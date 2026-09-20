@@ -50,6 +50,16 @@ test("keeps provider identity in explicit YouTube playback requests", () => {
   });
 });
 
+test("does not classify an untrusted host containing a YouTube path as YouTube", () => {
+  assert.equal(
+    getVodProvider({
+      vod_id: "spoofed",
+      vod_url: "https://attacker.example/youtube.com/watch?v=WGTrmrSvZH0",
+    }),
+    "twitch",
+  );
+});
+
 test("builds Twitch URLs and parent lists without browser globals", () => {
   assert.equal(formatTwitchTime(3661.9), "1h1m1s");
   assert.deepEqual(getTwitchParents("example.test"), ["example.test", "localhost", "127.0.0.1"]);

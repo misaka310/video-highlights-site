@@ -45,6 +45,23 @@ class YoutubeSourceTests(unittest.TestCase):
             ["WGTrmrSvZH0"],
         )
 
+    def test_youtube_public_filter_rejects_a_spoofed_youtube_path(self):
+        videos = [
+            {
+                "vod_id": "spoofed",
+                "vod_url": "https://attacker.example/youtube.com/watch?v=WGTrmrSvZH0",
+            },
+            {
+                "vod_id": "WGTrmrSvZH0",
+                "vod_url": "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+            },
+        ]
+
+        self.assertEqual(
+            [video["vod_id"] for video in serialization.filter_youtube_videos(videos)],
+            ["WGTrmrSvZH0"],
+        )
+
     def test_youtube_update_publishes_only_the_youtube_cache_scope(self):
         youtube_video = {
             "provider": "youtube",

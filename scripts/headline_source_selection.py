@@ -436,8 +436,8 @@ def clean_source_sentence(sentence: str, config: dict[str, Any] | None = None) -
 
     cleaned = SOURCE_INTERJECTION_INLINE_RE.sub("", cleaned)
     cleaned = SOURCE_REPEAT_WORD_RE.sub(r"\g<w>", cleaned)
-    cleaned = re.sub(r"([?-??-??-?A-Za-z0-9])(?:[?,\s]+\1){1,}", r"\1", cleaned)
-    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ??.!???")
+    cleaned = re.sub(r"([A-Za-z0-9])(?:[\u3001\u3002,?!\s]+\1){1,}", r"\1", cleaned)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" \u3001\u3002.!?\uff01\uff1f")
     return cleaned
 
 def normalize_headline_source_text(text: str, config: dict[str, Any] | None = None) -> str:

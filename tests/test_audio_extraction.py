@@ -73,6 +73,30 @@ class AudioExtractionCommandTests(unittest.TestCase):
         )
         self.assertIn("--force-ipv4", commands[0])
 
+    def test_spoofed_youtube_path_keeps_generic_download_options(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            work_dir = Path(temp_dir)
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                (work_dir / "clip.webm").write_bytes(b"audio")
+                return SimpleNamespace(returncode=0, stderr="", stdout="")
+
+            with patch("transcription.audio_extraction.subprocess.run", side_effect=fake_run):
+                download_segment_media(
+                    vod_url="https://attacker.example/youtube.com/watch?v=930HUhvRKHc",
+                    start_label="03:45:35",
+                    end_label="03:48:05",
+                    work_dir=work_dir,
+                    python_executable="python",
+                    timeout_sec=300,
+                    video_required=False,
+                )
+
+        self.assertNotIn("--force-ipv4", commands[0])
+        self.assertNotIn("-f", commands[0])
+
 
 if __name__ == "__main__":
     unittest.main()

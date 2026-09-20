@@ -12,10 +12,10 @@ from typing import Any, Callable, Mapping
 from urllib.parse import parse_qs, urlparse
 
 from vod_sources import ChatFetchResult
+from youtube_url import YOUTUBE_URL_HOSTS
 
 
 YOUTUBE_VIDEO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
-YOUTUBE_URL_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be", "www.youtu.be"}
 YOUTUBE_ORACLE_HOST_ENV = "YOUTUBE_ORACLE_HOST"
 YOUTUBE_ORACLE_USER_ENV = "YOUTUBE_ORACLE_USER"
 YOUTUBE_ORACLE_KEY_ENV = "YOUTUBE_ORACLE_KEY_PATH"

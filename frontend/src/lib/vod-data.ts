@@ -1,9 +1,25 @@
 import type { HighlightSegment, VodData, VodProvider } from "../domain/vod.js";
 
+const YOUTUBE_HOSTS = new Set([
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "youtu.be",
+  "www.youtu.be",
+]);
+
+function isYouTubeUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return (parsed.protocol === "http:" || parsed.protocol === "https:") && YOUTUBE_HOSTS.has(parsed.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
 export function getVodProvider(vod: { vod_id?: string; provider?: string; vod_url?: string } | null | undefined): VodProvider {
   if (String(vod?.provider || "").trim().toLowerCase() === "youtube") return "youtube";
-  const url = String(vod?.vod_url || "").trim().toLowerCase();
-  if (url.includes("youtube.com/") || url.includes("youtu.be/")) return "youtube";
+  if (isYouTubeUrl(String(vod?.vod_url || "").trim())) return "youtube";
   return "twitch";
 }
 

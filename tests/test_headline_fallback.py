@@ -7,9 +7,13 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import transcribe_segments as ts
+import headline_source_selection as hss
 
 
 class HeadlineFallbackTests(unittest.TestCase):
+    def test_source_sentence_strips_japanese_sentence_punctuation(self):
+        self.assertEqual(hss.clean_source_sentence("  迷路。  "), "迷路")
+
     def test_tag_fallbacks_are_not_used_as_publishable_content(self):
         cases = {
             "好プレー": "好プレーで盛り上がる",

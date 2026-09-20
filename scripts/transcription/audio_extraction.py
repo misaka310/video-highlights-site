@@ -3,6 +3,8 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+from youtube_url import is_youtube_url
+
 
 def build_download_command(
     *,
@@ -46,7 +48,7 @@ def download_segment_media(
     video_required: bool = True,
 ) -> Path:
     output_template = work_dir / "clip.%(ext)s"
-    is_youtube = "youtube.com/" in vod_url.lower() or "youtu.be/" in vod_url.lower()
+    is_youtube = is_youtube_url(vod_url)
     command = build_download_command(
         vod_url=vod_url,
         start_label=start_label,

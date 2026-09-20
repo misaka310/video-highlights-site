@@ -19,6 +19,7 @@ from vod_highlights import (
     normalize_activity_map,
     parse_int,
 )
+from youtube_url import is_youtube_url
 
 PUBLIC_VOD_RETENTION_DAYS = 60
 
@@ -63,8 +64,7 @@ def is_youtube_video(video: Mapping[str, Any]) -> bool:
     provider = str(video.get("provider") or "").strip().lower()
     if provider:
         return provider == "youtube"
-    url = str(video.get("vod_url") or "").strip().lower()
-    return "youtube.com/" in url or "youtu.be/" in url
+    return is_youtube_url(str(video.get("vod_url") or ""))
 
 
 def filter_youtube_videos(videos: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
