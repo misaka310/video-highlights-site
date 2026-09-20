@@ -129,11 +129,16 @@ test("runs real user playback controls through the YouTube adapter", async ({ pa
   await expect(frame).toHaveAttribute("data-current-start-sec", "40");
   expect((await getFakeYoutubeLog(page)).seeks).toEqual(expect.arrayContaining([50, 40]));
 
+  const playsBeforeDateSwitch = (await getFakeYoutubeLog(page)).plays;
   await page.getByRole("tab").nth(1).click();
   await expect(frame).toHaveAttribute("data-current-vod-id", secondVod.vod_id);
   await expect.poll(async () => (await getFakeYoutubeLog(page)).mounts.length).toBe(2);
   await expect(page.getByRole("region", { name: "文字起こし" })).toHaveCount(0);
-  expect((await getFakeYoutubeLog(page)).mounts.at(-1)).toMatchObject({ videoId: secondVod.vod_id, autoplay: 1 });
+  await expect(frame).toHaveAttribute("data-expected-autoplay", "false");
+  await expect(frame).toHaveAttribute("data-expected-muted", "true");
+  await expect(frame).toHaveAttribute("data-player-status", "ready");
+  expect((await getFakeYoutubeLog(page)).mounts.at(-1)).toMatchObject({ videoId: secondVod.vod_id, autoplay: 0 });
+  expect((await getFakeYoutubeLog(page)).plays).toBe(playsBeforeDateSwitch);
   expect((await getFakeYoutubeLog(page)).destroys).toBeGreaterThan(0);
 
   await page.locator(".highlight-item").first().click();

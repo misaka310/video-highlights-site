@@ -10,6 +10,7 @@ import { useSiteMetadata } from "./hooks/use-site-metadata.js";
 import { useVodPage } from "./hooks/use-vod-page.js";
 import { createActivityGeometry, createActivityOverlay } from "./lib/activity-geometry.js";
 import { extractAnosaStatements, resolveCaptionWindow, type AnosaStatement, type CaptionData } from "./lib/captions.js";
+import { createVodSwitchPlaybackOptions } from "./player/playback-request.js";
 import { getVodProvider, pageUrl, parsePageSearch, resolveDurationSec } from "./lib/vod-data.js";
 import { TwitchPlayer, type TwitchPlayerHandle } from "./twitch-player";
 
@@ -132,7 +133,8 @@ export default function App() {
     const startSec = Number(first?.start_sec || 0);
     setActiveVodId(vodId);
     setActiveSegmentId(first?.id || "");
-    requestUserPlayback(vodId, startSec, getVodProvider(vod));
+    setPositionSec(Math.max(0, Math.floor(startSec)));
+    playerRef.current?.requestPlayback(vodId, startSec, createVodSwitchPlaybackOptions(getVodProvider(vod)));
   }
 
   function selectSegment(segment: HighlightSegment) {

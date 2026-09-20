@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { decideMountContinuation, decidePlayback } from "../../src/player/playback-decision.js";
-import { createPlaybackRequest, normalizeVodId } from "../../src/player/playback-request.js";
+import { createPlaybackRequest, createVodSwitchPlaybackOptions, normalizeVodId } from "../../src/player/playback-request.js";
 import { buildEmbedUrl, formatTwitchTime, getTwitchParents } from "../../src/player/twitch-url.js";
 import { getVodProvider } from "../../src/lib/vod-data.js";
 
@@ -44,6 +44,15 @@ test("keeps provider identity in explicit YouTube playback requests", () => {
     vodId: "WGTrmrSvZH0",
     startSec: 12,
     autoplay: true,
+    muted: true,
+    triggeredByUser: false,
+    provider: "youtube",
+  });
+});
+
+test("keeps date changes paused until the user selects a playback target", () => {
+  assert.deepEqual(createVodSwitchPlaybackOptions("youtube"), {
+    autoplay: false,
     muted: true,
     triggeredByUser: false,
     provider: "youtube",

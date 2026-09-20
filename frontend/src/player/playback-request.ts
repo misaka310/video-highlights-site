@@ -4,6 +4,15 @@ export function normalizeVodId(vodId: string): string {
   return String(vodId || "").trim().replace(/^v/i, "");
 }
 
+export function createVodSwitchPlaybackOptions(provider: PlaybackOptions["provider"]): PlaybackOptions {
+  return {
+    autoplay: false,
+    muted: true,
+    triggeredByUser: false,
+    ...(provider ? { provider } : {}),
+  };
+}
+
 export function createPlaybackRequest(
   requestId: number,
   vodId: string,

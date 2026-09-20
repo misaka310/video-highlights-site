@@ -140,7 +140,7 @@ test("renders production layout and preserves same-VOD playback behavior", async
   expect(consoleErrors).toEqual([]);
 });
 
-test("latest click wins and a different VOD remounts with sound", async ({ page }) => {
+test("latest click wins and a different VOD remounts paused", async ({ page }) => {
   await page.route("**/data/vod_index.json", async (route) => {
     const response = await route.fetch();
     const payload = await response.json();
@@ -188,12 +188,14 @@ test("latest click wins and a different VOD remounts with sound", async ({ page 
 
   const tabs = page.getByRole("tab");
   test.skip((await tabs.count()) < 2, "requires at least two VODs");
+  const playsBeforeDateSwitch = (await getFakeYoutubeLog(page)).plays;
   await tabs.nth(1).click();
   await expect.poll(async () => frame.getAttribute("data-current-vod-id")).not.toBe(initialVodId);
-  await expect(frame).toHaveAttribute("data-expected-autoplay", "true");
-  await expect(frame).toHaveAttribute("data-expected-muted", "false");
+  await expect(frame).toHaveAttribute("data-expected-autoplay", "false");
+  await expect(frame).toHaveAttribute("data-expected-muted", "true");
   await expect.poll(async () => (await getFakeYoutubeLog(page)).mounts.length).toBeGreaterThan(1);
-  expect((await getFakeYoutubeLog(page)).mounts.at(-1)).toMatchObject({ autoplay: 1 });
+  expect((await getFakeYoutubeLog(page)).mounts.at(-1)).toMatchObject({ autoplay: 0 });
+  expect((await getFakeYoutubeLog(page)).plays).toBe(playsBeforeDateSwitch);
   await expect(page.locator("body > .player-embed--portal")).toHaveCount(1);
   await expect(page.locator("body > .player-embed--portal iframe")).toHaveCount(0);
   await expect(page.locator("body > .player-embed--portal [data-fake-youtube-player='true']")).toHaveCount(1);
