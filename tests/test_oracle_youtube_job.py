@@ -33,6 +33,31 @@ class OracleYoutubeJobTests(unittest.TestCase):
         self.assertIn("--playlist-end", command)
         self.assertEqual(command[-1], "https://www.youtube.com/@dotitube/streams")
 
+    def test_resolves_multiple_archives_from_streams_page(self):
+        with patch.object(
+            oracle_youtube_job,
+            "_run_ytdlp",
+            return_value=SimpleNamespace(stdout="aTCWAb8wRd8\n2a_ATYeOiAQ\n930HUhvRKHc\n"),
+        ) as run_ytdlp:
+            result = oracle_youtube_job._resolve_stream_urls(
+                "https://www.youtube.com/@dotitube/streams",
+                "/remote/yt-dlp",
+                "/remote/deno",
+                "/remote/youtube-cookies.txt",
+                limit=3,
+            )
+
+        self.assertEqual(
+            result,
+            [
+                "https://www.youtube.com/watch?v=aTCWAb8wRd8",
+                "https://www.youtube.com/watch?v=2a_ATYeOiAQ",
+                "https://www.youtube.com/watch?v=930HUhvRKHc",
+            ],
+        )
+        command = run_ytdlp.call_args.args[0]
+        self.assertEqual(command[command.index("--playlist-end") + 1], "3")
+
     def test_reads_live_chat_artifact_created_by_successful_ytdlp(self):
         with tempfile.TemporaryDirectory() as raw_dir:
             work_dir = Path(raw_dir)

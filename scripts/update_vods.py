@@ -261,7 +261,7 @@ BACKFILL_SUMMARY_PATH = DATA_DIR / "backfill_summary.json"
 ANALYSIS_VERSION = "chat-zscore-v8"
 UPDATE_HOUR_LOCAL = 9
 JST_TIMEZONE = timezone(timedelta(hours=9))
-PUBLIC_VIDEO_LIMIT = 3
+PUBLIC_VIDEO_LIMIT = 5
 BACKFILL_DEFAULT_DAYS = 120
 BACKFILL_SOURCE_LIMIT_MULTIPLIER = 3
 BACKFILL_SOURCE_LIMIT_FLOOR = 30
@@ -361,7 +361,7 @@ def parse_cli_args() -> CliArgs:
     )
 
 def run_normal_mode(now: datetime) -> None:
-    target_count = 3
+    target_count = PUBLIC_VIDEO_LIMIT
     source_limit = max(target_count * 2, target_count + 2)
     videos = fetch_latest_videos(limit=source_limit)
     skip_latest_candidate, skip_reason = resolve_live_skip_decision(CHANNEL)

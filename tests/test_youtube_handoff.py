@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from youtube_handoff import (  # noqa: E402
     build_material_manifest,
     create_material_bundle,
+    create_material_batch_bundle,
     extract_material_bundle,
     validate_material_manifest,
 )
@@ -93,6 +94,49 @@ class YoutubeHandoffTests(unittest.TestCase):
                 archive.addfile(info, io.BytesIO(payload))
             with self.assertRaises(ValueError):
                 extract_material_bundle(bundle, root / "out")
+
+    def test_batch_bundle_round_trip_keeps_each_video_isolated(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            entries = []
+            for video_id in ("WGTrmrSvZH0", "2a_ATYeOiAQ"):
+                audio = root / f"{video_id}.wav"
+                screenshot = root / f"{video_id}.webp"
+                audio.write_bytes(b"wav")
+                screenshot.write_bytes(b"webp")
+                captions = root / f"{video_id}.json"
+                captions.write_text(
+                    json.dumps(
+                        {
+                            "video_id": video_id,
+                            "source": "youtube_automatic_captions",
+                            "language": "ja",
+                            "language_source": "ja",
+                            "fetched_at": "2026-09-19T00:00:00Z",
+                            "cues": [{"start_sec": 0, "end_sec": 1, "text": "字幕"}],
+                        },
+                        ensure_ascii=False,
+                    ),
+                    encoding="utf-8",
+                )
+                entries.append(
+                    (
+                        self._manifest() | {"video": self._manifest()["video"] | {"vod_id": video_id}},
+                        {"clips/clip-0.wav": audio, "clips/clip-0.webp": screenshot},
+                        captions,
+                    )
+                )
+            bundle = root / "batch.tar.gz"
+            create_material_batch_bundle(bundle, entries)
+            extracted = extract_material_bundle(bundle, root / "out")
+
+            self.assertEqual(extracted["schema_version"], 2)
+            self.assertEqual(
+                [entry["video"]["vod_id"] for entry in extracted["videos"]],
+                ["WGTrmrSvZH0", "2a_ATYeOiAQ"],
+            )
+            self.assertTrue((root / "out" / "videos" / "WGTrmrSvZH0" / "captions.json").is_file())
+            self.assertTrue((root / "out" / "videos" / "2a_ATYeOiAQ" / "clips" / "clip-0.wav").is_file())
 
     def test_actions_workflow_receives_material_without_youtube_downloader(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "process-youtube-material.yml").read_text(encoding="utf-8")

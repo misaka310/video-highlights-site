@@ -10,6 +10,7 @@ import {
 import { formatChatVolume, formatClock, localizeReason } from "../../src/lib/formatters.js";
 import { resolveCaptionWindow } from "../../src/lib/captions.js";
 import { loadVodPage } from "../../src/hooks/use-vod-page.js";
+import { VOD_PAGE_SIZE } from "../../src/domain/vod.js";
 import {
   normalizeDataPath,
   normalizeAssetPath,
@@ -51,6 +52,10 @@ test("preserves page navigation query behavior", () => {
   assert.equal(pageUrl("https://example.test/?mode=preview&page=1", 3), "https://example.test/?mode=preview&page=3");
 });
 
+test("shows five YouTube VODs per page", () => {
+  assert.equal(VOD_PAGE_SIZE, 5);
+});
+
 test("clamps out-of-range VOD pages to the last available page", async () => {
   const requestedPaths: string[] = [];
   const fetcher = async (input: string | URL | Request): Promise<Response> => {
@@ -64,12 +69,20 @@ test("clamps out-of-range VOD pages to the last available page", async () => {
           { provider: "youtube", vod_id: "3", detail_path: "data/vods/3.json", published_at: "2026-08-03T00:00:00Z" },
           { provider: "youtube", vod_id: "2", detail_path: "data/vods/2.json", published_at: "2026-08-02T00:00:00Z" },
           { provider: "youtube", vod_id: "1", detail_path: "data/vods/1.json", published_at: "2026-08-01T00:00:00Z" },
+          { provider: "youtube", vod_id: "0", detail_path: "data/vods/0.json", published_at: "2026-07-31T00:00:00Z" },
+          { provider: "youtube", vod_id: "-1", detail_path: "data/vods/-1.json", published_at: "2026-07-30T00:00:00Z" },
         ],
       });
     }
     if (path === "/site-config.json") return Response.json({ site: { name: "Example" } });
     if (path === "/data/vods/1.json") {
       return Response.json({ provider: "youtube", vod_id: "1", title: "last page", published_at: "2026-08-01T00:00:00Z" });
+    }
+    if (path === "/data/vods/0.json") {
+      return Response.json({ provider: "youtube", vod_id: "0", title: "last page", published_at: "2026-07-31T00:00:00Z" });
+    }
+    if (path === "/data/vods/-1.json") {
+      return Response.json({ provider: "youtube", vod_id: "-1", title: "last page", published_at: "2026-07-30T00:00:00Z" });
     }
     return new Response("not found", { status: 404 });
   };
@@ -78,7 +91,7 @@ test("clamps out-of-range VOD pages to the last available page", async () => {
 
   assert.equal(result.requestedPage, 99);
   assert.equal(result.page, 2);
-  assert.deepEqual(result.vods.map((vod) => vod.vod_id), ["1"]);
+  assert.deepEqual(result.vods.map((vod) => vod.vod_id), ["-1"]);
   assert.equal(requestedPaths.includes("/data/vods/4.json"), false);
 });
 

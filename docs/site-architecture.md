@@ -89,7 +89,7 @@
 ## データ読込
 
 1. `data/vod_index.json` を読み、VODを `published_at` の新しい順へ並べる。
-2. `page` クエリに応じて3件を選ぶ。
+2. `page` クエリに応じて5件を選ぶ。
 3. 各行の `detail_path` から `data/vods/{vod_id}.json` を読む。
 4. 各VODの見どころを `rank`、なければ `start_sec` で並べ、先頭3件を表示する。
 

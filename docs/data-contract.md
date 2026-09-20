@@ -54,7 +54,7 @@ YouTube live_chatの実取得は、`YOUTUBE_ORACLE_HOST` / `YOUTUBE_ORACLE_USER`
 
 ## `data/vods.json`
 
-YouTubeの最新3件をトップ画面へ表示する公開データです。各VODは次のフィールドだけを持ちます。旧Twitchキャッシュはこのファイルへ出力しません。
+YouTubeの最新5件をトップ画面へ表示する公開データです。各VODは次のフィールドだけを持ちます。旧Twitchキャッシュはこのファイルへ出力しません。
 
 - `provider`（YouTubeでは`youtube`、Twitchでは省略可）
 - `vod_id`

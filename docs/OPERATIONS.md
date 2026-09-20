@@ -59,12 +59,12 @@ $env:YOUTUBE_ORACLE_REMOTE_TSV_TEMPLATE = '$HOME/ytprobe/{video_id}-comment-time
 python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGTrmrSvZH0'
 ```
 
-- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`先頭から最新アーカイブを解決して処理し、Actionsの`process-youtube-material.yml`へ`repository_dispatch`を送る。新しい配信がない日は前回処理済みIDを見て正常終了する。GitHub ActionsのcronはYouTube取得経路に使わない。
+- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から未処理の新しいアーカイブを最大5件解決して1つのbundleへまとめ、Actionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。新しい配信がない日は処理済みIDを見て正常終了する。GitHub ActionsのcronはYouTube取得経路に使わない。
 - yt-dlpがライブチャットJSONを生成した後に付随形式のHTTP 403で終了する場合は、生成済みJSONが非空であることを検証して処理を継続する。JSONがない、または空の場合は失敗として扱う。
 - 既存`.github/workflows/update-vods.yml`のschedule宣言は互換検査のため残すが、現在の`if: github.event_name == 'workflow_dispatch'`による停止を無条件に解除しない。
 - GitHub側の混雑により実際の開始・完了が遅れることはある。画面の「次回更新予定」は処理開始時刻ではなく、公開反映目標の09:00 JSTを表示する。
 - 手動更新は `workflow_dispatch` で `main` を指定する。
-- `data/vods.json` は公開トップ用のYouTube最新3件、`data/vod_index.json` は保持期間内のYouTube一覧を持つ。既存キャッシュにTwitchが残っていても、YouTubeのActions処理が公開出力前に除外する。
+- `data/vods.json` は公開トップ用のYouTube最新5件、`data/vod_index.json` は保持期間内のYouTube一覧を持つ。既存キャッシュにTwitchが残っていても、YouTubeのActions処理が公開出力前に除外する。
 - YouTube更新データは `automation/youtube-material-*` ブランチとPRを経由し、公開準備チェック成功後にmainへマージする。旧Twitch更新workflowは停止中であり、公開出力へTwitchを戻さない。
 - YouTube更新PRの検証はActions botが作成したPRでも停止しないよう、`Frontend CI`、`Repository hygiene`、`Repo Launch Doctor`を`workflow_dispatch`で対象ブランチへ実行してから自動マージする。PRの`pull_request`イベント待ちは使わない（GitHub側の承認待ち`action_required`になり得るため）。
 - YouTubeでWhisperの内容を確定できない区間は `headline` 欠損のまま扱い、反応タグや既存の `reason` を公開UIの表示見出しへフォールバックしない。既存Twitchデータは互換維持のため従来の `reason` 表示を許容する。
@@ -123,5 +123,5 @@ workflow badgeやブランチ更新だけで成功判定しない。対象runを
 - 作業ツリー、stash、一時releaseブランチが残っていない。
 - `npm run verify` が成功している。
 - 公開URLがKumo版の静的バンドルを返す。
-- 公開データの `updated_at` と最新3件がmainと一致する。
+- 公開データの `updated_at` と最新5件がmainと一致する。
 - 次回の定期更新が09:00 JSTとして表示される。

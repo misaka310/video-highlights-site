@@ -55,6 +55,8 @@ only on the VM; never commit this file:
 ```text
 # Resolve the newest archive from this channel tab on every timer run.
 YOUTUBE_ORACLE_STREAMS_URL=https://www.youtube.com/@dotitube/streams
+# One timer run can hand off up to five unprocessed archives in one bundle.
+YOUTUBE_ORACLE_MAX_VIDEOS=5
 # Optional one-video fallback when streams discovery is intentionally disabled.
 YOUTUBE_ORACLE_VIDEO_URL=https://www.youtube.com/watch?v=...
 YOUTUBE_ORACLE_YTDLP_PATH=$HOME/yt-dlp
@@ -76,10 +78,11 @@ pre-authenticated requests cannot delete objects, so configure an OCI
 lifecycle rule that deletes the temporary object within one day. The GitHub token must be limited to this repository's
 `repository_dispatch` operation.
 
-When `YOUTUBE_ORACLE_STREAMS_URL` is set, the timer resolves the first archive
-from that channel's `/streams` tab and processes it. The last successfully
-handed-off video ID is kept in the state file, so a day without a new stream
-exits cleanly without re-running Whisper preparation. A fixed
+When `YOUTUBE_ORACLE_STREAMS_URL` is set, the timer resolves up to five
+unprocessed archives from that channel's `/streams` tab and hands them to one
+Actions run. `YOUTUBE_ORACLE_MAX_VIDEOS` can lower that bound. Processed video
+IDs are kept in the state file, so a day without a new stream exits cleanly
+without re-running Whisper preparation. A fixed
 `YOUTUBE_ORACLE_VIDEO_URL` remains supported as a fallback.
 
 Install and enable the timer:

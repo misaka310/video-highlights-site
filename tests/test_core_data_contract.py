@@ -58,6 +58,22 @@ def iter_keys(value):
 
 
 class CoreDataContractTests(unittest.TestCase):
+    def test_public_feed_keeps_five_latest_videos(self):
+        now = uv.datetime(2026, 9, 20, tzinfo=uv.JST_TIMEZONE)
+        videos = [
+            {
+                "provider": "youtube",
+                "vod_id": f"{index:011d}",
+                "vod_url": f"https://www.youtube.com/watch?v={index:011d}",
+                "title": str(index),
+                "published_at": f"2026-09-{20 - index:02d}T00:00:00+00:00",
+                "items": [],
+            }
+            for index in range(6)
+        ]
+        payload = uv.build_public_payload(videos, now)
+        self.assertEqual(len(payload["videos"]), 5)
+
     def test_storage_sanitizer_is_whitelist_based(self):
         source = {
             "vod_id": "1",

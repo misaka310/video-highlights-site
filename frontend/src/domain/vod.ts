@@ -74,4 +74,4 @@ export type VodPageData = {
   siteConfig: RuntimeSiteConfig;
 };
 
-export const VOD_PAGE_SIZE = 3;
+export const VOD_PAGE_SIZE = 5;

@@ -22,7 +22,12 @@ from urllib import error, request
 
 from update_vods import analyze_video_entry
 from vod_sources import ChatFetchResult
-from youtube_handoff import build_material_manifest, create_material_bundle, upload_bundle_to_url
+from youtube_handoff import (
+    build_material_manifest,
+    create_material_batch_bundle,
+    create_material_bundle,
+    upload_bundle_to_url,
+)
 from youtube_captions import (
     CAPTIONS_SOURCE_AUTOMATIC,
     CAPTIONS_SOURCE_MANUAL,
@@ -111,7 +116,8 @@ def _yt_dlp_base(ytdlp: str, deno: str, cookies: str) -> list[str]:
     ]
 
 
-def _resolve_latest_stream_url(streams_url: str, ytdlp: str, deno: str, cookies: str) -> str:
+def _resolve_stream_urls(streams_url: str, ytdlp: str, deno: str, cookies: str, *, limit: int) -> list[str]:
+    bounded_limit = max(1, min(int(limit), 8))
     completed = _run_ytdlp(
         [
             ytdlp,
@@ -123,7 +129,7 @@ def _resolve_latest_stream_url(streams_url: str, ytdlp: str, deno: str, cookies:
             cookies,
             "--flat-playlist",
             "--playlist-end",
-            "1",
+            str(bounded_limit),
             "--print",
             "%(id)s",
             "--quiet",
@@ -132,14 +138,27 @@ def _resolve_latest_stream_url(streams_url: str, ytdlp: str, deno: str, cookies:
         ],
         timeout=120,
     )
+    urls: list[str] = []
+    seen_ids: set[str] = set()
     for line in completed.stdout.splitlines():
         candidate = line.strip()
         try:
             video_id = parse_youtube_video_id(candidate)
         except ValueError:
             continue
-        return f"https://www.youtube.com/watch?v={video_id}"
-    raise OracleJobFailure("yt_dlp_failure", "YouTube streams page returned no archive")
+        if video_id in seen_ids:
+            continue
+        seen_ids.add(video_id)
+        urls.append(f"https://www.youtube.com/watch?v={video_id}")
+        if len(urls) >= bounded_limit:
+            break
+    if not urls:
+        raise OracleJobFailure("yt_dlp_failure", "YouTube streams page returned no archive")
+    return urls
+
+
+def _resolve_latest_stream_url(streams_url: str, ytdlp: str, deno: str, cookies: str) -> str:
+    return _resolve_stream_urls(streams_url, ytdlp, deno, cookies, limit=1)[0]
 
 
 def _state_path() -> Path:
@@ -163,6 +182,10 @@ def _write_state(state: dict[str, Any]) -> None:
 
 def _mark_processed(video_id: str) -> None:
     state = _read_state()
+    processed = [str(item).strip() for item in state.get("processed_video_ids", []) if str(item).strip()]
+    processed = [item for item in processed if item != video_id]
+    processed.append(video_id)
+    state["processed_video_ids"] = processed[-30:]
     state["last_processed_video_id"] = video_id
     _write_state(state)
 
@@ -431,14 +454,17 @@ def _cut_media(video_url: str, item: dict[str, Any], index: int, work_dir: Path,
     return audio, screenshot
 
 
-def _dispatch_github(video_id: str) -> None:
+def _dispatch_github(video_ids: list[str]) -> None:
     token = _env("YOUTUBE_ORACLE_GITHUB_TOKEN")
     repository = _env("YOUTUBE_ORACLE_GITHUB_REPOSITORY")
     if not token or not repository:
         raise OracleJobFailure("github_dispatch_configuration", "GitHub dispatch configuration is missing")
     url = f"https://api.github.com/repos/{repository}/dispatches"
     payload = json.dumps(
-        {"event_type": "youtube-material-ready", "client_payload": {"video_id": video_id}}
+        {
+            "event_type": "youtube-material-ready",
+            "client_payload": {"video_id": video_ids[0], "video_ids": video_ids},
+        }
     ).encode("utf-8")
     req = request.Request(
         url,
@@ -491,6 +517,42 @@ def _send_discord(webhook: str, content: str) -> None:
         pass
 
 
+def _prepare_material(
+    video_url: str,
+    work_dir: Path,
+    ytdlp: str,
+    deno: str,
+    cookies: str,
+) -> dict[str, Any]:
+    video_id = parse_youtube_video_id(video_url)
+    work_dir.mkdir(parents=True, exist_ok=True)
+    video, comments = _download_chat_and_metadata(video_url, work_dir, ytdlp, deno, cookies)
+    captions_file = _download_captions(video_url, work_dir, ytdlp, deno, cookies)
+    analyzed, status = analyze_video_entry(
+        video,
+        dt.datetime.now().astimezone(),
+        chat_data_override=ChatFetchResult(comments=comments, duration_sec=video.get("duration_sec")),
+        metadata_override=video,
+    )
+    if not analyzed or status != "analyzed":
+        raise OracleJobFailure("highlight_detection_failure", "chat offsets produced no highlights")
+    items = list(analyzed.get("items") or [])
+    media_files: dict[str, Path] = {}
+    for index, item in enumerate(items):
+        audio, screenshot = _cut_media(video_url, item, index, work_dir, ytdlp, deno, cookies)
+        media_files[f"clips/clip-{index}.wav"] = audio
+        media_files[f"clips/clip-{index}.webp"] = screenshot
+    return {
+        "video_id": video_id,
+        "manifest": build_material_manifest(video, comments, items),
+        "media_files": media_files,
+        "captions_file": captions_file,
+        "chat_total": len(comments),
+        "highlights": len(items),
+        "media_bytes": sum(path.stat().st_size for path in media_files.values()),
+    }
+
+
 def run(video_url: str) -> dict[str, Any]:
     ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
     deno = _path_env("YOUTUBE_ORACLE_DENO_PATH", DEFAULT_DENO)
@@ -506,43 +568,76 @@ def run(video_url: str) -> dict[str, Any]:
     video_id = parse_youtube_video_id(video_url)
     with tempfile.TemporaryDirectory(prefix=f"job-{video_id}-", dir=work_root) as temp_dir:
         work_dir = Path(temp_dir)
-        video, comments = _download_chat_and_metadata(video_url, work_dir, ytdlp, deno, cookies)
-        captions_file = _download_captions(video_url, work_dir, ytdlp, deno, cookies)
-        analyzed, status = analyze_video_entry(
-            video,
-            dt.datetime.now().astimezone(),
-            chat_data_override=ChatFetchResult(comments=comments, duration_sec=video.get("duration_sec")),
-            metadata_override=video,
-        )
-        if not analyzed or status != "analyzed":
-            raise OracleJobFailure("highlight_detection_failure", "chat offsets produced no highlights")
-        items = list(analyzed.get("items") or [])
-        media_files: dict[str, Path] = {}
-        for index, item in enumerate(items):
-            audio, screenshot = _cut_media(video_url, item, index, work_dir, ytdlp, deno, cookies)
-            media_files[f"clips/clip-{index}.wav"] = audio
-            media_files[f"clips/clip-{index}.webp"] = screenshot
-        manifest = build_material_manifest(video, comments, items)
+        prepared = _prepare_material(video_url, work_dir, ytdlp, deno, cookies)
         bundle_path = work_dir / f"youtube-material-{video_id}.tar.gz"
-        create_material_bundle(bundle_path, manifest, media_files, captions_file=captions_file)
+        create_material_bundle(
+            bundle_path,
+            prepared["manifest"],
+            prepared["media_files"],
+            captions_file=prepared["captions_file"],
+        )
         try:
             upload_bundle_to_url(bundle_path, upload_url)
         except (OSError, error.URLError, TimeoutError, RuntimeError) as exc:
             raise OracleJobFailure("handoff_upload_failure", "temporary material upload failed") from exc
-        _dispatch_github(video_id)
+        _dispatch_github([video_id])
         return {
             "video_id": video_id,
-            "chat_total": len(comments),
-            "highlights": len(items),
-            "captions": bool(captions_file),
-            "media_bytes": sum(path.stat().st_size for path in media_files.values()),
+            "chat_total": prepared["chat_total"],
+            "highlights": prepared["highlights"],
+            "captions": bool(prepared["captions_file"]),
+            "media_bytes": prepared["media_bytes"],
         }
 
 
+def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
+    """Acquire several archives and hand them to one checked Actions run."""
+
+    if not video_urls:
+        raise OracleJobFailure("yt_dlp_failure", "no YouTube archives selected")
+    ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
+    deno = _path_env("YOUTUBE_ORACLE_DENO_PATH", DEFAULT_DENO)
+    cookies = _path_env("YOUTUBE_ORACLE_COOKIES_PATH", DEFAULT_COOKIES)
+    upload_url = _env("YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL")
+    if not upload_url:
+        raise OracleJobFailure("handoff_configuration", "bundle upload PAR is not configured")
+    if not Path(cookies).is_file():
+        raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
+
+    work_root = Path(_path_env("YOUTUBE_ORACLE_WORK_ROOT", DEFAULT_WORK_ROOT))
+    work_root.mkdir(parents=True, exist_ok=True)
+    prepared_entries: list[tuple[dict[str, Any], dict[str, Path], Path | None]] = []
+    results: list[dict[str, Any]] = []
+    with tempfile.TemporaryDirectory(prefix="batch-", dir=work_root) as temp_dir:
+        root = Path(temp_dir)
+        for video_url in video_urls:
+            video_id = parse_youtube_video_id(video_url)
+            prepared = _prepare_material(video_url, root / video_id, ytdlp, deno, cookies)
+            prepared_entries.append((prepared["manifest"], prepared["media_files"], prepared["captions_file"]))
+            results.append(
+                {
+                    "video_id": video_id,
+                    "chat_total": prepared["chat_total"],
+                    "highlights": prepared["highlights"],
+                    "captions": bool(prepared["captions_file"]),
+                    "media_bytes": prepared["media_bytes"],
+                }
+            )
+        bundle_path = root / "youtube-material-batch.tar.gz"
+        create_material_batch_bundle(bundle_path, prepared_entries)
+        try:
+            upload_bundle_to_url(bundle_path, upload_url)
+        except (OSError, error.URLError, TimeoutError, RuntimeError) as exc:
+            raise OracleJobFailure("handoff_upload_failure", "temporary material upload failed") from exc
+        _dispatch_github([item["video_id"] for item in results])
+    return results
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Acquire one YouTube archive on Oracle and hand off selected material.")
+    parser = argparse.ArgumentParser(description="Acquire YouTube archives on Oracle and hand off selected material.")
     parser.add_argument("--streams-url", default=_env("YOUTUBE_ORACLE_STREAMS_URL"))
     parser.add_argument("--video-url", default=_env("YOUTUBE_ORACLE_VIDEO_URL"))
+    parser.add_argument("--max-videos", type=int, default=int(_env("YOUTUBE_ORACLE_MAX_VIDEOS", "5")))
     args = parser.parse_args()
     try:
         ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
@@ -551,27 +646,46 @@ def main() -> int:
         if args.streams_url:
             if not Path(cookies).is_file():
                 raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
-            video_url = _resolve_latest_stream_url(args.streams_url, ytdlp, deno, cookies)
+            video_urls = _resolve_stream_urls(
+                args.streams_url,
+                ytdlp,
+                deno,
+                cookies,
+                limit=args.max_videos,
+            )
+            processed_ids = {
+                str(item).strip()
+                for item in _read_state().get("processed_video_ids", [])
+                if str(item).strip()
+            }
+            if not processed_ids:
+                previous = str(_read_state().get("last_processed_video_id") or "").strip()
+                if previous:
+                    processed_ids.add(previous)
+            video_urls = [
+                url for url in video_urls if parse_youtube_video_id(url) not in processed_ids
+            ]
+            if not video_urls:
+                _notify(None)
+                print("oracle YouTube job skipped: reason=all_selected_archives_already_processed")
+                return 0
         else:
-            video_url = args.video_url
-        if not video_url:
+            video_urls = [args.video_url] if args.video_url else []
+        if not video_urls:
             raise OracleJobFailure("handoff_configuration", "YOUTUBE_ORACLE_STREAMS_URL or video URL is required")
-        video_id = parse_youtube_video_id(video_url)
-        if _read_state().get("last_processed_video_id") == video_id:
-            _notify(None)
-            print(f"oracle YouTube job skipped: video_id={video_id} reason=already_processed")
-            return 0
-        result = run(video_url)
-        _mark_processed(result["video_id"])
+        results = run(video_urls[0]) if len(video_urls) == 1 else run_batch(video_urls)
+        for result in results:
+            _mark_processed(result["video_id"])
         _notify(None)
-        print(
-            "oracle YouTube job complete:"
-            f" video_id={result['video_id']}"
-            f" chat_offsets={result['chat_total']}"
-            f" highlights={result['highlights']}"
-            f" captions={'yes' if result['captions'] else 'no'}"
-            f" media_bytes={result['media_bytes']}"
-        )
+        print(f"oracle YouTube job complete: videos={len(results)}")
+        for result in results:
+            print(
+                f" video_id={result['video_id']}"
+                f" chat_offsets={result['chat_total']}"
+                f" highlights={result['highlights']}"
+                f" captions={'yes' if result['captions'] else 'no'}"
+                f" media_bytes={result['media_bytes']}"
+            )
         return 0
     except OracleJobFailure as exc:
         _notify(exc.category)
