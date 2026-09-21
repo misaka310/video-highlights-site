@@ -116,6 +116,7 @@ h1 { margin: 0; font-size: clamp(1.22rem, 2vw, 1.62rem); letter-spacing: -0.035e
 }
 
 .rail-content { min-width: 0; }
+.vod-list-card { min-height: 400px; }
 .highlight-list { display: grid; gap: 7px; margin-top: 10px; }
 .highlight-item { display: grid; grid-template-columns: 126px minmax(0, 1fr); gap: 11px; width: 100%; min-width: 0; padding: 7px; border: 1px solid #1b2635; border-radius: 7px; background: #0d131d; color: inherit; text-align: left; cursor: pointer; transition: border-color .14s ease, background .14s ease; }
 .highlight-item:hover { background: #111925; border-color: #2a3749; }
@@ -181,6 +182,7 @@ h1 { margin: 0; font-size: clamp(1.22rem, 2vw, 1.62rem); letter-spacing: -0.035e
   .playback-surface,
   .player-embed--portal { border-radius: 4px; }
   .playback-assist-panel { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px; }
+  .vod-list-card { min-height: 360px; }
   .caption-panel { padding: 8px 9px 10px; }
   .activity-card { padding: 9px 9px 10px; }
   .activity-head { gap: 8px; margin-bottom: 7px; }

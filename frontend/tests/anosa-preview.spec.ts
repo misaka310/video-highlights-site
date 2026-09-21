@@ -111,6 +111,15 @@ test("keeps all synchronized captions and shows あのさ as a separate right-ra
   await expect(railTabs.getByRole("tab")).toHaveText(["見どころ1", "あのさ2"]);
   await expect(page.getByText("確認用見どころ", { exact: true })).toBeVisible();
 
+  const listCard = page.locator(".vod-list-card");
+  const summaryCard = page.locator(".stream-summary-card");
+  await expect(listCard).toBeVisible();
+  await expect(summaryCard).toBeVisible();
+  const highlightLayout = await page.evaluate(() => ({
+    listHeight: Math.round(document.querySelector(".vod-list-card")?.getBoundingClientRect().height || 0),
+    summaryTop: Math.round(document.querySelector(".stream-summary-card")?.getBoundingClientRect().top || 0),
+  }));
+
   await railTabs.getByRole("tab", { name: /あのさ/ }).click();
 
   const anosaItems = page.locator(".anosa-item");
@@ -120,6 +129,13 @@ test("keeps all synchronized captions and shows あのさ as a separate right-ra
     "あのさ、これは絶対やった方がいい。",
   ]);
   await expect(page.getByText("あのさ、これは途中で", { exact: false })).toHaveCount(0);
+
+  const anosaLayout = await page.evaluate(() => ({
+    listHeight: Math.round(document.querySelector(".vod-list-card")?.getBoundingClientRect().height || 0),
+    summaryTop: Math.round(document.querySelector(".stream-summary-card")?.getBoundingClientRect().top || 0),
+  }));
+  expect(anosaLayout.listHeight).toBe(highlightLayout.listHeight);
+  expect(anosaLayout.summaryTop).toBe(highlightLayout.summaryTop);
 
   await anosaItems.nth(1).click();
   await expect(anosaItems.nth(1)).toHaveAttribute("aria-pressed", "true");

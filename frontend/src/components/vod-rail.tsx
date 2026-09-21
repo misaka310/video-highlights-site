@@ -51,7 +51,7 @@ export function VodRail({
 
   return (
     <aside className="highlight-column" aria-label="VODと見どころ一覧">
-      <LayerCard>
+      <LayerCard className="vod-list-card">
         <LayerCard.Primary>
           <div className="rail-content">
             <Tabs tabs={tabItems} value={activeVod.vod_id} onValueChange={onSelectVod} />
@@ -99,7 +99,7 @@ export function VodRail({
         </LayerCard.Primary>
       </LayerCard>
 
-      <LayerCard>
+      <LayerCard className="stream-summary-card">
         <LayerCard.Primary>
           <StreamSummary
             vod={activeVod}
