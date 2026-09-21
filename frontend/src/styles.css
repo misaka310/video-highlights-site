@@ -43,11 +43,12 @@ h1 { margin: 0; font-size: clamp(1.22rem, 2vw, 1.62rem); letter-spacing: -0.035e
 
 .playback-assist-panel { display: grid; grid-template-columns: minmax(0, 65fr) minmax(220px, 35fr); align-items: stretch; gap: 10px; padding: 10px; background: #080d15; }
 .playback-assist-panel--map-only { grid-template-columns: minmax(0, 1fr); }
-.caption-panel { display: flex; flex-direction: column; justify-content: center; min-width: 0; padding: 10px 12px 12px; border: 1px solid #1b2736; border-radius: 6px; background: #0a1019; }
-.caption-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 3px; color: #a8adba; font-size: .67rem; }
+.caption-panel { display: grid; grid-template-rows: auto minmax(0, 1fr); align-content: center; gap: 8px; min-width: 0; padding: 10px 12px 12px; border: 1px solid #1b2736; border-radius: 6px; background: #0a1019; }
+.caption-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 7px; border-bottom: 1px solid #1b2736; color: #a8adba; font-size: .67rem; }
 .caption-head strong { color: #dce5f1; font-size: .7rem; }
-.caption-line { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 7px; min-width: 0; min-height: 19px; align-items: center; color: #7f8a9d; font-size: .69rem; line-height: 1.25; }
-.caption-line--current { color: #eef2f8; font-size: .76rem; }
+.caption-lines { display: grid; align-content: center; gap: 3px; min-height: 0; }
+.caption-line { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 7px; min-width: 0; min-height: 22px; align-items: center; color: #7f8a9d; font-size: .69rem; line-height: 1.25; }
+.caption-line--current { min-height: 26px; padding: 2px 6px; border-radius: 4px; background: #111724; color: #eef2f8; font-size: .76rem; }
 .caption-label { color: #7d8797; font-weight: 700; text-align: center; }
 .caption-line--current .caption-label { color: #b690ff; }
 .caption-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -183,7 +184,7 @@ h1 { margin: 0; font-size: clamp(1.22rem, 2vw, 1.62rem); letter-spacing: -0.035e
   .player-embed--portal { border-radius: 4px; }
   .playback-assist-panel { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 8px; }
   .vod-list-card { min-height: 360px; }
-  .caption-panel { padding: 8px 9px 10px; }
+  .caption-panel { gap: 7px; padding: 8px 9px 10px; }
   .activity-card { padding: 9px 9px 10px; }
   .activity-head { gap: 8px; margin-bottom: 7px; }
   .activity-help { display: none; }

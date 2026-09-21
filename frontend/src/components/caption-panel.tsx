@@ -30,9 +30,11 @@ export function CaptionPanel({ window }: CaptionPanelProps) {
         <strong>文字起こし</strong>
         <span>YouTube字幕</span>
       </div>
-      <CaptionLine label="前" text={window.previous?.text || ""} />
-      <CaptionLine label="今" text={window.current?.text || ""} current />
-      <CaptionLine label="次" text={window.next?.text || ""} />
+      <div className="caption-lines">
+        <CaptionLine label="前" text={window.previous?.text || ""} />
+        <CaptionLine label="今" text={window.current?.text || ""} current />
+        <CaptionLine label="次" text={window.next?.text || ""} />
+      </div>
     </section>
   );
 }
