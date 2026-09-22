@@ -1,7 +1,33 @@
 {
-  "updated_at": "2026-09-20T09:18:26+09:00",
-  "next_update_at": "2026-09-21T00:00:00+00:00",
+  "updated_at": "2026-09-22T20:17:49+09:00",
+  "next_update_at": "2026-09-23T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "7NwFPUnJSLU",
+      "vod_url": "https://www.youtube.com/watch?v=7NwFPUnJSLU",
+      "title": "デドバならば視聴者泣かせられるはずやもしれぬ！【Dead by Daylight】",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/7NwFPUnJSLU/maxresdefault.jpg",
+      "duration_sec": 6850,
+      "count": 3,
+      "chat_total": 628,
+      "comments_per_hour": 330.044,
+      "detail_path": "/data/vods/7NwFPUnJSLU.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "Dl_8GJUCspU",
+      "vod_url": "https://www.youtube.com/watch?v=Dl_8GJUCspU",
+      "title": "【ダスブラ練習】最強のビルド育てて対人で視聴者泣かす！ダスブラなりきりエルデン大会！！【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-09-20T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/Dl_8GJUCspU/maxresdefault.jpg",
+      "duration_sec": 29389,
+      "count": 3,
+      "chat_total": 3215,
+      "comments_per_hour": 393.821,
+      "detail_path": "/data/vods/Dl_8GJUCspU.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "aTCWAb8wRd8",
       "vod_url": "https://www.youtube.com/watch?v=aTCWAb8wRd8",
