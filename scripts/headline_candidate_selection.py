@@ -558,7 +558,10 @@ def choose_best_headline(
             f"headline={candidate.headline} score={score.total:.2f} breakdown={score.breakdown} reasons={score.reasons}"
         )
 
-    scored_rows.sort(key=lambda row: row[1].total, reverse=True)
+    scored_rows.sort(
+        key=lambda row: (is_publishable_headline(row[0].headline, source_text=source_text), row[1].total),
+        reverse=True,
+    )
     best, best_score = scored_rows[0]
     print(
         "info: headline selected "

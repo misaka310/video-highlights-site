@@ -36,6 +36,7 @@ class HeadlineGenerationCallbacks:
     validate_headline_result: Callable[..., Any]
     choose_best_remote_headline: Callable[..., tuple[Any, dict[str, Any]]]
     make_headline_result: Callable[..., Any]
+    is_publishable_headline: Callable[..., bool] | None = None
 
 
 HEADLINE_PROVIDER_ERROR_MAX_RETRIES = 3
@@ -736,11 +737,17 @@ class ResilientHeadlineGenerator:
                 validation_result=validation,
                 logger=print,
             )
+            publishable = self._is_publishable(result.text, prepared_transcript or transcript)
+            metadata["publishable"] = publishable
             collected.append(result)
-            if not hlp.should_retry_attempt(validation):
+            if publishable and not hlp.should_retry_attempt(validation):
                 break
             attempt += 1
         return collected
+
+    def _is_publishable(self, headline: str, source_text: str) -> bool:
+        check = getattr(self.callbacks, "is_publishable_headline", None)
+        return check is None or bool(check(headline, source_text=source_text))
 
     def generate(
         self,
@@ -811,7 +818,9 @@ class ResilientHeadlineGenerator:
                     print("warn: headline NVIDIA failed; using local fallback")
 
         if candidates:
-            selected, comparison = self.callbacks.choose_best_remote_headline(candidates, transcript=transcript)
+            publishable = [item for item in candidates if (item.metadata or {}).get("publishable", True)]
+            pool = publishable or candidates
+            selected, comparison = self.callbacks.choose_best_remote_headline(pool, transcript=transcript)
             selected_metadata = dict(selected.metadata or {})
             selected_metadata["comparison"] = comparison
             selected.metadata = selected_metadata

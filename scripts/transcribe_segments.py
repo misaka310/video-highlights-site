@@ -1173,6 +1173,7 @@ def build_headline_generator() -> hlg.ResilientHeadlineGenerator:
         validate_headline_result=validate_headline_result,
         choose_best_remote_headline=choose_best_remote_headline,
         make_headline_result=HeadlineResult,
+        is_publishable_headline=is_publishable_headline,
     )
     return hlg.build_headline_generator(
         gemini_api_key=GEMINI_API_KEY,
