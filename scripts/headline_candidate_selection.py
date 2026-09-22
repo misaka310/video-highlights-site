@@ -404,9 +404,12 @@ PUBLISH_CONVERSATIONAL_EDGE_RE = re.compile(
     r"^(?:あー|えー|いや|まあ|なんか|はい|なんで)|(?:っていう|ってい|というか|して|まして|ませ)$"
 )
 
+PUBLISH_HEADLINE_MIN_CHARS = 8
+PUBLISH_HEADLINE_MAX_CHARS = 24
+
 def is_publishable_headline(headline: str, *, source_text: str | None = None) -> bool:
     value = cleanup_headline_candidate(headline)
-    if len(value) < 8 or len(value) > 24:
+    if len(value) < PUBLISH_HEADLINE_MIN_CHARS or len(value) > PUBLISH_HEADLINE_MAX_CHARS:
         return False
     validation = validate_final_headline_japanese(value, source_text=source_text)
     if not validation.accepted:
@@ -676,7 +679,7 @@ def build_remote_headline_prompt(
         "generation_mode and notes are optional. "
         "Use only facts explicitly present in the source text. "
         "Do not add names, events, or details that are not in the source text. "
-        f"Keep each headline natural Japanese and under {HEADLINE_MAX_CHARS} characters. "
+        f"Keep each headline natural Japanese and {PUBLISH_HEADLINE_MIN_CHARS} to {PUBLISH_HEADLINE_MAX_CHARS} characters. "
         "Reuse concrete source terms when possible, but do not copy the source sentence verbatim. "
         "When source is weak, still output short readable headlines (safe/extractive allowed). "
         "Never return SKIP if source text is non-empty."
@@ -692,6 +695,9 @@ def build_remote_headline_prompt(
         "- Avoid conversational tails/fragments like 「〜けど」「〜かな」「〜かも」「というか」「なんか」。\n"
         "- Prefer event summaries that read well as a list headline.\n"
         "- Avoid plain transcript copy/paste.\n"
+        f"- Each headline must be {PUBLISH_HEADLINE_MIN_CHARS} to {PUBLISH_HEADLINE_MAX_CHARS} characters.\n"
+        "- Do not use question marks (? or ？). Rephrase a question as a statement.\n"
+        "- Do not include quote brackets such as 「」『』 or any unmatched bracket copied from the source.\n"
         f"Source text (already normalized): {prepared_transcript}\n"
         "Return JSON only."
     )

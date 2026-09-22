@@ -83,5 +83,21 @@ class ChooseBestHeadlineTests(unittest.TestCase):
         self.assertEqual(best.headline, candidates[1].headline)
 
 
+class RemotePromptRuleTests(unittest.TestCase):
+    def test_prompt_states_publish_rules(self) -> None:
+        instructions, prompt = hcs.build_remote_headline_prompt(
+            provider="Groq",
+            video_title="t",
+            start_time="0",
+            end_time="1",
+            transcript="どういうこと？」そうだよね",
+            prepared_transcript="どういうこと？」そうだよね",
+        )
+        rule_text = instructions + prompt
+        self.assertIn(f"{hcs.PUBLISH_HEADLINE_MIN_CHARS} to {hcs.PUBLISH_HEADLINE_MAX_CHARS} characters", rule_text)
+        self.assertIn("Do not use question marks", prompt)
+        self.assertIn("unmatched bracket", prompt)
+
+
 if __name__ == "__main__":
     unittest.main()
