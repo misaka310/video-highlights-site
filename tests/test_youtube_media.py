@@ -166,7 +166,7 @@ class YoutubeMediaTests(unittest.TestCase):
         self.assertEqual(enriched["items"][0]["headline_generation_mode"], "llm_ranked")
         self.assertIn("迷路", headline_generator.kwargs["prepared_transcript"])
 
-    def test_enrichment_rejects_extractive_headline_fallback(self):
+    def test_enrichment_uses_publishable_extractive_headline_fallback(self):
         video = {
             "provider": "youtube",
             "vod_id": "WGTrmrSvZH0",
@@ -201,13 +201,68 @@ class YoutubeMediaTests(unittest.TestCase):
                     notes="extractive_fallback",
                 )
 
-        with self.assertRaisesRegex(RuntimeError, "no remote LLM headline"):
-            enrich_youtube_video(
-                video,
-                media_fetcher=media_fetcher,
-                transcriber=FakeTranscriber(),
-                headline_generator=ExtractiveFallbackGenerator(),
-            )
+        enriched, summary = enrich_youtube_video(
+            video,
+            media_fetcher=media_fetcher,
+            transcriber=FakeTranscriber(),
+            headline_generator=ExtractiveFallbackGenerator(),
+        )
+        self.assertEqual(summary.headlines, 1)
+        self.assertEqual(enriched["items"][0]["headline"], "気まずくなる流れ好き")
+        self.assertEqual(enriched["items"][0]["headline_source"], "extractive")
+
+    def test_enrichment_leaves_unpublishable_headline_missing_without_failing(self):
+        video = {
+            "provider": "youtube",
+            "vod_id": "WGTrmrSvZH0",
+            "vod_url": "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+            "title": "archive",
+            "items": [
+                {"id": "WGTrmrSvZH0_120_240", "start_sec": 120, "end_sec": 240},
+                {"id": "WGTrmrSvZH0_300_360", "start_sec": 300, "end_sec": 360},
+            ],
+        }
+
+        def media_fetcher(_url, _start, _end, output_dir):
+            path = output_dir / "clip.webm"
+            path.write_bytes(b"clip")
+            return path
+
+        class FakeTranscriber:
+            def transcribe(self, *_args, **_kwargs):
+                return SimpleNamespace(
+                    text="どういうこと？そうだよね。",
+                    source_text="どういうこと？そうだよね。",
+                    language="ja",
+                    language_probability=0.9,
+                    segments=None,
+                )
+
+        class UnpublishableGenerator:
+            def __init__(self):
+                self.fallback = self
+
+            def generate(self, **_kwargs):
+                return SimpleNamespace(
+                    text="どういうこと？」が連呼",
+                    source="groq",
+                    model="openai/gpt-oss-120b",
+                    generation_mode="llm_ranked",
+                    confidence="medium",
+                    notes="",
+                )
+
+        enriched, summary = enrich_youtube_video(
+            video,
+            media_fetcher=media_fetcher,
+            transcriber=FakeTranscriber(),
+            headline_generator=UnpublishableGenerator(),
+        )
+        self.assertEqual(summary.attempted, 2)
+        self.assertEqual(summary.headlines, 0)
+        for item in enriched["items"]:
+            self.assertNotIn("headline", item)
+            self.assertEqual(item["headline_status"], "missing:not_publishable")
 
     def test_enrichment_refreshes_headline_runtime_from_environment(self):
         video = {

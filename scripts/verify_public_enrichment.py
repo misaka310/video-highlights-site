@@ -55,7 +55,9 @@ def collect_public_enrichment_failures(payload: dict[str, Any], *, root: Path = 
                 if not is_publishable_headline(headline):
                     reasons = ",".join(validation.reasons) or "publish_quality"
                     failures.append(f"segment_id={segment_id}: invalid headline ({reasons})")
-            elif provider == "youtube" or not reason:
+            elif provider != "youtube" and not reason:
+                # YouTube items without a publishable headline are published as
+                # "見出し未生成" instead of blocking the whole update.
                 failures.append(f"segment_id={segment_id}: headline missing")
 
             if not screenshot_url:

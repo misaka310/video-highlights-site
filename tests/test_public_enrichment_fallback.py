@@ -49,21 +49,24 @@ class PublicEnrichmentFallbackTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(b"webp")
 
-    def test_reason_does_not_fallback_to_a_missing_headline(self):
+    def test_missing_youtube_headline_does_not_block(self):
         verifier = self.load_verifier()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             self.create_screenshot(root)
-            failures = verifier.collect_public_enrichment_failures(self.build_payload(), root=root)
-        self.assertEqual(["segment_id=123_3723_3783: headline missing"], failures)
+            for reason in ("Chat activity spike around 01:02:03 (z-score=4.2).", ""):
+                failures = verifier.collect_public_enrichment_failures(self.build_payload(reason=reason), root=root)
+                self.assertEqual([], failures)
 
-    def test_missing_headline_and_reason_remains_blocking(self):
+    def test_unpublishable_youtube_headline_remains_blocking(self):
         verifier = self.load_verifier()
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             self.create_screenshot(root)
-            failures = verifier.collect_public_enrichment_failures(self.build_payload(reason=""), root=root)
-        self.assertEqual(["segment_id=123_3723_3783: headline missing"], failures)
+            with patch.object(verifier, "is_publishable_headline", return_value=False):
+                failures = verifier.collect_public_enrichment_failures(self.build_payload(headline="どういうこと？」"), root=root)
+        self.assertEqual(1, len(failures))
+        self.assertIn("invalid headline", failures[0])
 
     def test_runtime_loader_uses_detail_payload_referenced_by_index(self):
         verifier = self.load_verifier()

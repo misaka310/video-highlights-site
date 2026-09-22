@@ -174,45 +174,46 @@ def enrich_youtube_video(
             )
             transcript = str(getattr(result, "text", "") or "").strip()
             if not transcript:
-                raise RuntimeError(f"youtube enrichment produced no transcript for {item.get('id')}")
+                print(f"warn: YouTube headline left missing item={item.get('id')} reason=no_transcript")
+                _mark_headline_missing(item, "no_transcript")
+                continue
             transcribed += 1
             apply_transcript_result(item, target, result)
             source_text = build_headline_source_text(transcript, headline_source_config)
             source_validation = is_valid_headline_source_text(source_text or transcript, headline_source_config)
-            headline_result = active_headline_generator.generate(
-                video_title=str(video.get("title") or "").strip(),
-                start_time=str(item.get("start_time") or start_sec),
-                end_time=str(item.get("end_time") or end_sec),
-                transcript=transcript,
-                prepared_transcript=source_text or transcript,
-                source_validation=source_validation,
-            )
-            headline = str(getattr(headline_result, "text", "") or "").strip()
-            generation_mode = str(getattr(headline_result, "generation_mode", "") or "").strip()
-            source = str(getattr(headline_result, "source", "") or "").strip().lower()
-            notes = str(getattr(headline_result, "notes", "") or "").strip()
-            if (
-                not headline
-                or source not in {"gemini", "groq", "nvidia"}
-                or generation_mode == "fallback_extractive"
-                or notes == "local_candidate"
-            ):
-                raise RuntimeError(
-                    f"youtube enrichment produced no remote LLM headline for {item.get('id')}"
-                )
-            if not is_publishable_headline(headline, source_text=source_text or transcript):
-                raise RuntimeError(f"youtube enrichment rejected low-quality headline for {item.get('id')}")
-            item["headline"] = headline
-            item["headline_source"] = source
-            item["headline_model"] = str(getattr(headline_result, "model", "") or "").strip()
-            item["headline_status"] = "ok"
-            item["headline_generation_mode"] = generation_mode or "llm_ranked"
-            item["headline_confidence"] = str(getattr(headline_result, "confidence", "") or "medium").strip()
+            generate_kwargs = {
+                "video_title": str(video.get("title") or "").strip(),
+                "start_time": str(item.get("start_time") or start_sec),
+                "end_time": str(item.get("end_time") or end_sec),
+                "transcript": transcript,
+                "prepared_transcript": source_text or transcript,
+                "source_validation": source_validation,
+            }
+            publish_source = source_text or transcript
+            headline_result = active_headline_generator.generate(**generate_kwargs)
+            if not _is_publishable_result(headline_result, publish_source):
+                fallback = getattr(active_headline_generator, "fallback", None)
+                try:
+                    fallback_result = fallback.generate(**generate_kwargs) if fallback is not None else None
+                except Exception as exc:
+                    print(f"warn: YouTube headline fallback failed item={item.get('id')} ({exc})")
+                    fallback_result = None
+                if fallback_result is not None and _is_publishable_result(fallback_result, publish_source):
+                    print(f"warn: YouTube headline used local fallback item={item.get('id')}")
+                    headline_result = fallback_result
+                else:
+                    print(f"warn: YouTube headline left missing item={item.get('id')} reason=not_publishable")
+                    _mark_headline_missing(item, "not_publishable")
+                    continue
+            _apply_headline(item, headline_result)
             headlines += 1
 
-    if attempted == 0 or transcribed != attempted or headlines != attempted:
-        raise RuntimeError(
-            f"youtube enrichment incomplete attempted={attempted} transcribed={transcribed} headlines={headlines}"
+    if attempted == 0:
+        raise RuntimeError("youtube enrichment found no highlight items")
+    if headlines != attempted:
+        print(
+            "warn: YouTube headlines incomplete "
+            f"attempted={attempted} transcribed={transcribed} headlines={headlines}"
         )
     return video, YoutubeEnrichmentSummary(
         attempted=attempted,
@@ -220,6 +221,29 @@ def enrich_youtube_video(
         headlines=headlines,
         screenshots=screenshots,
     )
+
+
+def _is_publishable_result(result: Any, source_text: str) -> bool:
+    headline = str(getattr(result, "text", "") or "").strip()
+    return bool(headline) and is_publishable_headline(headline, source_text=source_text)
+
+
+def _apply_headline(item: dict[str, Any], result: Any) -> None:
+    source = str(getattr(result, "source", "") or "").strip().lower()
+    item["headline"] = str(getattr(result, "text", "") or "").strip()
+    item["headline_source"] = source
+    item["headline_model"] = str(getattr(result, "model", "") or "").strip()
+    item["headline_status"] = "ok"
+    item["headline_generation_mode"] = (
+        str(getattr(result, "generation_mode", "") or "").strip() or "llm_ranked"
+    )
+    item["headline_confidence"] = str(getattr(result, "confidence", "") or "medium").strip()
+
+
+def _mark_headline_missing(item: dict[str, Any], reason: str) -> None:
+    for key in ("headline", "headline_source", "headline_model", "headline_generation_mode", "headline_confidence"):
+        item.pop(key, None)
+    item["headline_status"] = f"missing:{reason}"
 
 
 __all__ = ["YoutubeEnrichmentSummary", "enrich_youtube_video"]
