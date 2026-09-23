@@ -45,7 +45,7 @@ jobs:
     timeout-minutes: 120
     env:
       TZ: Asia/Tokyo
-      TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+      TWITCH_CLIENT_ID: ${{ vars.TWITCH_CLIENT_ID }}
       TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
       TWITCH_CHANNEL: ${{ vars.TWITCH_CHANNEL }}
       TWITCH_CHANNEL_ID: ${{ vars.TWITCH_CHANNEL_ID }}
