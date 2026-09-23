@@ -125,3 +125,7 @@ workflow badgeやブランチ更新だけで成功判定しない。対象runを
 - 公開URLがKumo版の静的バンドルを返す。
 - 公開データの `updated_at` と最新5件がmainと一致する。
 - 次回の定期更新が09:00 JSTとして表示される。
+
+## 2026-09-24 Credential and normal configuration split
+
+The Twitch application ID is a non-secret GitHub Actions repository variable, while the Twitch client secret and Groq API key remain in GitHub Secrets. The workflow now uses the normal variable exclusively; PR #193 passed required CI and was merged, and the redundant Twitch ID secret was deleted after verifying all production workflow references. On the local Windows developer PC, the AgentSecrets control plane stores eight active secrets in Bitwarden Secrets Manager and keeps six ordinary identifiers/model settings outside Git in the local system config, with repository-scoped Groq access and protected Oracle-only runtime credentials. The GitHub Actions secrets and the local Bitwarden credentials are separate storage domains.
