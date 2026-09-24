@@ -16,6 +16,7 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 from urllib import error, request
@@ -49,6 +50,13 @@ DEFAULT_DENO = "$HOME/.local/bin/deno"
 DEFAULT_COOKIES = "$HOME/youtube-cookies.txt"
 DEFAULT_WORK_ROOT = "$HOME/ytprobe"
 
+# Transient YouTube extraction failures (for example "The page needs to be
+# reloaded.") come and go within minutes, so the same yt-dlp call is retried
+# with a short backoff before the daily job gives up.
+YTDLP_TRANSIENT_RETRY_ATTEMPTS = 3
+YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS = 20
+TRANSIENT_YTDLP_CATEGORIES = {"temporary_network_failure", "yt_dlp_failure"}
+
 
 def _env(name: str, default: str = "") -> str:
     return str(os.environ.get(name) or default).strip()
@@ -72,6 +80,7 @@ def _run(command: list[str], *, category: str, timeout: int = 900) -> subprocess
     except subprocess.TimeoutExpired as exc:
         raise OracleJobFailure(category, "runtime timed out") from exc
     if completed.returncode != 0:
+        _log_runtime_failure("runtime", completed)
         raise OracleJobFailure(category, "runtime returned a non-zero exit status")
     return completed
 
@@ -89,16 +98,35 @@ def _classify_ytdlp_failure(completed: subprocess.CompletedProcess[str]) -> str:
     return "yt_dlp_failure"
 
 
-def _run_ytdlp(command: list[str], *, timeout: int = 900) -> subprocess.CompletedProcess[str]:
-    try:
-        completed = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
-    except FileNotFoundError as exc:
-        raise OracleJobFailure("yt_dlp_deno_failure", "yt-dlp or its runtime was not found") from exc
-    except subprocess.TimeoutExpired as exc:
-        raise OracleJobFailure("temporary_network_failure", "yt-dlp timed out") from exc
-    if completed.returncode != 0:
-        raise OracleJobFailure(_classify_ytdlp_failure(completed), "yt-dlp failed")
-    return completed
+def _log_runtime_failure(label: str, completed: subprocess.CompletedProcess[str]) -> None:
+    output = str(completed.stderr or "").strip() or str(completed.stdout or "").strip()
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    detail = " | ".join(lines[-3:])
+    print(f"{label} failed: exit={completed.returncode} detail={detail[:600]}", flush=True)
+
+
+def _run_ytdlp(
+    command: list[str],
+    *,
+    timeout: int = 900,
+    attempts: int = YTDLP_TRANSIENT_RETRY_ATTEMPTS,
+) -> subprocess.CompletedProcess[str]:
+    bounded_attempts = max(1, int(attempts))
+    for attempt in range(1, bounded_attempts + 1):
+        try:
+            completed = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
+        except FileNotFoundError as exc:
+            raise OracleJobFailure("yt_dlp_deno_failure", "yt-dlp or its runtime was not found") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise OracleJobFailure("temporary_network_failure", "yt-dlp timed out") from exc
+        if completed.returncode == 0:
+            return completed
+        category = _classify_ytdlp_failure(completed)
+        _log_runtime_failure("yt-dlp", completed)
+        if category not in TRANSIENT_YTDLP_CATEGORIES or attempt == bounded_attempts:
+            raise OracleJobFailure(category, "yt-dlp failed")
+        time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
+    raise OracleJobFailure("yt_dlp_failure", "yt-dlp failed after retries")
 
 
 def _yt_dlp_base(ytdlp: str, deno: str, cookies: str) -> list[str]:
@@ -297,18 +325,28 @@ def _metadata(completed: subprocess.CompletedProcess[str], video_id: str, video_
 def _download_chat_and_metadata(video_url: str, work_dir: Path, ytdlp: str, deno: str, cookies: str) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     video_id = parse_youtube_video_id(video_url)
     stem = work_dir / "archive"
-    try:
-        _run_ytdlp(
-            _yt_dlp_base(ytdlp, deno, cookies)
-            + ["--skip-download", "--write-subs", "--sub-langs", "live_chat", "-o", str(stem), video_url]
-        )
-    except OracleJobFailure as exc:
-        # Some yt-dlp versions finish writing the live-chat JSON and then
-        # return 403 while probing an unrelated video format. Keep the chat
-        # artifact only when it exists; the parser below remains authoritative
-        # for rejecting empty or malformed output.
-        if exc.category != "yt_dlp_failure":
-            raise
+    for attempt in range(1, YTDLP_TRANSIENT_RETRY_ATTEMPTS + 1):
+        try:
+            _run_ytdlp(
+                _yt_dlp_base(ytdlp, deno, cookies)
+                + ["--skip-download", "--write-subs", "--sub-langs", "live_chat", "-o", str(stem), video_url],
+                attempts=1,
+            )
+            break
+        except OracleJobFailure as exc:
+            # Some yt-dlp versions finish writing the live-chat JSON and then
+            # return 403 while probing an unrelated video format. Keep the chat
+            # artifact only when it exists; the parser below remains authoritative
+            # for rejecting empty or malformed output.  When nothing was written,
+            # transient extraction failures are retried before the daily job
+            # gives up.
+            if list(work_dir.glob("*.live_chat.json")):
+                break
+            if exc.category not in TRANSIENT_YTDLP_CATEGORIES:
+                raise
+            if attempt == YTDLP_TRANSIENT_RETRY_ATTEMPTS:
+                raise
+            time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
     chat_files = list(work_dir.glob("*.live_chat.json"))
     if not chat_files:
         raise OracleJobFailure("live_chat_zero", "yt-dlp returned no live chat file")
@@ -612,7 +650,14 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
         root = Path(temp_dir)
         for video_url in video_urls:
             video_id = parse_youtube_video_id(video_url)
-            prepared = _prepare_material(video_url, root / video_id, ytdlp, deno, cookies)
+            try:
+                prepared = _prepare_material(video_url, root / video_id, ytdlp, deno, cookies)
+            except OracleJobFailure as exc:
+                # One bad archive must not block the rest of the daily batch.
+                # The skipped video stays unprocessed and the next timer run
+                # retries it.
+                print(f"skipped video_id={video_id} category={exc.category}", flush=True)
+                continue
             prepared_entries.append((prepared["manifest"], prepared["media_files"], prepared["captions_file"]))
             results.append(
                 {
@@ -623,6 +668,8 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
                     "media_bytes": prepared["media_bytes"],
                 }
             )
+        if not results:
+            raise OracleJobFailure("yt_dlp_failure", "no YouTube archives could be prepared")
         bundle_path = root / "youtube-material-batch.tar.gz"
         create_material_batch_bundle(bundle_path, prepared_entries)
         try:

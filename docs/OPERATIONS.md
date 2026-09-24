@@ -75,6 +75,8 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 - Oracleの定期実行は`YOUTUBE_ORACLE_STREAMS_URL=https://www.youtube.com/@dotitube/streams`を優先し、固定の`YOUTUBE_ORACLE_VIDEO_URL`へ戻さない。Cookieは`YOUTUBE_ORACLE_REMOTE_COOKIES_PATH`で指定したOracle上のファイルだけを使う。
 - YouTubeの内部音声解析は、スクリーンショット不要時はHTTPS音声のみ、必要時はHTTPSの軽量映像・音声を選ぶ。Twitchの区間取得フォーマットは変更しない。
 - 公開準備チェックは、生成済み `headline` の品質と見どころサムネイルの存在を検証する。見出しが欠損する場合や、生成済み見出しが品質基準を満たさない場合は従来どおり失敗させる。
+- Oracleジョブの一時的な取得失敗（`temporary_network_failure`、`yt_dlp_failure`）は、同一コマンドを20秒間隔のバックオフで最大3回再試行する。Cookie認証・bot判定・Deno起動など恒久区分の失敗は再試行せず、yt-dlp失敗時はstderr末尾をjournalへ出力する。
+- 複数件のバッチ処理では、1件の失敗を隔離して残りを1つのbundleへ渡す。全件失敗のときだけ失敗終了する。失敗した配信は未処理のまま残り、翌日のtimer実行で再試行される。
 
 ### Oracle → Actions 一時素材
 
