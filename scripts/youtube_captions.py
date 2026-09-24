@@ -203,6 +203,21 @@ def validate_captions_payload(payload: Any, *, expected_video_id: str | None = N
     }
 
 
+def collect_caption_text(cues: list[dict[str, Any]], start_sec: float, end_sec: float) -> str:
+    """Join caption cues overlapping a highlight interval into one text blob."""
+
+    parts: list[str] = []
+    for cue in cues:
+        cue_start = float(cue.get("start_sec") or 0.0)
+        cue_end = float(cue.get("end_sec") or 0.0)
+        if cue_end <= start_sec or cue_start >= end_sec:
+            continue
+        text = str(cue.get("text") or "").strip()
+        if text and (not parts or parts[-1] != text):
+            parts.append(text)
+    return " ".join(parts).strip()
+
+
 def write_captions_payload(path: Path, payload: Any, *, expected_video_id: str | None = None) -> None:
     validated = validate_captions_payload(payload, expected_video_id=expected_video_id)
     Path(path).parent.mkdir(parents=True, exist_ok=True)

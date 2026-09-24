@@ -166,6 +166,103 @@ class YoutubeMediaTests(unittest.TestCase):
         self.assertEqual(enriched["items"][0]["headline_generation_mode"], "llm_ranked")
         self.assertIn("迷路", headline_generator.kwargs["prepared_transcript"])
 
+    def test_enrichment_skips_whisper_when_captions_cover_the_interval(self):
+        video = {
+            "provider": "youtube",
+            "vod_id": "WGTrmrSvZH0",
+            "vod_url": "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+            "title": "archive",
+            "items": [{"id": "WGTrmrSvZH0_120_240", "start_sec": 120, "end_sec": 240, "tags": ["ww"]}],
+        }
+
+        def media_fetcher(_url, _start, _end, output_dir):
+            path = output_dir / "clip.webm"
+            path.write_bytes(b"clip")
+            return path
+
+        class FailIfCalledTranscriber:
+            def transcribe(self, *_args, **_kwargs):
+                raise AssertionError("whisper must not run when captions cover the interval")
+
+        class FakeHeadlineGenerator:
+            def generate(self, **kwargs):
+                self.kwargs = kwargs
+                return SimpleNamespace(
+                    text="字幕から見出しを作る",
+                    source="groq",
+                    model="openai/gpt-oss-120b",
+                    generation_mode="llm_ranked",
+                    confidence="high",
+                    notes="",
+                )
+
+        headline_generator = FakeHeadlineGenerator()
+        enriched, summary = enrich_youtube_video(
+            video,
+            media_fetcher=media_fetcher,
+            caption_cues=[
+                {"start_sec": 118, "end_sec": 130, "text": "会上がった。"},
+                {"start_sec": 130, "end_sec": 242, "text": "すごいな。"},
+            ],
+            transcriber=FailIfCalledTranscriber(),
+            headline_generator=headline_generator,
+        )
+        self.assertEqual(summary.headlines, 1)
+        self.assertIn("会上がった", headline_generator.kwargs["prepared_transcript"])
+        self.assertIn("すごいな", headline_generator.kwargs["transcript"])
+        self.assertNotIn("ww", enriched["items"][0]["headline"])
+        self.assertEqual(enriched["items"][0]["headline_source"], "groq")
+
+    def test_enrichment_falls_back_to_whisper_when_captions_miss_the_interval(self):
+        video = {
+            "provider": "youtube",
+            "vod_id": "WGTrmrSvZH0",
+            "vod_url": "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+            "title": "archive",
+            "items": [{"id": "WGTrmrSvZH0_120_240", "start_sec": 120, "end_sec": 240}],
+        }
+
+        def media_fetcher(_url, _start, _end, output_dir):
+            path = output_dir / "clip.webm"
+            path.write_bytes(b"clip")
+            return path
+
+        transcriber_calls = []
+
+        class FakeTranscriber:
+            def transcribe(self, media_path, **_kwargs):
+                transcriber_calls.append(media_path)
+                return SimpleNamespace(
+                    text="この気まずくなる流れ好きすぎるからやめて。",
+                    source_text="この気まずくなる流れ好きすぎるからやめて。",
+                    language="ja",
+                    language_probability=0.9,
+                    segments=None,
+                )
+
+        class FakeHeadlineGenerator:
+            def generate(self, **_kwargs):
+                return SimpleNamespace(
+                    text="気まずくなる流れ好き",
+                    source="groq",
+                    model="openai/gpt-oss-120b",
+                    generation_mode="llm_ranked",
+                    confidence="high",
+                    notes="",
+                )
+
+        enriched, summary = enrich_youtube_video(
+            video,
+            media_fetcher=media_fetcher,
+            caption_cues=[{"start_sec": 300, "end_sec": 360, "text": "区間の外の字幕"}],
+            transcriber=FakeTranscriber(),
+            headline_generator=FakeHeadlineGenerator(),
+        )
+        self.assertEqual(len(transcriber_calls), 1)
+        self.assertEqual(summary.transcribed, 1)
+        self.assertEqual(summary.headlines, 1)
+        self.assertIn("気まずくなる流れ", enriched["items"][0]["headline"])
+
     def test_enrichment_uses_publishable_extractive_headline_fallback(self):
         video = {
             "provider": "youtube",

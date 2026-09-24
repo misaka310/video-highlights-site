@@ -86,7 +86,16 @@ def _process_manifest(manifest: dict[str, Any], root: Path, active_now: datetime
             raise RuntimeError("requested bundle interval is not present")
         return media_by_item_id[item["id"]]["audio"]
 
-    enriched, summary = enrich_youtube_video(analyzed, media_fetcher=media_fetcher)
+    captions_payload: dict[str, Any] | None = None
+    captions_source_path = root / str(manifest.get("captions_path") or "captions.json")
+    if captions_source_path.is_file():
+        captions_payload = json.loads(captions_source_path.read_text(encoding="utf-8"))
+
+    enriched, summary = enrich_youtube_video(
+        analyzed,
+        media_fetcher=media_fetcher,
+        caption_cues=list((captions_payload or {}).get("cues") or []) or None,
+    )
     cache_payload = load_processed_cache()
     cached_by_vod_id = {
         item["vod_id"]: item
@@ -95,9 +104,7 @@ def _process_manifest(manifest: dict[str, Any], root: Path, active_now: datetime
     }
     cached_by_vod_id[enriched["vod_id"]] = enriched
     captions_written = False
-    captions_source_path = root / str(manifest.get("captions_path") or "captions.json")
-    if captions_source_path.is_file():
-        captions_payload = json.loads(captions_source_path.read_text(encoding="utf-8"))
+    if captions_payload is not None:
         captions_destination = DATA_DIR / "captions" / f"{enriched['vod_id']}.json"
         write_captions_payload(
             captions_destination,

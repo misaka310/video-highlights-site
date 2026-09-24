@@ -48,6 +48,26 @@ class YoutubeCaptionsTests(unittest.TestCase):
             self.assertEqual(stored["source"], yc.CAPTIONS_SOURCE_AUTOMATIC)
             self.assertEqual(stored["cues"][0]["text"], "字幕")
 
+    def test_collect_caption_text_joins_only_overlapping_cues(self):
+        cues = [
+            {"start_sec": 0, "end_sec": 5, "text": "before"},
+            {"start_sec": 120, "end_sec": 130, "text": "会上がった。"},
+            {"start_sec": 128, "end_sec": 140, "text": "会上がった。"},
+            {"start_sec": 135, "end_sec": 150, "text": "すごいな。"},
+            {"start_sec": 200, "end_sec": 210, "text": "after"},
+        ]
+        text = yc.collect_caption_text(cues, 120, 150)
+        self.assertIn("会上がった", text)
+        self.assertIn("すごいな", text)
+        self.assertNotIn("before", text)
+        self.assertNotIn("after", text)
+        self.assertEqual(text.count("会上がった"), 1)
+
+    def test_collect_caption_text_returns_empty_without_overlap(self):
+        cues = [{"start_sec": 300, "end_sec": 320, "text": "外側"}]
+        self.assertEqual(yc.collect_caption_text(cues, 120, 240), "")
+        self.assertEqual(yc.collect_caption_text([], 120, 240), "")
+
     def test_rejects_mismatched_video_id(self):
         payload = yc.build_captions_payload(
             video_id="WGTrmrSvZH0",

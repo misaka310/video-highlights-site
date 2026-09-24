@@ -70,7 +70,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 - YouTubeでWhisperの内容を確定できない区間は `headline` 欠損のまま扱い、反応タグや既存の `reason` を公開UIの表示見出しへフォールバックしない。既存Twitchデータは互換維持のため従来の `reason` 表示を許容する。
 - YouTube公開字幕は任意データとして扱う。手動字幕を優先し、なければ自動生成字幕を取得する。字幕取得失敗・字幕なしはVOD更新を失敗させず、字幕パネルを出さない。
 - YouTube更新では、タグを見出しへ変換しない。公開用の `headline` は、Oracleから取得した見どころ区間の音声・映像を後段のWhisper/見出し生成へ渡して作る。素材や文字起こしを取得できない項目は `headline` を欠損のまま扱い、反応タグを見出しに見せかけない。
-- Oracle素材を処理する `process-youtube-material.yml` の見出し生成は、Whisper文字起こしを入力としてGroqの `openai/gpt-oss-120b` を使う。LLMの見出しが公開判定（`is_publishable_headline`）を通らない場合はローカル抽出フォールバックを試し、それも公開判定を通らない場合や文字起こしが空の場合は、その項目だけ`headline`を欠損のまま公開する（画面では「見出し未生成」）。見出しの欠損で更新処理全体を失敗させない。LLMの候補選定と再試行は公開判定（`is_publishable_headline`）と同じ基準を使い、公開判定を通らない候補は再試行の対象として選定から除外する。見出しプロンプトには公開判定の文字数（8〜24文字）、疑問符と引用括弧の禁止を明記する。
+- Oracle素材を処理する `process-youtube-material.yml` の見出し生成は、見どころ区間をカバーする字幕がbundleに含まれる場合はその字幕テキストを入力にし、その区間のWhisperを実行しない。字幕が区間をカバーしない場合はWhisper文字起こしを入力としてGroqの `openai/gpt-oss-120b` を使う。LLMの見出しが公開判定（`is_publishable_headline`）を通らない場合はローカル抽出フォールバックを試し、それも公開判定を通らない場合や文字起こしが空の場合は、その項目だけ`headline`を欠損のまま公開する（画面では「見出し未生成」）。見出しの欠損で更新処理全体を失敗させない。LLMの候補選定と再試行は公開判定（`is_publishable_headline`）と同じ基準を使い、公開判定を通らない候補は再試行の対象として選定から除外する。見出しプロンプトには公開判定の文字数（8〜24文字）、疑問符と引用括弧の禁止を明記する。
 - 既存VODの見出しだけを修復する場合は `workflow_dispatch` の `repair_vod_id` を指定し、保存済みのYouTube公開字幕から同じGPT-OSS 120B見出し生成経路を通して全見どころを再生成する。通常のOracle素材処理ではこの修復経路を使わない。
 - Oracleの定期実行は`YOUTUBE_ORACLE_STREAMS_URL=https://www.youtube.com/@dotitube/streams`を優先し、固定の`YOUTUBE_ORACLE_VIDEO_URL`へ戻さない。Cookieは`YOUTUBE_ORACLE_REMOTE_COOKIES_PATH`で指定したOracle上のファイルだけを使う。
 - YouTubeの内部音声解析は、スクリーンショット不要時はHTTPS音声のみ、必要時はHTTPSの軽量映像・音声を選ぶ。Twitchの区間取得フォーマットは変更しない。

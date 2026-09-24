@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import tempfile
 from dataclasses import dataclass
+from types import SimpleNamespace
 from pathlib import Path
 from typing import Any, Callable
 
@@ -14,6 +15,7 @@ from headline_candidate_selection import (
     is_valid_headline_source_text,
 )
 from transcription.config import PipelineSettings
+from youtube_captions import collect_caption_text
 from youtube_media import (
     YOUTUBE_MEDIA_INCLUDE_VIDEO_ENV,
     fetch_youtube_highlight_media_files,
@@ -36,12 +38,15 @@ def enrich_youtube_video(
     video: dict[str, Any],
     *,
     media_fetcher: MediaFetcher | None = None,
+    caption_cues: list[dict[str, Any]] | None = None,
     transcriber: Any | None = None,
     headline_generator: Any | None = None,
 ) -> tuple[dict[str, Any], YoutubeEnrichmentSummary]:
     """Enrich each selected item from a transient Oracle media section.
 
-    Transcript fields are useful only during this process and are stripped by
+    When caption cues cover a highlight interval, the stored YouTube caption
+    text is used instead of running Whisper for that interval.  Transcript
+    fields are useful only during this process and are stripped by
     the public serializer.  A missing transcript never falls back to reaction
     tags or the stream title.
     """
@@ -163,15 +168,26 @@ def enrich_youtube_video(
             except Exception as exc:
                 print(f"warn: YouTube screenshot enrichment failed item={item.get('id')} ({exc})")
 
-            result = active_transcriber.transcribe(
-                media_path,
-                model_name=pass_config.model,
-                vad_filter=pass_config.vad_filter,
-                word_timestamps=pass_config.word_timestamps,
-                condition_on_previous_text=pass_config.condition_on_previous_text,
-                beam_size=pass_config.beam_size,
-                vad_parameters=pass_config.vad_parameters,
-            )
+            result = None
+            caption_text = collect_caption_text(caption_cues or [], start_sec, end_sec)
+            if caption_text:
+                result = SimpleNamespace(
+                    text=caption_text,
+                    source_text=caption_text,
+                    language="ja",
+                    language_probability=None,
+                    segments=None,
+                )
+            else:
+                result = active_transcriber.transcribe(
+                    media_path,
+                    model_name=pass_config.model,
+                    vad_filter=pass_config.vad_filter,
+                    word_timestamps=pass_config.word_timestamps,
+                    condition_on_previous_text=pass_config.condition_on_previous_text,
+                    beam_size=pass_config.beam_size,
+                    vad_parameters=pass_config.vad_parameters,
+                )
             transcript = str(getattr(result, "text", "") or "").strip()
             if not transcript:
                 print(f"warn: YouTube headline left missing item={item.get('id')} reason=no_transcript")

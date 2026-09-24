@@ -15,23 +15,10 @@ from headline_candidate_selection import (
 from transcription.config import PipelineSettings
 from update_vods import DATA_DIR, load_processed_cache, write_processed_cache, write_public_data
 from vod_serialization import filter_youtube_videos
-from youtube_captions import validate_captions_payload
+from youtube_captions import collect_caption_text, validate_captions_payload
 
 
 VOD_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
-
-
-def collect_caption_text(cues: list[dict[str, Any]], start_sec: float, end_sec: float) -> str:
-    parts: list[str] = []
-    for cue in cues:
-        cue_start = float(cue.get("start_sec") or 0.0)
-        cue_end = float(cue.get("end_sec") or 0.0)
-        if cue_end <= start_sec or cue_start >= end_sec:
-            continue
-        text = str(cue.get("text") or "").strip()
-        if text and (not parts or parts[-1] != text):
-            parts.append(text)
-    return " ".join(parts).strip()
 
 
 def _require_remote_headline(result: Any, *, source_text: str, item_id: str) -> str:
