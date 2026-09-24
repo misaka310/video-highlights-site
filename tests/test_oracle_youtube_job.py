@@ -207,6 +207,40 @@ class OracleYoutubeJobTests(unittest.TestCase):
         self.assertEqual(caught.exception.category, "yt_dlp_failure")
         self.assertEqual(sleep.call_count, oracle_youtube_job.YTDLP_TRANSIENT_RETRY_ATTEMPTS - 1)
 
+    def test_ytdlp_timeout_is_retried_then_succeeds(self):
+        def fake_run(_command, **_kwargs):
+            if fake_run.calls == 0:
+                fake_run.calls += 1
+                raise oracle_youtube_job.subprocess.TimeoutExpired(cmd="yt-dlp", timeout=10)
+            return SimpleNamespace(returncode=0, stdout="ok")
+
+        fake_run.calls = 0
+
+        with patch.object(oracle_youtube_job.subprocess, "run", side_effect=fake_run), patch.object(
+            oracle_youtube_job.time, "sleep", return_value=None
+        ) as sleep:
+            completed = oracle_youtube_job._run_ytdlp(["yt-dlp"], timeout=10)
+
+        self.assertEqual(completed.stdout, "ok")
+        self.assertEqual(sleep.call_count, 1)
+
+    def test_ytdlp_members_only_failure_is_not_retried(self):
+        def fake_run(_command, **_kwargs):
+            return SimpleNamespace(
+                returncode=1,
+                stdout="",
+                stderr="ERROR: [youtube] abc: Join this channel to get access to members-only content",
+            )
+
+        with patch.object(oracle_youtube_job.subprocess, "run", side_effect=fake_run), patch.object(
+            oracle_youtube_job.time, "sleep", return_value=None
+        ) as sleep:
+            with self.assertRaises(oracle_youtube_job.OracleJobFailure) as caught:
+                oracle_youtube_job._run_ytdlp(["yt-dlp"], timeout=10)
+
+        self.assertEqual(caught.exception.category, "youtube_access_failure")
+        self.assertEqual(sleep.call_count, 0)
+
     def test_chat_download_retries_when_no_artifact_was_written(self):
         calls = {"chat": 0}
 

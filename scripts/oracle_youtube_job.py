@@ -89,6 +89,8 @@ def _classify_ytdlp_failure(completed: subprocess.CompletedProcess[str]) -> str:
     text = f"{completed.stdout}\n{completed.stderr}".lower()
     if any(marker in text for marker in ("sign in", "authentication", "cookies", "login", "age-restricted")):
         return "cookie_authentication_failure"
+    if any(marker in text for marker in ("members-only", "join this channel")):
+        return "youtube_access_failure"
     if any(marker in text for marker in ("not a bot", "captcha", "challenge", "confirm you're not")):
         return "youtube_bot_challenge_failure"
     if "deno" in text or "javascript runtime" in text or "remote-components" in text:
@@ -118,7 +120,13 @@ def _run_ytdlp(
         except FileNotFoundError as exc:
             raise OracleJobFailure("yt_dlp_deno_failure", "yt-dlp or its runtime was not found") from exc
         except subprocess.TimeoutExpired as exc:
-            raise OracleJobFailure("temporary_network_failure", "yt-dlp timed out") from exc
+            # A stalled transfer is transient: retry the same command within
+            # the remaining attempts before the caller gives up.
+            print(f"yt-dlp timed out: timeout={timeout}s attempt={attempt}/{bounded_attempts}", flush=True)
+            if attempt == bounded_attempts:
+                raise OracleJobFailure("temporary_network_failure", "yt-dlp timed out") from exc
+            time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
+            continue
         if completed.returncode == 0:
             return completed
         category = _classify_ytdlp_failure(completed)
