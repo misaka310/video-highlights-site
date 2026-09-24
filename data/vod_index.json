@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-09-22T20:17:49+09:00",
-  "next_update_at": "2026-09-23T00:00:00+00:00",
+  "updated_at": "2026-09-25T07:34:11+09:00",
+  "next_update_at": "2026-09-25T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "psNNW7U95wg",
+      "vod_url": "https://www.youtube.com/watch?v=psNNW7U95wg",
+      "title": "長期ナイトレ禁生活明けの極上の一夜にまさかの…！？【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-09-23T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/psNNW7U95wg/maxresdefault.jpg",
+      "duration_sec": 39617,
+      "count": 3,
+      "chat_total": 3511,
+      "comments_per_hour": 319.045,
+      "detail_path": "/data/vods/psNNW7U95wg.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "7NwFPUnJSLU",
       "vod_url": "https://www.youtube.com/watch?v=7NwFPUnJSLU",
