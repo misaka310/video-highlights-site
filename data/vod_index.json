@@ -1,7 +1,33 @@
 {
-  "updated_at": "2026-09-25T07:34:11+09:00",
-  "next_update_at": "2026-09-25T00:00:00+00:00",
+  "updated_at": "2026-09-26T06:36:03+09:00",
+  "next_update_at": "2026-09-26T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "3V0swWyny-8",
+      "vod_url": "https://www.youtube.com/watch?v=3V0swWyny-8",
+      "title": "ゲリラ朝活！夜渡りの朝(夜)は早い【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-09-25T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/3V0swWyny-8/maxresdefault.jpg",
+      "duration_sec": 18785,
+      "count": 3,
+      "chat_total": 1349,
+      "comments_per_hour": 258.525,
+      "detail_path": "/data/vods/3V0swWyny-8.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "4dcYSB6iIoo",
+      "vod_url": "https://www.youtube.com/watch?v=4dcYSB6iIoo",
+      "title": "長期ナイトレ禁生活明けの極上の一夜にまさかの…！？【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-09-24T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/4dcYSB6iIoo/maxresdefault.jpg",
+      "duration_sec": 20960,
+      "count": 3,
+      "chat_total": 1934,
+      "comments_per_hour": 332.176,
+      "detail_path": "/data/vods/4dcYSB6iIoo.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "psNNW7U95wg",
       "vod_url": "https://www.youtube.com/watch?v=psNNW7U95wg",
