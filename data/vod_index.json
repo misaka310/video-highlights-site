@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-09-26T06:36:03+09:00",
-  "next_update_at": "2026-09-26T00:00:00+00:00",
+  "updated_at": "2026-09-27T06:49:45+09:00",
+  "next_update_at": "2026-09-27T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "KwRhwLUZjko",
+      "vod_url": "https://www.youtube.com/watch?v=KwRhwLUZjko",
+      "title": "深度5ガチで怖すぎる【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-09-26T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/KwRhwLUZjko/maxresdefault.jpg",
+      "duration_sec": 20177,
+      "count": 3,
+      "chat_total": 2161,
+      "comments_per_hour": 385.568,
+      "detail_path": "/data/vods/KwRhwLUZjko.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "3V0swWyny-8",
       "vod_url": "https://www.youtube.com/watch?v=3V0swWyny-8",
@@ -13,6 +26,19 @@
       "chat_total": 1349,
       "comments_per_hour": 258.525,
       "detail_path": "/data/vods/3V0swWyny-8.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "aRJa-2MDDOY",
+      "vod_url": "https://www.youtube.com/watch?v=aRJa-2MDDOY",
+      "title": "【TVアニメ化決定】みんなで語りながらクリアする【SEKIRO: SHADOWS DIE TWICE】",
+      "published_at": "2026-09-25T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/aRJa-2MDDOY/maxresdefault.jpg",
+      "duration_sec": 15487,
+      "count": 3,
+      "chat_total": 1813,
+      "comments_per_hour": 421.437,
+      "detail_path": "/data/vods/aRJa-2MDDOY.json",
       "provider": "youtube"
     },
     {
