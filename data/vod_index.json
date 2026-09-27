@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-09-27T06:49:45+09:00",
-  "next_update_at": "2026-09-27T00:00:00+00:00",
+  "updated_at": "2026-09-28T02:40:52+09:00",
+  "next_update_at": "2026-09-28T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "d41zBjWSGcc",
+      "vod_url": "https://www.youtube.com/watch?v=d41zBjWSGcc",
+      "title": "深度5で手汗びしゃびしゃチャンネル【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-09-27T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/d41zBjWSGcc/maxresdefault.jpg",
+      "duration_sec": 26679,
+      "count": 3,
+      "chat_total": 2678,
+      "comments_per_hour": 361.363,
+      "detail_path": "/data/vods/d41zBjWSGcc.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "KwRhwLUZjko",
       "vod_url": "https://www.youtube.com/watch?v=KwRhwLUZjko",
