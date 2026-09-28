@@ -1,4 +1,4 @@
-import type { VodData } from "../domain/vod.js";
+import type { VodData, VodProvider } from "../domain/vod.js";
 
 export function formatClock(totalSeconds: number): string {
   const total = Math.max(0, Math.floor(totalSeconds || 0));
@@ -32,6 +32,17 @@ export function localizeReason(reason = ""): string {
     .replace(/^\d+h\d+m\d+s\s*/i, "")
     .replace(/\s*\(z-score=[^)]+\)\.?/gi, "")
     .trim();
+}
+
+export function resolveHighlightTitle(
+  headline: string | undefined,
+  reason: string | undefined,
+  provider: VodProvider,
+): string {
+  const normalizedHeadline = String(headline || "").trim();
+  if (normalizedHeadline) return normalizedHeadline;
+  if (provider === "youtube") return "コメントが集中した場面";
+  return localizeReason(reason || "") || "見どころ";
 }
 
 export function formatChatVolume(vod: VodData): string {
