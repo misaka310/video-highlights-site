@@ -257,7 +257,7 @@ test("keeps legacy ordering and missing metadata fallbacks", async ({ page }) =>
   await expect(frame).toHaveAttribute("data-current-vod-id", "newer");
   await expect(frame).toHaveAttribute("data-current-start-sec", "20");
   await expect(page.locator(".time-chip")).toHaveText(["00:00:20", "00:00:40", "00:01:00"]);
-  await expect(page.locator(".highlight-copy > strong")).toHaveText(["1番目", "見出し未生成", "3番目"]);
+  await expect(page.locator(".highlight-copy > strong")).toHaveText(["1番目", "コメントが集中した場面", "3番目"]);
   await expect(page.locator(".stream-summary dd").nth(0)).toHaveText("―");
   await expect(page.locator(".stream-summary dd").nth(2)).toHaveText("00:01:30");
   await expect(page.locator(".stream-summary dd").nth(3)).toHaveText("―");
