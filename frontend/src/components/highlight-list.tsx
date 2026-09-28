@@ -1,7 +1,7 @@
 import { Badge, Empty } from "@cloudflare/kumo";
 import { PlayIcon } from "@phosphor-icons/react";
 import type { HighlightSegment } from "../domain/vod.js";
-import { formatClock, localizeReason } from "../lib/formatters.js";
+import { formatClock, resolveHighlightTitle } from "../lib/formatters.js";
 import { normalizeAssetPath } from "../lib/vod-data.js";
 
 type HighlightListProps = {
@@ -18,12 +18,7 @@ export function HighlightList({ vodId, provider = "twitch", vodThumbnailUrl, seg
     <div className="highlight-list">
       {segments.length > 0 ? segments.map((segment) => {
         const selected = segment.id === activeSegmentId;
-        // Reaction reasons belong in metadata, never in the viewer-facing heading.
-        // A missing content headline must remain visibly incomplete instead of
-        // masquerading as a generic highlight title.
-        const title = String(
-          segment.headline || (provider === "twitch" ? localizeReason(segment.reason) : "見出し未生成"),
-        ).trim();
+        const title = resolveHighlightTitle(segment.headline, segment.reason, provider);
         const thumbnailUrl = segment.screenshot_url || vodThumbnailUrl;
         return (
           <button

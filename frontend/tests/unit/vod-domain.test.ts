@@ -7,7 +7,7 @@ import {
   downsampleBuckets,
   smoothBuckets,
 } from "../../src/lib/activity-geometry.js";
-import { formatChatVolume, formatClock, localizeReason } from "../../src/lib/formatters.js";
+import { formatChatVolume, formatClock, localizeReason, resolveHighlightTitle } from "../../src/lib/formatters.js";
 import { resolveCaptionWindow } from "../../src/lib/captions.js";
 import { loadVodPage } from "../../src/hooks/use-vod-page.js";
 import { VOD_PAGE_SIZE } from "../../src/domain/vod.js";
@@ -154,6 +154,17 @@ test("keeps display formatting and reason localization", () => {
   assert.equal(
     formatChatVolume({ vod_id: "1", title: "", published_at: "", chat_total: 1234, comments_per_hour: 56.7 }),
     "1,234件 / 時間あたり約57件",
+  );
+});
+
+test("uses the generic chat activity label when a YouTube headline is missing", () => {
+  assert.equal(
+    resolveHighlightTitle(
+      undefined,
+      "Chat activity spike around 4h37m30s (z-score=4.562).",
+      "youtube",
+    ),
+    "コメントが集中した場面",
   );
 });
 
