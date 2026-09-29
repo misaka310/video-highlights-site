@@ -150,6 +150,13 @@ export function extractAnoneStatements(cues: CaptionCue[]): AnosaStatement[] {
   return extractPhraseStatements(cues, "あのね");
 }
 
+export function getPhraseEmptyDescription(phrase: "あのさ" | "あのね"): string {
+  if (phrase === "あのさ") {
+    return "この配信では残念ながら「あのさ」は検出されませんでした。";
+  }
+  return `この配信では「${phrase}」は検出されませんでした。`;
+}
+
 export function resolveCaptionWindow(cues: CaptionCue[], positionSec: number): CaptionWindow {
   if (!Array.isArray(cues) || cues.length === 0) {
     return { previous: null, current: null, next: null };
