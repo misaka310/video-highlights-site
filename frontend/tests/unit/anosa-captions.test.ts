@@ -87,14 +87,14 @@ test("extracts complete あのね statements without changing the existing あ�
   assert.deepEqual(extractAnosaStatements(captions), []);
 });
 
-test("includes and flags あのね split across adjacent subtitle cues", () => {
+test("includes あのね split across adjacent subtitle cues", () => {
   const result = extractAnoneStatements([
     cue(80, "これちなみにね、あの", 82),
     cue(82, "ね、多分この後は大丈夫。", 84),
   ]);
 
   assert.deepEqual(result, [
-    { start_sec: 80, end_sec: 84, text: "あのね、多分この後は大丈夫。", boundary_split: true },
+    { start_sec: 80, end_sec: 84, text: "あのね、多分この後は大丈夫。" },
   ]);
 });
 
@@ -107,12 +107,12 @@ test("does not join an あのね subtitle split across a gap over five seconds",
   assert.deepEqual(result, []);
 });
 
-test("keeps incomplete あのね caption candidates visible and marked as fragments", () => {
+test("keeps incomplete あのね caption candidates visible", () => {
   const result = extractAnoneStatements([
     cue(100, "前置き。あのね、その話なんだけど"),
   ]);
 
   assert.deepEqual(result, [
-    { start_sec: 100, end_sec: 102, text: "あのね、その話なんだけど", partial: true },
+    { start_sec: 100, end_sec: 102, text: "あのね、その話なんだけど" },
   ]);
 });

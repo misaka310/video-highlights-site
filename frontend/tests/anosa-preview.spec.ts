@@ -150,11 +150,9 @@ test("keeps あのさ and あのね in separate right-rail tabs", async ({ page 
   await expect(anoneItems).toHaveCount(3);
   await expect(anoneItems.locator(".anosa-transcript")).toHaveText([
     "あのね、今回は見つけやすい発話です。",
-    "あのね、多分この後は大丈夫。字幕境界",
-    "あのね、まだ続く字幕断片",
+    "あのね、多分この後は大丈夫。",
+    "あのね、まだ続く",
   ]);
-  await expect(anoneItems.nth(1).locator(".phrase-marker")).toHaveText("字幕境界");
-  await expect(anoneItems.nth(2).locator(".phrase-marker")).toHaveText("字幕断片");
   await expect(page.getByText("あのさ、これは絶対やった方がいい。", { exact: true })).toHaveCount(0);
 
   await anoneItems.nth(1).click();
