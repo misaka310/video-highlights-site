@@ -27,6 +27,7 @@ export type AnosaStatement = {
 
 const ANOSA_RE = /あのさ(?:ぁ|あ)?/;
 const ANONE_RE = /あのね(?:ぇ|え)?/;
+const ANONE_MAX_CHARACTERS = 110;
 const SENTENCE_END_RE = /[。！？!?](?:[」』】）》〉〕］】]*)$/;
 const NOISE_ONLY_RE = /^\[[^\]]+\]$/;
 const JAPANESE_SPACE_RE = /(?<=[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー])\s+(?=[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー])/gu;
@@ -55,9 +56,20 @@ function appendCaptionText(base: string, incoming: string): string {
   return normalizeCaptionText(`${left}${right}`);
 }
 
+function capCaptionText(text: string, maxCharacters?: number): { text: string; truncated: boolean } {
+  if (maxCharacters === undefined) return { text, truncated: false };
+  const characters = Array.from(text);
+  if (characters.length <= maxCharacters) return { text, truncated: false };
+  return {
+    text: `${characters.slice(0, maxCharacters - 1).join("")}…`,
+    truncated: true,
+  };
+}
+
 function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あのね"): AnosaStatement[] {
   if (!Array.isArray(cues) || cues.length === 0) return [];
 
+  const maxCharacters = phrase === "あのね" ? ANONE_MAX_CHARACTERS : undefined;
   const results: AnosaStatement[] = [];
   for (let index = 0; index < cues.length; index += 1) {
     const source = cues[index];
@@ -66,6 +78,7 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
     let text = "";
     let endSec = Number(source?.end_sec ?? source?.start_sec ?? 0);
     let cursor = index + 1;
+    let truncated = false;
 
     if (match && match.index >= 0) {
       text = sourceText.slice(match.index);
@@ -82,12 +95,19 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
       continue;
     }
 
-    while (!SENTENCE_END_RE.test(text) && cursor < cues.length && cursor <= index + 8 && text.length < 220) {
+    const initialText = capCaptionText(text, maxCharacters);
+    text = initialText.text;
+    truncated = initialText.truncated;
+
+    while (!truncated && !SENTENCE_END_RE.test(text) && cursor < cues.length && cursor <= index + 8 && text.length < 220) {
       const next = cues[cursor];
       const nextStartSec = Number(next?.start_sec ?? endSec);
       if (nextStartSec - endSec > 5) break;
       const nextText = normalizeCaptionText(next?.text || "");
-      text = appendCaptionText(text, nextText);
+      const combinedText = appendCaptionText(text, nextText);
+      const cappedText = capCaptionText(combinedText, maxCharacters);
+      text = cappedText.text;
+      truncated = cappedText.truncated;
       endSec = Math.max(endSec, Number(next?.end_sec ?? next?.start_sec ?? endSec));
       cursor += 1;
     }
