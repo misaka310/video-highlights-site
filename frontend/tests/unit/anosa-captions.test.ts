@@ -116,3 +116,22 @@ test("keeps incomplete あのね caption candidates visible", () => {
     { start_sec: 100, end_sec: 102, text: "あのね、その話なんだけど" },
   ]);
 });
+
+test("hard caps a long あのね cue at 110 characters including the ellipsis", () => {
+  const result = extractAnoneStatements([
+    cue(110, `あのね、${"長い文章".repeat(60)}`),
+  ]);
+
+  assert.equal(Array.from(result[0]?.text || "").length, 110);
+  assert.ok(result[0]?.text.endsWith("…"));
+});
+
+test("hard caps あのね text when the next caption cue exceeds the remaining length", () => {
+  const result = extractAnoneStatements([
+    cue(120, "あのね、短い前置き"),
+    cue(122, "これから先も長く続く文章".repeat(30)),
+  ]);
+
+  assert.equal(Array.from(result[0]?.text || "").length, 110);
+  assert.ok(result[0]?.text.endsWith("…"));
+});
