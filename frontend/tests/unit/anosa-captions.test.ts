@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extractAnosaStatements, type CaptionCue } from "../../src/lib/captions.js";
+import { extractAnoneStatements, extractAnosaStatements, type CaptionCue } from "../../src/lib/captions.js";
 
 function cue(start: number, text: string, end = start + 2): CaptionCue {
   return { start_sec: start, end_sec: end, text };
@@ -75,4 +75,44 @@ test("noise-only cues do not break sentence reconstruction", () => {
   ]);
 
   assert.equal(result[0]?.text, "あのさ、続きがここまで来れば意味が通る。");
+});
+
+test("extracts complete あのね statements without changing the existing あのさ list", () => {
+  const captions = [cue(70, "前置き。あのね、これは見つけやすい。")];
+  const result = extractAnoneStatements(captions);
+
+  assert.deepEqual(result, [
+    { start_sec: 70, end_sec: 72, text: "あのね、これは見つけやすい。" },
+  ]);
+  assert.deepEqual(extractAnosaStatements(captions), []);
+});
+
+test("includes and flags あのね split across adjacent subtitle cues", () => {
+  const result = extractAnoneStatements([
+    cue(80, "これちなみにね、あの", 82),
+    cue(82, "ね、多分この後は大丈夫。", 84),
+  ]);
+
+  assert.deepEqual(result, [
+    { start_sec: 80, end_sec: 84, text: "あのね、多分この後は大丈夫。", boundary_split: true },
+  ]);
+});
+
+test("does not join an あのね subtitle split across a gap over five seconds", () => {
+  const result = extractAnoneStatements([
+    cue(90, "これちなみにね、あの", 91),
+    cue(97, "ね、多分この後は大丈夫。", 99),
+  ]);
+
+  assert.deepEqual(result, []);
+});
+
+test("keeps incomplete あのね caption candidates visible and marked as fragments", () => {
+  const result = extractAnoneStatements([
+    cue(100, "前置き。あのね、その話なんだけど"),
+  ]);
+
+  assert.deepEqual(result, [
+    { start_sec: 100, end_sec: 102, text: "あのね、その話なんだけど", partial: true },
+  ]);
 });

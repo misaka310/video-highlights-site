@@ -14,6 +14,7 @@ type VodRailProps = {
   segments: HighlightSegment[];
   activeSegmentId: string;
   anosaStatements: AnosaStatement[];
+  anoneStatements: AnosaStatement[];
   captionsAvailable: boolean;
   durationSec: number;
   playerState: string;
@@ -22,7 +23,7 @@ type VodRailProps = {
   totalCount: number;
   onSelectVod: (vodId: string) => void;
   onSelectSegment: (segment: HighlightSegment) => void;
-  onSelectAnosa: (statement: AnosaStatement) => void;
+  onSelectPhrase: (statement: AnosaStatement) => void;
   onSetPage: (page: number) => void;
 };
 
@@ -32,6 +33,7 @@ export function VodRail({
   segments,
   activeSegmentId,
   anosaStatements,
+  anoneStatements,
   captionsAvailable,
   durationSec,
   playerState,
@@ -40,14 +42,16 @@ export function VodRail({
   totalCount,
   onSelectVod,
   onSelectSegment,
-  onSelectAnosa,
+  onSelectPhrase,
   onSetPage,
 }: VodRailProps) {
-  const [contentTab, setContentTab] = useState<"highlights" | "anosa">("highlights");
+  const [contentTab, setContentTab] = useState<"highlights" | "anosa" | "anone">("highlights");
   const tabItems = vods.map((vod) => ({
     value: vod.vod_id,
     label: formatDate(vod.published_at, { month: "numeric", day: "numeric", weekday: "short" }),
   }));
+  const phrase = contentTab === "anosa" ? "あのさ" : "あのね";
+  const phraseStatements = contentTab === "anosa" ? anosaStatements : anoneStatements;
 
   return (
     <aside className="highlight-column" aria-label="VODと見どころ一覧">
@@ -76,6 +80,16 @@ export function VodRail({
                 あのさ
                 <span>{captionsAvailable ? anosaStatements.length : "—"}</span>
               </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={contentTab === "anone"}
+                className={contentTab === "anone" ? "is-active" : ""}
+                onClick={() => setContentTab("anone")}
+              >
+                あのね
+                <span>{captionsAvailable ? anoneStatements.length : "—"}</span>
+              </button>
             </div>
 
             {contentTab === "highlights" ? (
@@ -89,10 +103,11 @@ export function VodRail({
               />
             ) : (
               <AnosaList
-                statements={anosaStatements}
+                phrase={phrase}
+                statements={phraseStatements}
                 positionSec={positionSec}
                 captionsAvailable={captionsAvailable}
-                onSelect={onSelectAnosa}
+                onSelect={onSelectPhrase}
               />
             )}
           </div>

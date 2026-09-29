@@ -9,7 +9,7 @@ import { useMediaQuery } from "./hooks/use-media-query.js";
 import { useSiteMetadata } from "./hooks/use-site-metadata.js";
 import { useVodPage } from "./hooks/use-vod-page.js";
 import { createActivityGeometry, createActivityOverlay } from "./lib/activity-geometry.js";
-import { extractAnosaStatements, resolveCaptionWindow, type AnosaStatement, type CaptionData } from "./lib/captions.js";
+import { extractAnoneStatements, extractAnosaStatements, resolveCaptionWindow, type AnosaStatement, type CaptionData } from "./lib/captions.js";
 import { createVodSwitchPlaybackOptions } from "./player/playback-request.js";
 import { getVodProvider, pageUrl, parsePageSearch, resolveDurationSec } from "./lib/vod-data.js";
 import { TwitchPlayer, type TwitchPlayerHandle } from "./twitch-player";
@@ -105,6 +105,10 @@ export default function App() {
     () => extractAnosaStatements(captions?.cues || []),
     [captions?.cues],
   );
+  const anoneStatements = useMemo(
+    () => extractAnoneStatements(captions?.cues || []),
+    [captions?.cues],
+  );
   const captionWindow = useMemo(
     () => resolveCaptionWindow(captions?.cues || [], positionSec),
     [captions?.cues, positionSec],
@@ -142,7 +146,7 @@ export default function App() {
     requestUserPlayback(activeVod?.vod_id || "", segment.start_sec);
   }
 
-  function selectAnosa(statement: AnosaStatement) {
+  function selectPhrase(statement: AnosaStatement) {
     setActiveSegmentId("");
     requestUserPlayback(activeVod?.vod_id || "", statement.start_sec);
   }
@@ -223,6 +227,7 @@ export default function App() {
           segments={segments}
           activeSegmentId={activeSegment?.id || ""}
           anosaStatements={anosaStatements}
+          anoneStatements={anoneStatements}
           captionsAvailable={Boolean(captions)}
           durationSec={durationSec}
           playerState={playerState}
@@ -231,7 +236,7 @@ export default function App() {
           totalCount={data.totalCount}
           onSelectVod={selectVod}
           onSelectSegment={selectSegment}
-          onSelectAnosa={selectAnosa}
+          onSelectPhrase={selectPhrase}
           onSetPage={setPage}
         />
       </main>
