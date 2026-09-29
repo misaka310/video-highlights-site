@@ -1,6 +1,6 @@
 import { Empty } from "@cloudflare/kumo";
 import { QuotesIcon } from "@phosphor-icons/react";
-import type { AnosaStatement } from "../lib/captions.js";
+import { getPhraseEmptyDescription, type AnosaStatement } from "../lib/captions.js";
 import { formatClock } from "../lib/formatters.js";
 
 type AnosaListProps = {
@@ -17,7 +17,7 @@ export function AnosaList({ phrase, statements, positionSec, captionsAvailable, 
   }
 
   if (statements.length === 0) {
-    return <Empty title={`「${phrase}」なし`} description={`この配信では「${phrase}」は検出されませんでした。`} />;
+    return <Empty title={`「${phrase}」なし`} description={getPhraseEmptyDescription(phrase)} />;
   }
 
   return (

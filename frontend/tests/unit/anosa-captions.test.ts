@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { extractAnoneStatements, extractAnosaStatements, type CaptionCue } from "../../src/lib/captions.js";
+import {
+  extractAnoneStatements,
+  extractAnosaStatements,
+  getPhraseEmptyDescription,
+  type CaptionCue,
+} from "../../src/lib/captions.js";
 
 function cue(start: number, text: string, end = start + 2): CaptionCue {
   return { start_sec: start, end_sec: end, text };
@@ -107,6 +112,14 @@ test("extracts complete あのね statements without changing the existing あ�
     { start_sec: 70, end_sec: 72, text: "あのね、これは見つけやすい。" },
   ]);
   assert.deepEqual(extractAnosaStatements(captions), []);
+});
+
+test("keeps the あのさ empty message and uses a separate あのね message", () => {
+  assert.equal(
+    getPhraseEmptyDescription("あのさ"),
+    "この配信では残念ながら「あのさ」は検出されませんでした。",
+  );
+  assert.equal(getPhraseEmptyDescription("あのね"), "この配信では「あのね」は検出されませんでした。");
 });
 
 test("includes あのね split across adjacent subtitle cues", () => {
