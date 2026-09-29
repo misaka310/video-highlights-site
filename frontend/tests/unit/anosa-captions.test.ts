@@ -67,6 +67,28 @@ test("unnatural spaces inside Japanese text are removed", () => {
   assert.equal(result[0]?.text, "あのさ、これはちゃんと読める。");
 });
 
+test("caps a long complete あのさ cue at 110 characters including the ellipsis", () => {
+  const result = extractAnosaStatements([
+    cue(55, `あのさ、${"長い文章".repeat(60)}。`),
+  ]);
+
+  assert.equal(Array.from(result[0]?.text || "").length, 110);
+  assert.ok(result[0]?.text.endsWith("…"));
+});
+
+test("reconstructs a long あのさ statement through its ending before capping the displayed text", () => {
+  const result = extractAnosaStatements([
+    cue(56, `あのさ、${"長い文章".repeat(20)}`, 58),
+    cue(58, "さらに続く話".repeat(20), 60),
+    cue(60, "最後に。", 62),
+  ]);
+
+  assert.equal(result.length, 1);
+  assert.equal(Array.from(result[0]?.text || "").length, 110);
+  assert.ok(result[0]?.text.endsWith("…"));
+  assert.equal(result[0]?.end_sec, 62);
+});
+
 test("noise-only cues do not break sentence reconstruction", () => {
   const result = extractAnosaStatements([
     cue(60, "あのさ、続きが"),

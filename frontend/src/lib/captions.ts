@@ -27,7 +27,7 @@ export type AnosaStatement = {
 
 const ANOSA_RE = /あのさ(?:ぁ|あ)?/;
 const ANONE_RE = /あのね(?:ぇ|え)?/;
-const ANONE_MAX_CHARACTERS = 110;
+const PHRASE_MAX_CHARACTERS = 110;
 const SENTENCE_END_RE = /[。！？!?](?:[」』】）》〉〕］】]*)$/;
 const NOISE_ONLY_RE = /^\[[^\]]+\]$/;
 const JAPANESE_SPACE_RE = /(?<=[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー])\s+(?=[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}ー])/gu;
@@ -69,7 +69,7 @@ function capCaptionText(text: string, maxCharacters?: number): { text: string; t
 function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あのね"): AnosaStatement[] {
   if (!Array.isArray(cues) || cues.length === 0) return [];
 
-  const maxCharacters = phrase === "あのね" ? ANONE_MAX_CHARACTERS : undefined;
+  const maxCharacters = phrase === "あのね" ? PHRASE_MAX_CHARACTERS : undefined;
   const results: AnosaStatement[] = [];
   for (let index = 0; index < cues.length; index += 1) {
     const source = cues[index];
@@ -120,7 +120,7 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
     const statement: AnosaStatement = {
       start_sec: startSec,
       end_sec: Math.max(startSec, endSec),
-      text,
+      text: capCaptionText(text, PHRASE_MAX_CHARACTERS).text,
     };
 
     const previous = results[results.length - 1];
