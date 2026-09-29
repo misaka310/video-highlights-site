@@ -157,8 +157,6 @@ h1 { margin: 0; font-size: clamp(1.22rem, 2vw, 1.62rem); letter-spacing: -0.035e
 .anosa-time { display: flex; align-items: center; gap: 5px; align-self: start; color: #b99bdd; font-size: .72rem; font-weight: 760; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .anosa-time svg { width: 13px; height: 13px; flex: 0 0 auto; }
 .anosa-transcript { min-width: 0; color: #dce2ec; font-size: .78rem; line-height: 1.45; overflow-wrap: anywhere; }
-.phrase-marker { display: inline-block; margin-inline-start: 6px; padding: 1px 5px; border: 1px solid #51452d; border-radius: 999px; color: #d8be7d; font-size: .62rem; line-height: 1.35; vertical-align: .08em; white-space: nowrap; }
-
 .stream-summary { min-width: 0; }
 .stream-summary h3 { margin: 0 0 8px; font-size: .82rem; font-weight: 700; }
 .stream-summary dl { margin: 0; display: grid; gap: 0; }

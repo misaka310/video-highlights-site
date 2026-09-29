@@ -41,11 +41,7 @@ export function AnosaList({ phrase, statements, positionSec, captionsAvailable, 
               <QuotesIcon weight="fill" />
               {formatClock(statement.start_sec)}
             </span>
-            <span className="anosa-transcript">
-              {statement.text}
-              {statement.boundary_split ? <span className="phrase-marker">字幕境界</span> : null}
-              {statement.partial ? <span className="phrase-marker">字幕断片</span> : null}
-            </span>
+            <span className="anosa-transcript">{statement.text}</span>
           </button>
         );
       })}

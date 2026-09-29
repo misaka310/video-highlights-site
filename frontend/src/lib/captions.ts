@@ -23,8 +23,6 @@ export type AnosaStatement = {
   start_sec: number;
   end_sec: number;
   text: string;
-  boundary_split?: boolean;
-  partial?: boolean;
 };
 
 const ANOSA_RE = /あのさ(?:ぁ|あ)?/;
@@ -68,7 +66,6 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
     let text = "";
     let endSec = Number(source?.end_sec ?? source?.start_sec ?? 0);
     let cursor = index + 1;
-    let boundarySplit = false;
 
     if (match && match.index >= 0) {
       text = sourceText.slice(match.index);
@@ -81,7 +78,6 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
       text = appendCaptionText("あの", nextText);
       endSec = Math.max(endSec, Number(next?.end_sec ?? next?.start_sec ?? endSec));
       cursor += 1;
-      boundarySplit = true;
     } else {
       continue;
     }
@@ -105,8 +101,6 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
       start_sec: startSec,
       end_sec: Math.max(startSec, endSec),
       text,
-      ...(boundarySplit ? { boundary_split: true } : {}),
-      ...(!complete ? { partial: true } : {}),
     };
 
     const previous = results[results.length - 1];
