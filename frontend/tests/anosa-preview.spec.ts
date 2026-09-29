@@ -10,7 +10,7 @@ test.beforeAll(() => {
   mkdirSync(artifactsDirectory, { recursive: true });
 });
 
-test("keeps all synchronized captions and shows あのさ as a separate right-rail tab", async ({ page }) => {
+test("keeps あのさ and あのね in separate right-rail tabs", async ({ page }) => {
   await installFakeYoutube(page);
 
   await page.route("**/site-config.json", async (route) => {
@@ -82,6 +82,11 @@ test("keeps all synchronized captions and shows あのさ as a separate right-ra
           { start_sec: 32, end_sec: 34, text: "意味が切れて" },
           { start_sec: 50, end_sec: 52, text: "別の話。あのさ、これ は 絶対" },
           { start_sec: 52, end_sec: 54, text: "絶対やった方がいい。" },
+          { start_sec: 60, end_sec: 62, text: "前置き。あのね、今回は見つけやすい" },
+          { start_sec: 62, end_sec: 64, text: "発話です。" },
+          { start_sec: 70, end_sec: 72, text: "これちなみにね、あの" },
+          { start_sec: 72, end_sec: 74, text: "ね、多分この後は大丈夫。" },
+          { start_sec: 80, end_sec: 82, text: "前置き。あのね、まだ続く" },
         ],
       }),
     });
@@ -108,7 +113,7 @@ test("keeps all synchronized captions and shows あのさ as a separate right-ra
 
   const railTabs = page.getByRole("tablist", { name: "見どころ表示" });
   await expect(railTabs).toBeVisible();
-  await expect(railTabs.getByRole("tab")).toHaveText(["見どころ1", "あのさ2"]);
+  await expect(railTabs.getByRole("tab")).toHaveText(["見どころ1", "あのさ2", "あのね3"]);
   await expect(page.getByText("確認用見どころ", { exact: true })).toBeVisible();
 
   const listCard = page.locator(".vod-list-card");
@@ -139,6 +144,21 @@ test("keeps all synchronized captions and shows あのさ as a separate right-ra
 
   await anosaItems.nth(1).click();
   await expect(anosaItems.nth(1)).toHaveAttribute("aria-pressed", "true");
+
+  await railTabs.getByRole("tab", { name: /あのね/ }).click();
+  const anoneItems = page.locator(".anosa-item");
+  await expect(anoneItems).toHaveCount(3);
+  await expect(anoneItems.locator(".anosa-transcript")).toHaveText([
+    "あのね、今回は見つけやすい発話です。",
+    "あのね、多分この後は大丈夫。字幕境界",
+    "あのね、まだ続く字幕断片",
+  ]);
+  await expect(anoneItems.nth(1).locator(".phrase-marker")).toHaveText("字幕境界");
+  await expect(anoneItems.nth(2).locator(".phrase-marker")).toHaveText("字幕断片");
+  await expect(page.getByText("あのさ、これは絶対やった方がいい。", { exact: true })).toHaveCount(0);
+
+  await anoneItems.nth(1).click();
+  await expect(anoneItems.nth(1)).toHaveAttribute("aria-pressed", "true");
 
   const layout = await page.evaluate(() => ({
     innerWidth: window.innerWidth,

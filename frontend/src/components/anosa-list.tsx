@@ -4,19 +4,20 @@ import type { AnosaStatement } from "../lib/captions.js";
 import { formatClock } from "../lib/formatters.js";
 
 type AnosaListProps = {
+  phrase: "あのさ" | "あのね";
   statements: AnosaStatement[];
   positionSec: number;
   captionsAvailable: boolean;
   onSelect: (statement: AnosaStatement) => void;
 };
 
-export function AnosaList({ statements, positionSec, captionsAvailable, onSelect }: AnosaListProps) {
+export function AnosaList({ phrase, statements, positionSec, captionsAvailable, onSelect }: AnosaListProps) {
   if (!captionsAvailable) {
     return <Empty title="字幕なし" description="この配信ではYouTube字幕を取得できていません。" />;
   }
 
   if (statements.length === 0) {
-    return <Empty title="「あのさ」なし" description="この配信では残念ながら「あのさ」は検出されませんでした。" />;
+    return <Empty title={`「${phrase}」なし`} description={`この配信では「${phrase}」は検出されませんでした。`} />;
   }
 
   return (
@@ -40,7 +41,11 @@ export function AnosaList({ statements, positionSec, captionsAvailable, onSelect
               <QuotesIcon weight="fill" />
               {formatClock(statement.start_sec)}
             </span>
-            <span className="anosa-transcript">{statement.text}</span>
+            <span className="anosa-transcript">
+              {statement.text}
+              {statement.boundary_split ? <span className="phrase-marker">字幕境界</span> : null}
+              {statement.partial ? <span className="phrase-marker">字幕断片</span> : null}
+            </span>
           </button>
         );
       })}
