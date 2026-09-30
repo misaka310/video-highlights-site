@@ -1,0 +1,76 @@
+{
+  "vod_id": "ekhHnGl2pAg",
+  "vod_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg",
+  "title": "【感想会】ダスクブラッドネットワークテストの興奮を共有する会3日目【The Duskbloods/ダスクブラッド】",
+  "published_at": "2026-08-22T00:00:00+00:00",
+  "thumbnail_url": "https://i.ytimg.com/vi/ekhHnGl2pAg/maxresdefault.jpg",
+  "duration_sec": 4944,
+  "count": 3,
+  "chat_total": 952,
+  "comments_per_hour": 693.204,
+  "items": [
+    {
+      "rank": 1,
+      "id": "ekhHnGl2pAg_2750_2800",
+      "start_sec": 2750,
+      "end_sec": 2800,
+      "duration_sec": 50,
+      "start_time": "00:45:50",
+      "end_time": "00:46:40",
+      "reason": "Chat activity spike around 0h45m50s (z-score=3.356).",
+      "headline": "メニュー音が止まらず設定オフ",
+      "tags": [],
+      "watch_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg&t=2750s",
+      "screenshot_url": "/data/segment-thumbnails/ekhHnGl2pAg/ekhHnGl2pAg_2750_2800.webp"
+    },
+    {
+      "rank": 2,
+      "id": "ekhHnGl2pAg_970_1020",
+      "start_sec": 970,
+      "end_sec": 1020,
+      "duration_sec": 50,
+      "start_time": "00:16:10",
+      "end_time": "00:17:00",
+      "reason": "Chat activity spike around 0h16m10s (z-score=3.356).",
+      "headline": "叫びパリー吸血で倒した瞬間",
+      "tags": [],
+      "watch_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg&t=970s",
+      "screenshot_url": "/data/segment-thumbnails/ekhHnGl2pAg/ekhHnGl2pAg_970_1020.webp"
+    },
+    {
+      "rank": 3,
+      "id": "ekhHnGl2pAg_4510_4560",
+      "start_sec": 4510,
+      "end_sec": 4560,
+      "duration_sec": 50,
+      "start_time": "01:15:10",
+      "end_time": "01:16:00",
+      "reason": "Chat activity spike around 1h15m10s (z-score=2.695).",
+      "headline": "フレームレート60前後の感覚",
+      "tags": [],
+      "watch_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg&t=4510s",
+      "screenshot_url": "/data/segment-thumbnails/ekhHnGl2pAg/ekhHnGl2pAg_4510_4560.webp"
+    }
+  ],
+  "activity_map": {
+    "bucket_sec": 10,
+    "duration_sec": 4946,
+    "last_comment_sec": 4946,
+    "buckets": [
+      1, 0, 0, 0, 0, 0, 0, 3, 1, 4, 2, 0, 3, 0, 0, 3, 1, 5, 1, 1, 2, 0, 2, 3, 1, 0, 1, 2, 1, 2, 0, 0, 1, 2, 3, 3, 2, 3, 2, 2,
+      0, 4, 2, 2, 1, 3, 3, 2, 4, 4, 2, 1, 3, 4, 2, 4, 3, 2, 0, 2, 1, 4, 6, 2, 3, 1, 1, 1, 4, 3, 1, 2, 3, 2, 0, 3, 3, 1, 1, 0,
+      4, 4, 4, 0, 2, 3, 6, 5, 4, 3, 1, 2, 0, 4, 0, 4, 0, 4, 4, 7, 4, 0, 5, 2, 2, 4, 1, 3, 1, 0, 3, 1, 6, 6, 3, 2, 1, 1, 2, 2,
+      4, 1, 3, 3, 3, 2, 3, 0, 3, 1, 4, 1, 0, 4, 1, 1, 3, 3, 4, 1, 5, 2, 1, 3, 5, 5, 2, 5, 2, 1, 3, 5, 3, 3, 3, 2, 2, 2, 1, 2,
+      2, 3, 0, 2, 3, 3, 3, 2, 2, 1, 1, 0, 1, 3, 2, 1, 0, 2, 2, 2, 6, 5, 3, 1, 1, 1, 5, 5, 0, 3, 3, 1, 2, 0, 1, 4, 4, 4, 0, 2,
+      3, 2, 6, 1, 2, 2, 2, 3, 4, 2, 4, 4, 6, 3, 2, 3, 5, 3, 5, 3, 4, 3, 1, 2, 4, 2, 4, 1, 5, 1, 4, 1, 3, 0, 2, 1, 0, 3, 1, 0,
+      0, 4, 3, 3, 1, 1, 1, 2, 2, 2, 1, 6, 4, 5, 1, 1, 1, 2, 2, 1, 2, 2, 1, 3, 3, 5, 2, 3, 3, 2, 1, 3, 0, 0, 1, 0, 0, 7, 3, 3,
+      4, 1, 2, 2, 1, 0, 0, 1, 3, 2, 3, 1, 1, 2, 2, 1, 1, 0, 1, 3, 0, 0, 2, 1, 1, 3, 1, 1, 1, 1, 0, 3, 0, 0, 2, 1, 0, 2, 1, 0,
+      0, 4, 0, 1, 1, 1, 0, 3, 4, 2, 0, 2, 0, 2, 1, 1, 2, 2, 0, 0, 1, 1, 1, 2, 2, 1, 0, 3, 2, 1, 3, 1, 0, 1, 0, 1, 0, 2, 1, 5,
+      2, 1, 0, 2, 2, 4, 0, 1, 2, 2, 1, 0, 3, 2, 1, 1, 2, 3, 1, 3, 5, 0, 2, 0, 2, 2, 3, 4, 1, 0, 1, 2, 3, 1, 1, 0, 1, 1, 0, 0,
+      3, 4, 0, 2, 0, 1, 0, 1, 0, 2, 1, 4, 4, 2, 1, 2, 1, 1, 6, 4, 1, 1, 0, 0, 0, 3, 1, 2, 0, 2, 4, 1, 1, 2, 3, 2, 2, 1, 1, 2,
+      1, 0, 1, 2, 2, 0, 1, 0, 1, 1, 1, 1, 1, 6, 3, 1, 1, 1, 1, 4, 0, 1, 1, 2, 0, 1, 2, 0, 4, 0, 0, 1, 0, 1, 1, 0, 2, 4, 0, 1,
+      3, 1, 3, 2, 4, 1, 1, 1, 1, 3, 2, 2, 1, 1, 2, 0
+    ]
+  },
+  "provider": "youtube"
+}
