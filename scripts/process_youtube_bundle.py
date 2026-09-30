@@ -18,15 +18,20 @@ from typing import Any
 
 from transcribe_segments import build_segment_screenshot_file_path, build_segment_screenshot_public_path
 from update_vods import (
+    ANALYSIS_VERSION,
     DATA_DIR,
     OUT_PATH,
-    analyze_video_entry,
+    build_youtube_watch_url,
     load_processed_cache,
     write_processed_cache,
     write_public_data,
 )
-from vod_sources import ChatFetchResult
-from vod_serialization import filter_youtube_videos
+from vod_highlights import DetectConfig, build_activity_map, format_hhmmss, sec_to_twitch_timestamp
+from vod_serialization import (
+    calculate_comments_per_hour,
+    filter_youtube_videos,
+    resolve_comments_per_hour_duration_sec,
+)
 from youtube_enrichment import enrich_youtube_video
 from youtube_handoff import extract_material_bundle
 from youtube_captions import write_captions_payload
@@ -36,31 +41,63 @@ def _interval_key(start_sec: Any, end_sec: Any) -> tuple[int, int]:
     return int(start_sec), int(end_sec)
 
 
-def _process_manifest(manifest: dict[str, Any], root: Path, active_now: datetime) -> dict[str, Any]:
+def _build_selected_items(video_id: str, selected: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    items = []
+    for item in selected:
+        start_sec, end_sec = _interval_key(item["start_sec"], item["end_sec"])
+        score = float(item.get("score") or 0.0)
+        items.append(
+            {
+                "rank": int(item["rank"]),
+                "id": str(item["id"]),
+                "start_sec": start_sec,
+                "end_sec": end_sec,
+                "duration_sec": end_sec - start_sec,
+                "start_time": format_hhmmss(start_sec),
+                "end_time": format_hhmmss(end_sec),
+                "reason": f"Chat activity spike around {sec_to_twitch_timestamp(start_sec)} (z-score={score}).",
+                "tags": list(item.get("tags") or []),
+                "watch_url": build_youtube_watch_url(video_id, start_sec),
+            }
+        )
+    return items
+
+
+def _build_oracle_analysis(manifest: dict[str, Any], active_now: datetime) -> dict[str, Any]:
     video = dict(manifest["video"])
-    selected = list(manifest["selected_highlights"])
     offsets = [
         {"content_offset_seconds": float(item["content_offset_seconds"])}
         for item in manifest["chat_offsets"]
     ]
-    chat = ChatFetchResult(comments=offsets, duration_sec=video.get("duration_sec"))
-
-    analyzed, status = analyze_video_entry(
-        video,
-        active_now,
-        chat_data_override=chat,
-        metadata_override=video,
+    items = _build_selected_items(str(video["vod_id"]), list(manifest["selected_highlights"]))
+    activity_map = build_activity_map(offsets, DetectConfig(), video.get("duration_sec"))
+    duration_sec = resolve_comments_per_hour_duration_sec(
+        chat_data_duration_sec=video.get("duration_sec"),
+        activity_map_duration_sec=activity_map.get("duration_sec"),
     )
-    if not analyzed or status != "analyzed":
-        raise RuntimeError("Oracle material did not produce publishable highlights")
-
-    selected_intervals = {_interval_key(item["start_sec"], item["end_sec"]) for item in selected}
-    analyzed_intervals = {
-        _interval_key(item["start_sec"], item["end_sec"])
-        for item in analyzed.get("items") or []
+    analyzed: dict[str, Any] = {
+        "provider": "youtube",
+        "vod_id": str(video["vod_id"]),
+        "vod_url": video.get("vod_url") or f"https://www.youtube.com/watch?v={video['vod_id']}",
+        "title": video.get("title") or "",
+        "published_at": video.get("published_at") or "",
+        "thumbnail_url": video.get("thumbnail_url") or "",
+        "duration_sec": duration_sec,
+        "count": len(items),
+        "chat_total": len(offsets),
+        "comments_per_hour": calculate_comments_per_hour(len(offsets), duration_sec),
+        "items": items,
+        "activity_map": activity_map,
+        "analysis_version": ANALYSIS_VERSION,
+        "analyzed_at": active_now.isoformat(timespec="seconds"),
     }
-    if selected_intervals != analyzed_intervals:
-        raise RuntimeError("Oracle-selected intervals do not match the repository detector")
+    return analyzed
+
+
+def _process_manifest(manifest: dict[str, Any], root: Path, active_now: datetime) -> dict[str, Any]:
+    video = dict(manifest["video"])
+    selected = list(manifest["selected_highlights"])
+    analyzed = _build_oracle_analysis(manifest, active_now)
 
     item_by_interval = {
         _interval_key(item["start_sec"], item["end_sec"]): item
