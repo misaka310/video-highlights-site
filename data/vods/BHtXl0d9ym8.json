@@ -1,0 +1,56 @@
+{
+  "vod_id": "BHtXl0d9ym8",
+  "vod_url": "https://www.youtube.com/watch?v=BHtXl0d9ym8",
+  "title": "【GRWM】ネットワークテストを完ぺきにこなすためルールを再確認いたします→行ってきます②【The Duskbloods/ダスクブラッド】",
+  "published_at": "2026-08-22T00:00:00+00:00",
+  "thumbnail_url": "https://i.ytimg.com/vi/BHtXl0d9ym8/maxresdefault.jpg",
+  "duration_sec": 2718,
+  "count": 2,
+  "chat_total": 245,
+  "comments_per_hour": 324.503,
+  "items": [
+    {
+      "rank": 1,
+      "id": "BHtXl0d9ym8_2350_2400",
+      "start_sec": 2350,
+      "end_sec": 2400,
+      "duration_sec": 50,
+      "start_time": "00:39:10",
+      "end_time": "00:40:00",
+      "reason": "Chat activity spike around 0h39m10s (z-score=3.209).",
+      "headline": "同じマッチに入るとハプニング",
+      "tags": [],
+      "watch_url": "https://www.youtube.com/watch?v=BHtXl0d9ym8&t=2350s",
+      "screenshot_url": "/data/segment-thumbnails/BHtXl0d9ym8/BHtXl0d9ym8_2350_2400.webp"
+    },
+    {
+      "rank": 2,
+      "id": "BHtXl0d9ym8_1050_1100",
+      "start_sec": 1050,
+      "end_sec": 1100,
+      "duration_sec": 50,
+      "start_time": "00:17:30",
+      "end_time": "00:18:20",
+      "reason": "Chat activity spike around 0h17m30s (z-score=3.209).",
+      "headline": "大きが複数回言及されたシーン",
+      "tags": [],
+      "watch_url": "https://www.youtube.com/watch?v=BHtXl0d9ym8&t=1050s",
+      "screenshot_url": "/data/segment-thumbnails/BHtXl0d9ym8/BHtXl0d9ym8_1050_1100.webp"
+    }
+  ],
+  "activity_map": {
+    "bucket_sec": 10,
+    "duration_sec": 2718,
+    "last_comment_sec": 2711,
+    "buckets": [
+      1, 0, 0, 0, 3, 2, 0, 0, 2, 1, 0, 3, 0, 1, 0, 1, 1, 3, 2, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 2, 1, 0, 1, 2, 1, 3, 0, 1, 0,
+      0, 1, 1, 1, 1, 0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 2, 2, 0, 0, 0, 1, 2, 0, 1, 0, 0, 1, 0, 0, 0, 0, 2, 0, 1, 0, 0, 1, 0, 2,
+      0, 2, 0, 1, 0, 0, 0, 3, 0, 0, 1, 0, 2, 2, 0, 0, 2, 0, 0, 0, 2, 1, 0, 1, 0, 2, 0, 4, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0,
+      0, 0, 2, 0, 1, 2, 0, 2, 2, 1, 2, 1, 0, 3, 2, 0, 0, 2, 1, 0, 2, 3, 1, 1, 1, 2, 0, 0, 2, 0, 3, 1, 2, 3, 0, 3, 1, 1, 2, 0,
+      0, 0, 3, 1, 0, 1, 0, 0, 2, 1, 1, 0, 0, 1, 2, 2, 2, 1, 2, 2, 1, 1, 1, 0, 0, 1, 1, 1, 2, 0, 0, 0, 1, 1, 3, 0, 2, 2, 0, 2,
+      1, 1, 1, 2, 3, 1, 0, 2, 1, 1, 1, 0, 1, 0, 2, 0, 1, 0, 2, 1, 1, 0, 0, 0, 1, 1, 1, 2, 0, 1, 0, 2, 1, 1, 0, 1, 3, 4, 0, 3,
+      0, 1, 2, 1, 0, 1, 0, 1, 2, 3, 1, 0, 1, 0, 1, 0, 2, 0, 0, 0, 3, 0, 2, 0, 3, 0, 0, 1, 0, 1, 0, 1, 0
+    ]
+  },
+  "provider": "youtube"
+}

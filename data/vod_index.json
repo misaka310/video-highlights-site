@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-30T22:47:11+09:00",
+  "updated_at": "2026-10-01T00:45:28+09:00",
   "next_update_at": "2026-10-01T00:00:00+00:00",
   "videos": [
     {
@@ -273,6 +273,71 @@
       "chat_total": 1716,
       "comments_per_hour": 974.231,
       "detail_path": "/data/vods/-8qMP8le5wI.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "XdaSvQoJ4HI",
+      "vod_url": "https://www.youtube.com/watch?v=XdaSvQoJ4HI",
+      "title": "【GRWM】ネットワークテストを完ぺきにこなす準備→行ってきます④【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-23T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/XdaSvQoJ4HI/maxresdefault.jpg",
+      "duration_sec": 2451,
+      "count": 2,
+      "chat_total": 333,
+      "comments_per_hour": 489.106,
+      "detail_path": "/data/vods/XdaSvQoJ4HI.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "ekhHnGl2pAg",
+      "vod_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg",
+      "title": "【感想会】ダスクブラッドネットワークテストの興奮を共有する会3日目【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-22T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/ekhHnGl2pAg/maxresdefault.jpg",
+      "duration_sec": 4944,
+      "count": 3,
+      "chat_total": 952,
+      "comments_per_hour": 693.204,
+      "detail_path": "/data/vods/ekhHnGl2pAg.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "IVoq5mrBmQ8",
+      "vod_url": "https://www.youtube.com/watch?v=IVoq5mrBmQ8",
+      "title": "ダスブラ特番を正座で見る血族集会【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-22T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/IVoq5mrBmQ8/maxresdefault.jpg",
+      "duration_sec": 7175,
+      "count": 3,
+      "chat_total": 1118,
+      "comments_per_hour": 560.948,
+      "detail_path": "/data/vods/IVoq5mrBmQ8.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "baFJ89qu_zY",
+      "vod_url": "https://www.youtube.com/watch?v=baFJ89qu_zY",
+      "title": "【感想会】ダスクブラッドネットワークテストの興奮を共有する会2日目【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-22T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/baFJ89qu_zY/maxresdefault.jpg",
+      "duration_sec": 10172,
+      "count": 3,
+      "chat_total": 3147,
+      "comments_per_hour": 1113.763,
+      "detail_path": "/data/vods/baFJ89qu_zY.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "BHtXl0d9ym8",
+      "vod_url": "https://www.youtube.com/watch?v=BHtXl0d9ym8",
+      "title": "【GRWM】ネットワークテストを完ぺきにこなすためルールを再確認いたします→行ってきます②【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-22T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/BHtXl0d9ym8/maxresdefault.jpg",
+      "duration_sec": 2718,
+      "count": 2,
+      "chat_total": 245,
+      "comments_per_hour": 324.503,
+      "detail_path": "/data/vods/BHtXl0d9ym8.json",
       "provider": "youtube"
     }
   ]
