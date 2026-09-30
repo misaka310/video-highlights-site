@@ -61,7 +61,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 
 - Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から直近60日以内の未処理アーカイブを古い順に最大5件選ぶ。Oracle stateの処理済みIDと`data/vod_index.json`の公開済みIDを除外してから上限を適用し、選んだ配信を1つのbundleへまとめてActionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。GitHub ActionsのcronはYouTube取得経路に使わない。
 - 60日内の未処理が5件を超える場合、古いものから1日最大5件ずつ後続の定期実行へ進む。公開済みは再取得しない。取得に失敗した配信は処理済みとして記録せず、翌日の実行で再試行する。`/streams`確認時点でYouTubeにまだ公開されていない配信や06:07 JST後に公開された配信は、原則として翌日の確認まで待つ。60日より古い配信は対象にしない。
-- OracleのGitHubコード同期は配信取得timerと別責務で、公開GitHubの`main`を**5分間隔**でfast-forward同期する。起動時にも同期し、配信取得サービスが実行中なら競合を避けて次の周期へ送る。同期はcleanな`main` checkout、許可済みorigin、fast-forwardだけを受け入れ、dirty checkout・origin不一致・非fast-forward・通信失敗ではローカル変更を上書きせず、その周期を失敗させて次回に再試行する。配信取得serviceの開始直前にも既存の同期preflightを維持する。
+- OracleのGitHubコード同期は、配信取得serviceの`ExecStartPre`で各起動の直前に行う。毎日06:07 JSTの定期起動では、その時点の公開GitHub `main`をcleanなcheckoutへfast-forwardしてから配信処理を開始する。手動起動でも同じpreflightが先に走る。別の5分間隔コード同期timerは設けない。同期は許可済みorigin、`main` branch、fast-forwardだけを受け入れ、dirty checkout・origin不一致・非fast-forward・通信失敗ではローカル変更を上書きせず、配信処理を開始せずに失敗する。
 - この同期対象はGitHubで`main`へ入ったcommitであり、未mergeのPRやbranchは対象外。Renderの公開反映とは別で、静的サイトの更新は既存のGitHub Actions / Render経路に従う。
 - yt-dlpがライブチャットJSONを生成した後に付随形式のHTTP 403で終了する場合は、生成済みJSONが非空であることを検証して処理を継続する。JSONがない、または空の場合は失敗として扱う。
 - 既存`.github/workflows/update-vods.yml`のschedule宣言は互換検査のため残すが、現在の`if: github.event_name == 'workflow_dispatch'`による停止を無条件に解除しない。

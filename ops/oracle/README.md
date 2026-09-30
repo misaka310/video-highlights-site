@@ -100,9 +100,11 @@ sudo systemctl enable --now youtube-highlight.timer
 systemctl list-timers youtube-highlight.timer
 ```
 
-The daily acquisition timer is separate from the managed GitHub code-sync
-timer on the production Oracle VM. Code sync checks the repository's public
-`main` on boot and every five minutes; it does not start this acquisition job.
+Before the acquisition service starts, its installed `ExecStartPre` hook
+fast-forwards the clean Oracle checkout to the repository's public `main`.
+This runs immediately before the daily 06:07 JST job and before a manual service
+start; there is no separate periodic code-sync timer, and sync alone does not
+start this acquisition job.
 Archives that appear after the 06:07 JST check stay unprocessed until the next
 acquisition run. Unprocessed archives inside the 60-day window are not
 discarded; each run chooses the oldest eligible five (or fewer) and later runs
