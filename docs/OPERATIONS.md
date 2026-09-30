@@ -60,6 +60,9 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 ```
 
 - Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から未処理の新しいアーカイブを最大5件解決して1つのbundleへまとめ、Actionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。新しい配信がない日は処理済みIDを見て正常終了する。GitHub ActionsのcronはYouTube取得経路に使わない。
+- `/streams`の確認時点でYouTubeにまだ公開されていないアーカイブは、その回では取得できない。未公開・取得失敗の配信IDは処理済みとして記録されず、次の定期確認で再び対象になる。1回の上限5件を超えた未処理アーカイブも後続回へ残る。定時確認後にアーカイブが公開された場合、同日中の自動再確認はなく、原則として翌日の定時処理まで待つ。
+- OracleのGitHubコード同期は配信取得timerと別責務で、公開GitHubの`main`を**5分間隔**でfast-forward同期する。起動時にも同期し、配信取得サービスが実行中なら競合を避けて次の周期へ送る。同期はcleanな`main` checkout、許可済みorigin、fast-forwardだけを受け入れ、dirty checkout・origin不一致・非fast-forward・通信失敗ではローカル変更を上書きせず、その周期を失敗させて次回に再試行する。配信取得serviceの開始直前にも既存の同期preflightを維持する。
+- この同期対象はGitHubで`main`へ入ったcommitであり、未mergeのPRやbranchは対象外。Renderの公開反映とは別で、静的サイトの更新は既存のGitHub Actions / Render経路に従う。
 - yt-dlpがライブチャットJSONを生成した後に付随形式のHTTP 403で終了する場合は、生成済みJSONが非空であることを検証して処理を継続する。JSONがない、または空の場合は失敗として扱う。
 - 既存`.github/workflows/update-vods.yml`のschedule宣言は互換検査のため残すが、現在の`if: github.event_name == 'workflow_dispatch'`による停止を無条件に解除しない。
 - GitHub側の混雑により実際の開始・完了が遅れることはある。画面の「次回更新予定」は処理開始時刻ではなく、公開反映目標の09:00 JSTを表示する。
