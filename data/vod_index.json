@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-30T17:35:21+09:00",
+  "updated_at": "2026-09-30T22:47:11+09:00",
   "next_update_at": "2026-10-01T00:00:00+00:00",
   "videos": [
     {
@@ -208,6 +208,71 @@
       "chat_total": 1992,
       "comments_per_hour": 611.355,
       "detail_path": "/data/vods/szA-n46-IfU.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "lobFZyr7Ehg",
+      "vod_url": "https://www.youtube.com/watch?v=lobFZyr7Ehg",
+      "title": "【本日発売】Switch2版エルデンで待ちに待った追加要素を堪能しよう【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-08-28T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/lobFZyr7Ehg/maxresdefault.jpg",
+      "duration_sec": 15585,
+      "count": 3,
+      "chat_total": 2124,
+      "comments_per_hour": 490.626,
+      "detail_path": "/data/vods/lobFZyr7Ehg.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "2GxfgE6OrXg",
+      "vod_url": "https://www.youtube.com/watch?v=2GxfgE6OrXg",
+      "title": "【本日発売】Switch2版エルデンで待ちに待った追加要素を堪能しよう【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-08-27T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/2GxfgE6OrXg/maxresdefault.jpg",
+      "duration_sec": 10057,
+      "count": 3,
+      "chat_total": 1315,
+      "comments_per_hour": 470.717,
+      "detail_path": "/data/vods/2GxfgE6OrXg.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "8IsV6LXcegk",
+      "vod_url": "https://www.youtube.com/watch?v=8IsV6LXcegk",
+      "title": "【同時視聴】ゲームの新情報を見張る会【gamescom 2026】←【検証】ダスブラの4日間でどの程度操作方法を忘れたのか？～2000時間夜を渡ったチンパン～【ナイトレイン】",
+      "published_at": "2026-08-25T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/8IsV6LXcegk/maxresdefault.jpg",
+      "duration_sec": 25321,
+      "count": 3,
+      "chat_total": 1499,
+      "comments_per_hour": 213.12,
+      "detail_path": "/data/vods/8IsV6LXcegk.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "qoIVESNLKHc",
+      "vod_url": "https://www.youtube.com/watch?v=qoIVESNLKHc",
+      "title": "【全日終了！】ダスブラテストが終了したので感想をまとめる＆質問答えます【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-24T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/qoIVESNLKHc/maxresdefault.jpg",
+      "duration_sec": 10258,
+      "count": 3,
+      "chat_total": 2842,
+      "comments_per_hour": 997.387,
+      "detail_path": "/data/vods/qoIVESNLKHc.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "-8qMP8le5wI",
+      "vod_url": "https://www.youtube.com/watch?v=-8qMP8le5wI",
+      "title": "【感想会】ダスクブラッドネットワークテストの興奮を共有する会④【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-23T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/-8qMP8le5wI/maxresdefault.jpg",
+      "duration_sec": 6341,
+      "count": 3,
+      "chat_total": 1716,
+      "comments_per_hour": 974.231,
+      "detail_path": "/data/vods/-8qMP8le5wI.json",
       "provider": "youtube"
     }
   ]
