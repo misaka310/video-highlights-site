@@ -225,10 +225,9 @@ def _resolve_stream_archive_records(
     return records
 
 
-def _select_unprocessed_stream_urls(
+def _select_unpublished_stream_urls(
     records: list[dict[str, str]],
     *,
-    processed_ids: set[str],
     published_ids: set[str],
     limit: int,
     now: dt.datetime | None = None,
@@ -247,7 +246,8 @@ def _select_unprocessed_stream_urls(
         if not video_id or video_id in seen_ids:
             continue
         seen_ids.add(video_id)
-        if video_id in processed_ids or video_id in published_ids:
+        # Dispatch history does not prove that downstream GitHub publication succeeded.
+        if video_id in published_ids:
             continue
         if not re.fullmatch(r"\d{8}", upload_date):
             continue
@@ -800,19 +800,8 @@ def main() -> int:
                 cookies,
                 now=run_started_at,
             )
-            state = _read_state()
-            processed_ids = {
-                str(item).strip()
-                for item in state.get("processed_video_ids", [])
-                if str(item).strip()
-            }
-            if not processed_ids:
-                previous = str(state.get("last_processed_video_id") or "").strip()
-                if previous:
-                    processed_ids.add(previous)
-            video_urls = _select_unprocessed_stream_urls(
+            video_urls = _select_unpublished_stream_urls(
                 records,
-                processed_ids=processed_ids,
                 published_ids=_read_published_video_ids(),
                 limit=args.max_videos,
                 now=run_started_at,
@@ -821,6 +810,8 @@ def main() -> int:
                 _notify(None)
                 print("oracle YouTube job skipped: reason=no_recent_unprocessed_archives")
                 return 0
+            for video_url in video_urls:
+                print(f"selected video_id={parse_youtube_video_id(video_url)}", flush=True)
         else:
             video_urls = [args.video_url] if args.video_url else []
         if not video_urls:

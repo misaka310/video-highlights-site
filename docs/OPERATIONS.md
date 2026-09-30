@@ -43,7 +43,7 @@ PR作成、対象SHAの検証、head SHA確認、squash mergeは`.github/scripts
 
 ## 定期VOD更新
 
-YouTubeの本番取得経路は、`YOUTUBE_ORACLE_HOST`と`YOUTUBE_ORACLE_USER`で設定したOracle VMだけとする。OracleはYouTube live_chatの取得、YouTube公開字幕の任意取得、コメント時刻抽出、既存の10秒bucket/z-scoreによる見どころ決定、選択区間の音声・軽量映像の切り出しまでを担当する。GitHub ActionsはYouTubeへ直接アクセスせず、OCI Object Storageの一時PARオブジェクトを受け取ってWhisper、見出し、サムネイル、字幕JSON、検証、checked PR公開を担当する。Renderは`main`更新後の静的サイト公開を担当する。
+YouTubeの本番取得経路は、`YOUTUBE_ORACLE_HOST`と`YOUTUBE_ORACLE_USER`で設定したOracle VMだけとする。OracleはYouTube live_chatの取得、YouTube公開字幕の任意取得、コメント時刻抽出、既存の10秒bucket/z-scoreによる見どころ決定、選択区間の音声・軽量映像の切り出しまでを担当する。Oracleがコメント本文を使って選んだ区間は後段処理の正本であり、GitHub Actionsはoffset-onlyデータから区間検出をやり直さない。GitHub ActionsはYouTubeへ直接アクセスせず、OCI Object Storageの一時PARオブジェクトを受け取ってOracle選択区間のWhisper、見出し、サムネイル、字幕JSON、検証、checked PR公開を担当する。Renderは`main`更新後の静的サイト公開を担当する。
 
 取得スクリプトとSSH鍵は、それぞれ`YOUTUBE_ORACLE_SCRIPT_PATH`と`YOUTUBE_ORACLE_KEY_PATH`で実行時に指定する。Oracle上の実行ファイル、Deno、Cookie、作業用TSVの場所も`YOUTUBE_ORACLE_REMOTE_*`環境変数で指定し、実値は表示・commitしない。
 
@@ -59,8 +59,8 @@ $env:YOUTUBE_ORACLE_REMOTE_TSV_TEMPLATE = '$HOME/ytprobe/{video_id}-comment-time
 python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGTrmrSvZH0'
 ```
 
-- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から直近60日以内の未処理アーカイブを新しい順に最大5件選ぶ。Oracle stateの処理済みIDと`data/vod_index.json`の公開済みIDを除外してから上限を適用し、選んだ配信を1つのbundleへまとめてActionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。GitHub ActionsのcronはYouTube取得経路に使わない。
-- 60日内の未処理が5件を超える場合、新しいものから1日最大5件ずつ後続の定期実行へ進む。公開済みは再取得しない。未処理の古い配信は60日以内なら破棄せず、より新しい未処理が処理済みになるにつれて後続実行の対象になる。取得に失敗した配信は処理済みとして記録せず、翌日の実行で再試行する。`/streams`確認時点でYouTubeにまだ公開されていない配信や06:07 JST後に公開された配信は、原則として翌日の確認まで待つ。60日より古い配信は対象にしない。
+- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から直近60日以内の未公開アーカイブを新しい順に最大5件選ぶ。`data/vod_index.json`の公開済みIDだけを除外してから上限を適用し、選んだ配信を1つのbundleへまとめてActionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。Oracle stateのIDは過去の引き渡し記録であり、GitHub公開完了の根拠にはしない。GitHub ActionsのcronはYouTube取得経路に使わない。
+- 60日内の未公開が5件を超える場合、新しいものから1日最大5件ずつ後続の定期実行へ進む。公開済みは再取得しない。GitHub処理や公開に失敗した配信は公開済み一覧に入らないため、60日以内ならより新しい未公開配信の処理後に再試行する。Oracleでの取得・素材準備に失敗した配信も未公開のまま残り、翌日の実行で再試行する。`/streams`確認時点でYouTubeにまだ公開されていない配信や06:07 JST後に公開された配信は、原則として翌日の確認まで待つ。60日より古い配信は対象にしない。
 - OracleのGitHubコード同期は、配信取得serviceの`ExecStartPre`で各起動の直前に行う。毎日06:07 JSTの定期起動では、その時点の公開GitHub `main`をcleanなcheckoutへfast-forwardしてから配信処理を開始する。手動起動でも同じpreflightが先に走る。別の5分間隔コード同期timerは設けない。同期は許可済みorigin、`main` branch、fast-forwardだけを受け入れ、dirty checkout・origin不一致・非fast-forward・通信失敗ではローカル変更を上書きせず、配信処理を開始せずに失敗する。
 - この同期対象はGitHubで`main`へ入ったcommitであり、未mergeのPRやbranchは対象外。Renderの公開反映とは別で、静的サイトの更新は既存のGitHub Actions / Render経路に従う。
 - yt-dlpがライブチャットJSONを生成した後に付随形式のHTTP 403で終了する場合は、生成済みJSONが非空であることを検証して処理を継続する。JSONがない、または空の場合は失敗として扱う。
@@ -83,7 +83,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 
 ### Oracle → Actions 一時素材
 
-受け渡しはOCI Object Storageの短命オブジェクトとPre-Authenticated Request（PAR）を使う。Oracleは固定した一時オブジェクトに対する`YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL`へ選択区間だけをPUTし、Actionsは`YOUTUBE_ORACLE_BUNDLE_READ_URL`で取得する。PARは期限まで再利用できるため毎日作り直さず、6か月を目安に両方を同時ローテーションする。OCIのPARではオブジェクトを削除できないため、OCIの1日以内のlifecycle ruleで一時オブジェクトを自動削除する。bundleには公開メタデータ、offset-onlyの時刻一覧、選択区間ごとのWAV/WEBP、および取得できた場合だけYouTube公開字幕cueを入れる。raw chat、ユーザー名、メッセージ、内部Whisper文字起こしは入れない。
+受け渡しはOCI Object Storageの短命オブジェクトとPre-Authenticated Request（PAR）を使う。Oracleは固定した一時オブジェクトに対する`YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL`へ選択区間だけをPUTし、Actionsは`YOUTUBE_ORACLE_BUNDLE_READ_URL`で取得する。PARは期限まで再利用できるため毎日作り直さず、6か月を目安に両方を同時ローテーションする。OCIのPARではオブジェクトを削除できないため、OCIの1日以内のlifecycle ruleで一時オブジェクトを自動削除する。bundleには公開メタデータ、offset-onlyの時刻一覧、Oracleが選んだ区間とスコア・許可済み分類タグ、選択区間ごとのWAV/WEBP、および取得できた場合だけYouTube公開字幕cueを入れる。raw chat、ユーザー名、メッセージ、内部Whisper文字起こしは入れない。
 
 2026-09-17に適用したOCI設定は次のとおり。`shareclip`は別用途のため使用しない。
 

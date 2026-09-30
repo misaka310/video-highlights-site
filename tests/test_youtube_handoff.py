@@ -37,7 +37,16 @@ class YoutubeHandoffTests(unittest.TestCase):
                 {"content_offset_seconds": 100.0, "message": "private text must not be bundled"},
                 {"content_offset_seconds": 101.0, "author_name": "private user"},
             ],
-            [{"id": "WGTrmrSvZH0_90_120", "rank": 1, "start_sec": 90, "end_sec": 120}],
+            [
+                {
+                    "id": "WGTrmrSvZH0_90_120",
+                    "rank": 1,
+                    "start_sec": 90,
+                    "end_sec": 120,
+                    "score": 3.25,
+                    "tags": ["好プレー"],
+                }
+            ],
         )
 
     def test_manifest_contains_offsets_only(self) -> None:
@@ -46,7 +55,21 @@ class YoutubeHandoffTests(unittest.TestCase):
         self.assertNotIn("comments", manifest)
         self.assertNotIn("message", json.dumps(manifest, ensure_ascii=False))
         self.assertNotIn("author", json.dumps(manifest, ensure_ascii=False))
+        self.assertEqual(manifest["selected_highlights"][0]["score"], 3.25)
+        self.assertEqual(manifest["selected_highlights"][0]["tags"], ["好プレー"])
         self.assertEqual(validate_material_manifest(manifest), manifest)
+
+    def test_manifest_rejects_unclassified_text_in_selected_tags(self) -> None:
+        manifest = self._manifest()
+        manifest["selected_highlights"][0]["tags"] = ["private text must not be bundled"]
+        with self.assertRaisesRegex(ValueError, "unrecognized tag"):
+            validate_material_manifest(manifest)
+
+    def test_manifest_rejects_highlight_ids_outside_the_selected_video_interval(self) -> None:
+        manifest = self._manifest()
+        manifest["selected_highlights"][0]["id"] = "../outside"
+        with self.assertRaisesRegex(ValueError, "does not match its video interval"):
+            validate_material_manifest(manifest)
 
     def test_bundle_round_trip_is_limited_to_expected_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -119,9 +142,14 @@ class YoutubeHandoffTests(unittest.TestCase):
                     ),
                     encoding="utf-8",
                 )
+                manifest = self._manifest()
+                manifest["video"]["vod_id"] = video_id
+                manifest["video"]["vod_url"] = f"https://www.youtube.com/watch?v={video_id}"
+                manifest["selected_highlights"][0]["id"] = f"{video_id}_90_120"
+                manifest["media"][0]["item_id"] = f"{video_id}_90_120"
                 entries.append(
                     (
-                        self._manifest() | {"video": self._manifest()["video"] | {"vod_id": video_id}},
+                        manifest,
                         {"clips/clip-0.wav": audio, "clips/clip-0.webp": screenshot},
                         captions,
                     )

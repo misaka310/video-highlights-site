@@ -46,7 +46,7 @@ YouTubeライブアーカイブのコメント量から抽出した見どころ�
 
 - Twitch via Twitch SDK / iframe fallback
 
-YouTube live_chatはOracle VM上で取得し、ローカルの直接取得を公開パイプラインの成功経路として扱わない。取得したvideoOffsetTimeMsecはcontent_offset_secondsへ正規化し、コメント本文や投稿者情報は保存しない。
+YouTube live_chatはOracle VM上で取得し、ローカルの直接取得を公開パイプラインの成功経路として扱わない。取得したvideoOffsetTimeMsecはcontent_offset_secondsへ正規化し、コメント本文や投稿者情報は保存しない。Oracleがコメント本文をメモリ上で解析して選んだ見どころ区間を後段処理の正本とする。GitHub側は本文を含まないoffsetから見どころ区間を再検出せず、activity_mapなどの集計にだけ使う。
 
 ローカルURLは `http://localhost:4174/` とする。
 

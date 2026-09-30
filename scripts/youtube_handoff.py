@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 from urllib import request
 
+from vod_highlights import TAG_RULES
 
 MATERIAL_BUNDLE_VERSION = 1
 _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
@@ -36,6 +37,7 @@ _FORBIDDEN_KEYS = {
     "username",
     "user_name",
 }
+_SAFE_HIGHLIGHT_TAGS = {label for label, _patterns in TAG_RULES} | {"あ", "は"}
 
 
 def _finite_nonnegative(value: Any, label: str) -> float:
@@ -93,6 +95,12 @@ def _safe_highlight(item: Mapping[str, Any], index: int) -> dict[str, Any]:
     end = int(_finite_nonnegative(item.get("end_sec"), f"highlight[{index}].end_sec"))
     if end <= start:
         raise ValueError(f"highlight {index} has an invalid interval")
+    raw_tags = item.get("tags") or []
+    if not isinstance(raw_tags, list) or len(raw_tags) > 3:
+        raise ValueError(f"highlight {index} has invalid tags")
+    tags = list(dict.fromkeys(str(tag).strip() for tag in raw_tags))
+    if any(tag not in _SAFE_HIGHLIGHT_TAGS for tag in tags):
+        raise ValueError(f"highlight {index} has an unrecognized tag")
     return {
         "index": index,
         "id": item_id,
@@ -100,6 +108,8 @@ def _safe_highlight(item: Mapping[str, Any], index: int) -> dict[str, Any]:
         "start_sec": start,
         "end_sec": end,
         "duration_sec": end - start,
+        "score": _finite_nonnegative(item.get("score", 0.0), f"highlight[{index}].score"),
+        "tags": tags,
     }
 
 
@@ -170,6 +180,10 @@ def validate_material_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
     if len(safe_offsets) != len(offsets):
         raise ValueError("material manifest contains an invalid chat offset")
     safe_items = [_safe_highlight(item, index) for index, item in enumerate(selected)]
+    for item in safe_items:
+        expected_id = f"{safe_video['vod_id']}_{item['start_sec']}_{item['end_sec']}"
+        if item["id"] != expected_id:
+            raise ValueError("material manifest highlight id does not match its video interval")
     if len(media) != len(safe_items):
         raise ValueError("material manifest media count does not match highlights")
     safe_media: list[dict[str, Any]] = []

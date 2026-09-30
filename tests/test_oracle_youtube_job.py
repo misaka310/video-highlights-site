@@ -18,7 +18,7 @@ import oracle_youtube_job  # noqa: E402
 
 
 class OracleYoutubeJobTests(unittest.TestCase):
-    def test_selects_newest_unprocessed_public_window_archives_before_capping(self):
+    def test_selects_newest_unpublished_public_window_archives_before_capping(self):
         now = dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc)
         records = [
             {"id": "aTCWAb8wRd8", "upload_date": "20260929"},
@@ -31,9 +31,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
             {"id": "3V0swWyny-8", "upload_date": "unknown"},
         ]
 
-        selected = oracle_youtube_job._select_unprocessed_stream_urls(
+        selected = oracle_youtube_job._select_unpublished_stream_urls(
             records,
-            processed_ids={"930HUhvRKHc"},
             published_ids={"2a_ATYeOiAQ"},
             limit=3,
             now=now,
@@ -43,8 +42,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
             selected,
             [
                 "https://www.youtube.com/watch?v=aTCWAb8wRd8",
+                "https://www.youtube.com/watch?v=930HUhvRKHc",
                 "https://www.youtube.com/watch?v=WGTrmrSvZH0",
-                "https://www.youtube.com/watch?v=AI5K5VH3BhY",
             ],
         )
 
@@ -63,9 +62,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
             },
         ]
 
-        selected = oracle_youtube_job._select_unprocessed_stream_urls(
+        selected = oracle_youtube_job._select_unpublished_stream_urls(
             records,
-            processed_ids=set(),
             published_ids=set(),
             limit=5,
             now=now,
@@ -79,7 +77,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
             ],
         )
 
-    def test_main_selects_newest_unprocessed_before_limiting_to_five(self):
+    def test_main_selects_newest_unpublished_before_limiting_to_five(self):
         with tempfile.TemporaryDirectory() as raw_dir:
             cookie_path = Path(raw_dir) / "youtube-cookies.txt"
             cookie_path.write_text("", encoding="utf-8")
@@ -96,11 +94,11 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 {"id": "Oldest00002", "upload_date": "20260921"},
             ]
             expected_urls = [
+                "https://www.youtube.com/watch?v=aTCWAb8wRd8",
                 "https://www.youtube.com/watch?v=930HUhvRKHc",
                 "https://www.youtube.com/watch?v=WGTrmrSvZH0",
                 "https://www.youtube.com/watch?v=AI5K5VH3BhY",
                 "https://www.youtube.com/watch?v=d41zBjWSGcc",
-                "https://www.youtube.com/watch?v=KwRhwLUZjko",
             ]
             with patch.dict(
                 os.environ,
