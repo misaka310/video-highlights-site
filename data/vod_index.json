@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-01T00:45:28+09:00",
+  "updated_at": "2026-10-01T02:18:28+09:00",
   "next_update_at": "2026-10-01T00:00:00+00:00",
   "videos": [
     {
@@ -208,6 +208,45 @@
       "chat_total": 1992,
       "comments_per_hour": 611.355,
       "detail_path": "/data/vods/szA-n46-IfU.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "uvjL4xGMxEM",
+      "vod_url": "https://www.youtube.com/watch?v=uvjL4xGMxEM",
+      "title": "新要素集めの旅いよいよ最後か⁉闘技場まっとれよ配信【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-09-08T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/uvjL4xGMxEM/maxresdefault.jpg",
+      "duration_sec": 8814,
+      "count": 3,
+      "chat_total": 661,
+      "comments_per_hour": 269.98,
+      "detail_path": "/data/vods/uvjL4xGMxEM.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "Uh-y01w6WxA",
+      "vod_url": "https://www.youtube.com/watch?v=Uh-y01w6WxA",
+      "title": "【映画セキロ感想会】未視聴の方はこの枠見ないでください！！【SEKIRO: NO DEFEAT】",
+      "published_at": "2026-09-06T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/Uh-y01w6WxA/maxresdefault.jpg",
+      "duration_sec": 13499,
+      "count": 3,
+      "chat_total": 1329,
+      "comments_per_hour": 354.426,
+      "detail_path": "/data/vods/Uh-y01w6WxA.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "13GjlTnKb5w",
+      "vod_url": "https://www.youtube.com/watch?v=13GjlTnKb5w",
+      "title": "【ラダーン祭】既プレイを疑われている女のエルデン←どちらとも読める【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-09-05T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/13GjlTnKb5w/maxresdefault.jpg",
+      "duration_sec": 20143,
+      "count": 3,
+      "chat_total": 1572,
+      "comments_per_hour": 280.951,
+      "detail_path": "/data/vods/13GjlTnKb5w.json",
       "provider": "youtube"
     },
     {
