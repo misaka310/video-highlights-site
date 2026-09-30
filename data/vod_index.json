@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-01T03:21:45+09:00",
+  "updated_at": "2026-10-01T06:14:36+09:00",
   "next_update_at": "2026-10-01T00:00:00+00:00",
   "videos": [
     {
@@ -286,6 +286,45 @@
       "chat_total": 1786,
       "comments_per_hour": 361.66,
       "detail_path": "/data/vods/V4ptTBDfRvk.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "7WOvIrLpD9E",
+      "vod_url": "https://www.youtube.com/watch?v=7WOvIrLpD9E",
+      "title": "【侵入歓迎】既プレイを疑われている女のエルデン←どちらとも読める【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-09-01T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/7WOvIrLpD9E/maxresdefault.jpg",
+      "duration_sec": 18548,
+      "count": 3,
+      "chat_total": 2036,
+      "comments_per_hour": 395.169,
+      "detail_path": "/data/vods/7WOvIrLpD9E.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "1UCd-YLgca0",
+      "vod_url": "https://www.youtube.com/watch?v=1UCd-YLgca0",
+      "title": "Switch2版エルデンの追加要素を探してさまよい続けている…【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-08-31T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/1UCd-YLgca0/maxresdefault.jpg",
+      "duration_sec": 19644,
+      "count": 3,
+      "chat_total": 1906,
+      "comments_per_hour": 349.297,
+      "detail_path": "/data/vods/1UCd-YLgca0.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "Ua69BzhgfV0",
+      "vod_url": "https://www.youtube.com/watch?v=Ua69BzhgfV0",
+      "title": "Switch2版エルデンで待ちに待った追加要素を堪能しよう【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-08-30T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/Ua69BzhgfV0/maxresdefault.jpg",
+      "duration_sec": 25070,
+      "count": 3,
+      "chat_total": 2746,
+      "comments_per_hour": 394.32,
+      "detail_path": "/data/vods/Ua69BzhgfV0.json",
       "provider": "youtube"
     },
     {
