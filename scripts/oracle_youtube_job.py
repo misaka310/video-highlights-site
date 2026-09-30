@@ -240,8 +240,8 @@ def _select_unprocessed_stream_urls(
     now_utc = now_utc.astimezone(dt.timezone.utc)
     cutoff = now_utc - dt.timedelta(days=PUBLIC_VOD_RETENTION_DAYS)
     seen_ids: set[str] = set()
-    eligible: list[tuple[dt.datetime, int, str]] = []
-    for position, record in enumerate(records):
+    eligible: list[tuple[dt.datetime, str]] = []
+    for record in records:
         video_id = str(record.get("id") or "").strip()
         upload_date = str(record.get("upload_date") or "").strip()
         if not video_id or video_id in seen_ids:
@@ -264,11 +264,11 @@ def _select_unprocessed_stream_urls(
                 sort_at = dt.datetime.fromtimestamp(float(raw_timestamp), tz=dt.timezone.utc)
             except (OverflowError, OSError, ValueError):
                 pass
-        eligible.append((sort_at, position, video_id))
-    eligible.sort(key=lambda item: (item[0], item[1]))
+        eligible.append((sort_at, video_id))
+    eligible.sort(key=lambda item: item[0], reverse=True)
     return [
         f"https://www.youtube.com/watch?v={video_id}"
-        for _published_at, _position, video_id in eligible[:bounded_limit]
+        for _published_at, video_id in eligible[:bounded_limit]
     ]
 
 
