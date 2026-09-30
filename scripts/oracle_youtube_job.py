@@ -728,7 +728,7 @@ def main() -> int:
             video_urls = [args.video_url] if args.video_url else []
         if not video_urls:
             raise OracleJobFailure("handoff_configuration", "YOUTUBE_ORACLE_STREAMS_URL or video URL is required")
-        results = run(video_urls[0]) if len(video_urls) == 1 else run_batch(video_urls)
+        results = [run(video_urls[0])] if len(video_urls) == 1 else run_batch(video_urls)
         for result in results:
             _mark_processed(result["video_id"])
         _notify(None)
