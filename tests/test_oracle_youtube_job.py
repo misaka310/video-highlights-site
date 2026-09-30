@@ -3,6 +3,8 @@ import os
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -15,6 +17,39 @@ import oracle_youtube_job  # noqa: E402
 
 
 class OracleYoutubeJobTests(unittest.TestCase):
+    def test_main_wraps_single_run_result_before_marking_processed(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookie_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookie_path.write_text("", encoding="utf-8")
+            result = {
+                "video_id": "AI5K5VH3BhY",
+                "chat_total": 10,
+                "highlights": 3,
+                "captions": True,
+                "media_bytes": 100,
+            }
+            output = StringIO()
+            with patch.dict(
+                os.environ,
+                {
+                    "YOUTUBE_ORACLE_VIDEO_URL": "https://www.youtube.com/watch?v=AI5K5VH3BhY",
+                    "YOUTUBE_ORACLE_COOKIES_PATH": str(cookie_path),
+                },
+                clear=True,
+            ), patch.object(sys, "argv", ["oracle_youtube_job"]), patch.object(
+                oracle_youtube_job, "run", return_value=result
+            ), patch.object(
+                oracle_youtube_job, "_mark_processed"
+            ) as mark_processed, patch.object(
+                oracle_youtube_job, "_notify"
+            ) as notify, redirect_stdout(output):
+                exit_code = oracle_youtube_job.main()
+
+        self.assertEqual(exit_code, 0)
+        mark_processed.assert_called_once_with("AI5K5VH3BhY")
+        notify.assert_called_once_with(None)
+        self.assertIn("oracle YouTube job complete: videos=1", output.getvalue())
+
     def test_resolves_first_archive_from_streams_page(self):
         with patch.object(
             oracle_youtube_job,
