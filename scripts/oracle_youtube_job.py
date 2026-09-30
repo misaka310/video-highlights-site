@@ -23,6 +23,7 @@ from urllib import error, request
 
 from update_vods import analyze_video_entry
 from vod_sources import ChatFetchResult
+from vod_serialization import PUBLIC_VOD_RETENTION_DAYS
 from youtube_handoff import (
     build_material_manifest,
     create_material_batch_bundle,
@@ -49,6 +50,9 @@ DEFAULT_YTDLP = "$HOME/yt-dlp"
 DEFAULT_DENO = "$HOME/.local/bin/deno"
 DEFAULT_COOKIES = "$HOME/youtube-cookies.txt"
 DEFAULT_WORK_ROOT = "$HOME/ytprobe"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+MAX_STREAM_ARCHIVES_PER_RUN = 5
+STREAM_DISCOVERY_DATE_BUFFER_DAYS = 2
 
 # Transient YouTube extraction failures (for example "The page needs to be
 # reloaded.") come and go within minutes, so the same yt-dlp call is retried
@@ -60,6 +64,10 @@ TRANSIENT_YTDLP_CATEGORIES = {"temporary_network_failure", "yt_dlp_failure"}
 
 def _env(name: str, default: str = "") -> str:
     return str(os.environ.get(name) or default).strip()
+
+
+def _utc_now() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc)
 
 
 def _path_env(name: str, default: str) -> str:
@@ -152,8 +160,21 @@ def _yt_dlp_base(ytdlp: str, deno: str, cookies: str) -> list[str]:
     ]
 
 
-def _resolve_stream_urls(streams_url: str, ytdlp: str, deno: str, cookies: str, *, limit: int) -> list[str]:
-    bounded_limit = max(1, min(int(limit), 8))
+def _resolve_stream_archive_records(
+    streams_url: str,
+    ytdlp: str,
+    deno: str,
+    cookies: str,
+    *,
+    now: dt.datetime | None = None,
+) -> list[dict[str, str]]:
+    now_utc = now or _utc_now()
+    if now_utc.tzinfo is None:
+        now_utc = now_utc.replace(tzinfo=dt.timezone.utc)
+    cutoff_date = (
+        now_utc.astimezone(dt.timezone.utc)
+        - dt.timedelta(days=PUBLIC_VOD_RETENTION_DAYS + STREAM_DISCOVERY_DATE_BUFFER_DAYS)
+    ).strftime("%Y%m%d")
     completed = _run_ytdlp(
         [
             ytdlp,
@@ -164,37 +185,107 @@ def _resolve_stream_urls(streams_url: str, ytdlp: str, deno: str, cookies: str, 
             "--cookies",
             cookies,
             "--flat-playlist",
-            "--playlist-end",
-            str(bounded_limit),
+            "--extractor-args",
+            "youtubetab:approximate_date",
+            "--dateafter",
+            cutoff_date,
             "--print",
-            "%(id)s",
+            "%(.{id,upload_date,timestamp})j",
             "--quiet",
             "--no-warnings",
             streams_url,
         ],
-        timeout=120,
+        timeout=300,
     )
-    urls: list[str] = []
+    records: list[dict[str, str]] = []
     seen_ids: set[str] = set()
     for line in completed.stdout.splitlines():
-        candidate = line.strip()
         try:
-            video_id = parse_youtube_video_id(candidate)
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(record, dict):
+            continue
+        try:
+            video_id = parse_youtube_video_id(str(record.get("id") or ""))
         except ValueError:
             continue
         if video_id in seen_ids:
             continue
         seen_ids.add(video_id)
-        urls.append(f"https://www.youtube.com/watch?v={video_id}")
-        if len(urls) >= bounded_limit:
-            break
-    if not urls:
-        raise OracleJobFailure("yt_dlp_failure", "YouTube streams page returned no archive")
-    return urls
+        records.append(
+            {
+                "id": video_id,
+                "upload_date": str(record.get("upload_date") or ""),
+                "timestamp": str(record.get("timestamp") or ""),
+            }
+        )
+    if completed.stdout.strip() and not records:
+        raise OracleJobFailure("yt_dlp_failure", "YouTube streams page returned unreadable archive metadata")
+    return records
 
 
-def _resolve_latest_stream_url(streams_url: str, ytdlp: str, deno: str, cookies: str) -> str:
-    return _resolve_stream_urls(streams_url, ytdlp, deno, cookies, limit=1)[0]
+def _select_unprocessed_stream_urls(
+    records: list[dict[str, str]],
+    *,
+    processed_ids: set[str],
+    published_ids: set[str],
+    limit: int,
+    now: dt.datetime | None = None,
+) -> list[str]:
+    bounded_limit = max(1, min(int(limit), MAX_STREAM_ARCHIVES_PER_RUN))
+    now_utc = now or _utc_now()
+    if now_utc.tzinfo is None:
+        now_utc = now_utc.replace(tzinfo=dt.timezone.utc)
+    now_utc = now_utc.astimezone(dt.timezone.utc)
+    cutoff = now_utc - dt.timedelta(days=PUBLIC_VOD_RETENTION_DAYS)
+    seen_ids: set[str] = set()
+    eligible: list[tuple[dt.datetime, int, str]] = []
+    for position, record in enumerate(records):
+        video_id = str(record.get("id") or "").strip()
+        upload_date = str(record.get("upload_date") or "").strip()
+        if not video_id or video_id in seen_ids:
+            continue
+        seen_ids.add(video_id)
+        if video_id in processed_ids or video_id in published_ids:
+            continue
+        if not re.fullmatch(r"\d{8}", upload_date):
+            continue
+        try:
+            published_at = dt.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=dt.timezone.utc)
+        except ValueError:
+            continue
+        if published_at < cutoff or published_at > now_utc:
+            continue
+        sort_at = published_at
+        raw_timestamp = str(record.get("timestamp") or "").strip()
+        if raw_timestamp:
+            try:
+                sort_at = dt.datetime.fromtimestamp(float(raw_timestamp), tz=dt.timezone.utc)
+            except (OverflowError, OSError, ValueError):
+                pass
+        eligible.append((sort_at, position, video_id))
+    eligible.sort(key=lambda item: (item[0], item[1]))
+    return [
+        f"https://www.youtube.com/watch?v={video_id}"
+        for _published_at, _position, video_id in eligible[:bounded_limit]
+    ]
+
+
+def _read_published_video_ids() -> set[str]:
+    index_path = REPOSITORY_ROOT / "data" / "vod_index.json"
+    try:
+        payload = json.loads(index_path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise OracleJobFailure("public_vod_index_failure", "public VOD index is unavailable") from exc
+    videos = payload.get("videos") if isinstance(payload, dict) else None
+    if not isinstance(videos, list):
+        raise OracleJobFailure("public_vod_index_failure", "public VOD index has invalid structure")
+    return {
+        str(video.get("vod_id") or "").strip()
+        for video in videos
+        if isinstance(video, dict) and str(video.get("vod_id") or "").strip()
+    }
 
 
 def _state_path() -> Path:
@@ -221,7 +312,7 @@ def _mark_processed(video_id: str) -> None:
     processed = [str(item).strip() for item in state.get("processed_video_ids", []) if str(item).strip()]
     processed = [item for item in processed if item != video_id]
     processed.append(video_id)
-    state["processed_video_ids"] = processed[-30:]
+    state["processed_video_ids"] = processed
     state["last_processed_video_id"] = video_id
     _write_state(state)
 
@@ -701,28 +792,34 @@ def main() -> int:
         if args.streams_url:
             if not Path(cookies).is_file():
                 raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
-            video_urls = _resolve_stream_urls(
+            run_started_at = _utc_now()
+            records = _resolve_stream_archive_records(
                 args.streams_url,
                 ytdlp,
                 deno,
                 cookies,
-                limit=args.max_videos,
+                now=run_started_at,
             )
+            state = _read_state()
             processed_ids = {
                 str(item).strip()
-                for item in _read_state().get("processed_video_ids", [])
+                for item in state.get("processed_video_ids", [])
                 if str(item).strip()
             }
             if not processed_ids:
-                previous = str(_read_state().get("last_processed_video_id") or "").strip()
+                previous = str(state.get("last_processed_video_id") or "").strip()
                 if previous:
                     processed_ids.add(previous)
-            video_urls = [
-                url for url in video_urls if parse_youtube_video_id(url) not in processed_ids
-            ]
+            video_urls = _select_unprocessed_stream_urls(
+                records,
+                processed_ids=processed_ids,
+                published_ids=_read_published_video_ids(),
+                limit=args.max_videos,
+                now=run_started_at,
+            )
             if not video_urls:
                 _notify(None)
-                print("oracle YouTube job skipped: reason=all_selected_archives_already_processed")
+                print("oracle YouTube job skipped: reason=no_recent_unprocessed_archives")
                 return 0
         else:
             video_urls = [args.video_url] if args.video_url else []

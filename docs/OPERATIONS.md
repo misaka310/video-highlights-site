@@ -59,8 +59,8 @@ $env:YOUTUBE_ORACLE_REMOTE_TSV_TEMPLATE = '$HOME/ytprobe/{video_id}-comment-time
 python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGTrmrSvZH0'
 ```
 
-- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から未処理の新しいアーカイブを最大5件解決して1つのbundleへまとめ、Actionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。新しい配信がない日は処理済みIDを見て正常終了する。GitHub ActionsのcronはYouTube取得経路に使わない。
-- `/streams`の確認時点でYouTubeにまだ公開されていないアーカイブは、その回では取得できない。未公開・取得失敗の配信IDは処理済みとして記録されず、次の定期確認で再び対象になる。1回の上限5件を超えた未処理アーカイブも後続回へ残る。定時確認後にアーカイブが公開された場合、同日中の自動再確認はなく、原則として翌日の定時処理まで待つ。
+- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から直近60日以内の未処理アーカイブを古い順に最大5件選ぶ。Oracle stateの処理済みIDと`data/vod_index.json`の公開済みIDを除外してから上限を適用し、選んだ配信を1つのbundleへまとめてActionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。GitHub ActionsのcronはYouTube取得経路に使わない。
+- 60日内の未処理が5件を超える場合、古いものから1日最大5件ずつ後続の定期実行へ進む。公開済みは再取得しない。取得に失敗した配信は処理済みとして記録せず、翌日の実行で再試行する。`/streams`確認時点でYouTubeにまだ公開されていない配信や06:07 JST後に公開された配信は、原則として翌日の確認まで待つ。60日より古い配信は対象にしない。
 - OracleのGitHubコード同期は配信取得timerと別責務で、公開GitHubの`main`を**5分間隔**でfast-forward同期する。起動時にも同期し、配信取得サービスが実行中なら競合を避けて次の周期へ送る。同期はcleanな`main` checkout、許可済みorigin、fast-forwardだけを受け入れ、dirty checkout・origin不一致・非fast-forward・通信失敗ではローカル変更を上書きせず、その周期を失敗させて次回に再試行する。配信取得serviceの開始直前にも既存の同期preflightを維持する。
 - この同期対象はGitHubで`main`へ入ったcommitであり、未mergeのPRやbranchは対象外。Renderの公開反映とは別で、静的サイトの更新は既存のGitHub Actions / Render経路に従う。
 - yt-dlpがライブチャットJSONを生成した後に付随形式のHTTP 403で終了する場合は、生成済みJSONが非空であることを検証して処理を継続する。JSONがない、または空の場合は失敗として扱う。
