@@ -1,3 +1,4 @@
+import datetime as dt
 import json
 import os
 import sys
@@ -17,6 +18,130 @@ import oracle_youtube_job  # noqa: E402
 
 
 class OracleYoutubeJobTests(unittest.TestCase):
+    def test_selects_oldest_unprocessed_public_window_archives_before_capping(self):
+        now = dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc)
+        records = [
+            {"id": "aTCWAb8wRd8", "upload_date": "20260929"},
+            {"id": "2a_ATYeOiAQ", "upload_date": "20260928"},
+            {"id": "930HUhvRKHc", "upload_date": "20260927"},
+            {"id": "WGTrmrSvZH0", "upload_date": "20260926"},
+            {"id": "AI5K5VH3BhY", "upload_date": "20260925"},
+            {"id": "d41zBjWSGcc", "upload_date": "20260801"},
+            {"id": "KwRhwLUZjko", "upload_date": "20260731"},
+            {"id": "3V0swWyny-8", "upload_date": "unknown"},
+        ]
+
+        selected = oracle_youtube_job._select_unprocessed_stream_urls(
+            records,
+            processed_ids={"930HUhvRKHc"},
+            published_ids={"2a_ATYeOiAQ"},
+            limit=3,
+            now=now,
+        )
+
+        self.assertEqual(
+            selected,
+            [
+                "https://www.youtube.com/watch?v=d41zBjWSGcc",
+                "https://www.youtube.com/watch?v=AI5K5VH3BhY",
+                "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+            ],
+        )
+
+    def test_uses_timestamps_to_order_archives_uploaded_on_the_same_day(self):
+        now = dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc)
+        records = [
+            {
+                "id": "aTCWAb8wRd8",
+                "upload_date": "20260929",
+                "timestamp": str(dt.datetime(2026, 9, 29, 18, tzinfo=dt.timezone.utc).timestamp()),
+            },
+            {
+                "id": "2a_ATYeOiAQ",
+                "upload_date": "20260929",
+                "timestamp": str(dt.datetime(2026, 9, 29, 8, tzinfo=dt.timezone.utc).timestamp()),
+            },
+        ]
+
+        selected = oracle_youtube_job._select_unprocessed_stream_urls(
+            records,
+            processed_ids=set(),
+            published_ids=set(),
+            limit=5,
+            now=now,
+        )
+
+        self.assertEqual(
+            selected,
+            [
+                "https://www.youtube.com/watch?v=2a_ATYeOiAQ",
+                "https://www.youtube.com/watch?v=aTCWAb8wRd8",
+            ],
+        )
+
+    def test_main_selects_backlog_before_limiting_to_five(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookie_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookie_path.write_text("", encoding="utf-8")
+            output = StringIO()
+            records = [
+                {"id": "aTCWAb8wRd8", "upload_date": "20260929"},
+                {"id": "2a_ATYeOiAQ", "upload_date": "20260928"},
+                {"id": "930HUhvRKHc", "upload_date": "20260927"},
+                {"id": "WGTrmrSvZH0", "upload_date": "20260926"},
+                {"id": "AI5K5VH3BhY", "upload_date": "20260925"},
+                {"id": "d41zBjWSGcc", "upload_date": "20260924"},
+                {"id": "KwRhwLUZjko", "upload_date": "20260923"},
+                {"id": "Oldest00001", "upload_date": "20260922"},
+                {"id": "Oldest00002", "upload_date": "20260921"},
+            ]
+            expected_urls = [
+                "https://www.youtube.com/watch?v=Oldest00002",
+                "https://www.youtube.com/watch?v=Oldest00001",
+                "https://www.youtube.com/watch?v=KwRhwLUZjko",
+                "https://www.youtube.com/watch?v=d41zBjWSGcc",
+                "https://www.youtube.com/watch?v=AI5K5VH3BhY",
+            ]
+            with patch.dict(
+                os.environ,
+                {
+                    "YOUTUBE_ORACLE_STREAMS_URL": "https://www.youtube.com/@dotitube/streams",
+                    "YOUTUBE_ORACLE_COOKIES_PATH": str(cookie_path),
+                    "YOUTUBE_ORACLE_MAX_VIDEOS": "99",
+                },
+                clear=True,
+            ), patch.object(sys, "argv", ["oracle_youtube_job"]), patch.object(
+                oracle_youtube_job,
+                "_utc_now",
+                return_value=dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc),
+            ), patch.object(
+                oracle_youtube_job, "_resolve_stream_archive_records", return_value=records
+            ), patch.object(
+                oracle_youtube_job, "_read_published_video_ids", return_value={"2a_ATYeOiAQ"}
+            ), patch.object(
+                oracle_youtube_job, "_read_state", return_value={"processed_video_ids": ["aTCWAb8wRd8"]}
+            ), patch.object(
+                oracle_youtube_job, "run_batch", return_value=[]
+            ) as run_batch, patch.object(
+                oracle_youtube_job, "_notify"
+            ), redirect_stdout(output):
+                exit_code = oracle_youtube_job.main()
+
+        self.assertEqual(exit_code, 0)
+        run_batch.assert_called_once_with(expected_urls)
+
+    def test_processed_state_keeps_all_ids_instead_of_truncating_history(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            state_path = Path(raw_dir) / "state.json"
+            initial_ids = [f"processed-{index}" for index in range(35)]
+            state_path.write_text(json.dumps({"processed_video_ids": initial_ids}), encoding="utf-8")
+            with patch.dict(os.environ, {"YOUTUBE_ORACLE_STATE_PATH": str(state_path)}):
+                oracle_youtube_job._mark_processed("new-video")
+
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(state["processed_video_ids"], initial_ids + ["new-video"])
+
     def test_main_wraps_single_run_result_before_marking_processed(self):
         with tempfile.TemporaryDirectory() as raw_dir:
             cookie_path = Path(raw_dir) / "youtube-cookies.txt"
@@ -54,45 +179,68 @@ class OracleYoutubeJobTests(unittest.TestCase):
         with patch.object(
             oracle_youtube_job,
             "_run_ytdlp",
-            return_value=SimpleNamespace(stdout="2a_ATYeOiAQ\n"),
+            return_value=SimpleNamespace(
+                stdout=json.dumps(
+                    {
+                        "id": "2a_ATYeOiAQ",
+                        "upload_date": "20260917",
+                        "timestamp": 1789603200,
+                    }
+                )
+                + "\n"
+            ),
         ) as run_ytdlp:
-            result = oracle_youtube_job._resolve_latest_stream_url(
+            result = oracle_youtube_job._resolve_stream_archive_records(
                 "https://www.youtube.com/@dotitube/streams",
                 "/remote/yt-dlp",
                 "/remote/deno",
                 "/remote/youtube-cookies.txt",
+                now=dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc),
             )
 
-        self.assertEqual(result, "https://www.youtube.com/watch?v=2a_ATYeOiAQ")
+        self.assertEqual(
+            result,
+            [{"id": "2a_ATYeOiAQ", "upload_date": "20260917", "timestamp": "1789603200"}],
+        )
         command = run_ytdlp.call_args.args[0]
         self.assertIn("--flat-playlist", command)
-        self.assertIn("--playlist-end", command)
+        self.assertIn("--dateafter", command)
+        self.assertIn("youtubetab:approximate_date", command)
+        self.assertEqual(command[command.index("--print") + 1], "%(.{id,upload_date,timestamp})j")
+        self.assertEqual(command[command.index("--dateafter") + 1], "20260730")
         self.assertEqual(command[-1], "https://www.youtube.com/@dotitube/streams")
 
     def test_resolves_multiple_archives_from_streams_page(self):
         with patch.object(
             oracle_youtube_job,
             "_run_ytdlp",
-            return_value=SimpleNamespace(stdout="aTCWAb8wRd8\n2a_ATYeOiAQ\n930HUhvRKHc\n"),
+            return_value=SimpleNamespace(
+                stdout="\n".join(
+                    json.dumps({"id": video_id, "upload_date": upload_date})
+                    for video_id, upload_date in (
+                        ("aTCWAb8wRd8", "20260918"),
+                        ("2a_ATYeOiAQ", "20260917"),
+                        ("930HUhvRKHc", "20260916"),
+                    )
+                )
+            ),
         ) as run_ytdlp:
-            result = oracle_youtube_job._resolve_stream_urls(
+            result = oracle_youtube_job._resolve_stream_archive_records(
                 "https://www.youtube.com/@dotitube/streams",
                 "/remote/yt-dlp",
                 "/remote/deno",
                 "/remote/youtube-cookies.txt",
-                limit=3,
             )
 
         self.assertEqual(
             result,
             [
-                "https://www.youtube.com/watch?v=aTCWAb8wRd8",
-                "https://www.youtube.com/watch?v=2a_ATYeOiAQ",
-                "https://www.youtube.com/watch?v=930HUhvRKHc",
+                {"id": "aTCWAb8wRd8", "upload_date": "20260918", "timestamp": ""},
+                {"id": "2a_ATYeOiAQ", "upload_date": "20260917", "timestamp": ""},
+                {"id": "930HUhvRKHc", "upload_date": "20260916", "timestamp": ""},
             ],
         )
-        command = run_ytdlp.call_args.args[0]
-        self.assertEqual(command[command.index("--playlist-end") + 1], "3")
+        self.assertNotIn("--playlist-end", run_ytdlp.call_args.args[0])
 
     def test_reads_live_chat_artifact_created_by_successful_ytdlp(self):
         with tempfile.TemporaryDirectory() as raw_dir:

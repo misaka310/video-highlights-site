@@ -53,9 +53,9 @@ Create `/etc/youtube-highlight/youtube.env` with mode `600`. Use real values
 only on the VM; never commit this file:
 
 ```text
-# Resolve the newest archive from this channel tab on every timer run.
+# Discover recent archives from this channel tab on every timer run.
 YOUTUBE_ORACLE_STREAMS_URL=https://www.youtube.com/@dotitube/streams
-# One timer run can hand off up to five unprocessed archives in one bundle.
+# One timer run hands off up to five oldest unprocessed archives from the last 60 days.
 YOUTUBE_ORACLE_MAX_VIDEOS=5
 # Optional one-video fallback when streams discovery is intentionally disabled.
 YOUTUBE_ORACLE_VIDEO_URL=https://www.youtube.com/watch?v=...
@@ -78,12 +78,17 @@ pre-authenticated requests cannot delete objects, so configure an OCI
 lifecycle rule that deletes the temporary object within one day. The GitHub token must be limited to this repository's
 `repository_dispatch` operation.
 
-When `YOUTUBE_ORACLE_STREAMS_URL` is set, the timer resolves up to five
-unprocessed archives from that channel's `/streams` tab and hands them to one
-Actions run. `YOUTUBE_ORACLE_MAX_VIDEOS` can lower that bound. Processed video
-IDs are kept in the state file, so a day without a new stream exits cleanly
-without re-running Whisper preparation. A fixed
-`YOUTUBE_ORACLE_VIDEO_URL` remains supported as a fallback.
+When `YOUTUBE_ORACLE_STREAMS_URL` is set, the timer discovers archives from the
+last 60 days, removes IDs already in Oracle state or the repository's published
+`data/vod_index.json`, then selects up to five in oldest-first order for one
+Actions run. `YOUTUBE_ORACLE_MAX_VIDEOS` can lower the five-item bound. A larger
+backlog advances by up to five eligible archives per daily run. Successful
+handoffs are retained in the Oracle state; an archive whose Oracle acquisition
+or material preparation fails is not marked processed and is retried on a
+later run. Published IDs are also excluded, so a stale state file does not
+cause already public VODs to be processed again. A fixed
+`YOUTUBE_ORACLE_VIDEO_URL` remains supported as a one-video manual fallback
+when streams discovery is unset.
 
 Install and enable the timer:
 
@@ -98,9 +103,11 @@ systemctl list-timers youtube-highlight.timer
 The daily acquisition timer is separate from the managed GitHub code-sync
 timer on the production Oracle VM. Code sync checks the repository's public
 `main` on boot and every five minutes; it does not start this acquisition job.
-Archives that appear after the 06:07 JST check stay unprocessed until a later
-acquisition run. Unprocessed archives are not discarded, and each run handles
-up to five.
+Archives that appear after the 06:07 JST check stay unprocessed until the next
+acquisition run. Unprocessed archives inside the 60-day window are not
+discarded; each run chooses the oldest eligible five (or fewer) and later runs
+continue through the backlog. Archives older than 60 days are outside the
+processing window.
 
 Useful one-shot checks are `systemctl start youtube-highlight.service` and
 `journalctl -u youtube-highlight.service`. The job prints only classified
