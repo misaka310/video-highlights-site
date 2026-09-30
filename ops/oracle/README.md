@@ -55,7 +55,7 @@ only on the VM; never commit this file:
 ```text
 # Discover recent archives from this channel tab on every timer run.
 YOUTUBE_ORACLE_STREAMS_URL=https://www.youtube.com/@dotitube/streams
-# One timer run hands off up to five oldest unprocessed archives from the last 60 days.
+# One timer run hands off up to five newest unprocessed archives from the last 60 days.
 YOUTUBE_ORACLE_MAX_VIDEOS=5
 # Optional one-video fallback when streams discovery is intentionally disabled.
 YOUTUBE_ORACLE_VIDEO_URL=https://www.youtube.com/watch?v=...
@@ -80,9 +80,11 @@ lifecycle rule that deletes the temporary object within one day. The GitHub toke
 
 When `YOUTUBE_ORACLE_STREAMS_URL` is set, the timer discovers archives from the
 last 60 days, removes IDs already in Oracle state or the repository's published
-`data/vod_index.json`, then selects up to five in oldest-first order for one
+`data/vod_index.json`, then selects up to five in newest-first order for one
 Actions run. `YOUTUBE_ORACLE_MAX_VIDEOS` can lower the five-item bound. A larger
-backlog advances by up to five eligible archives per daily run. Successful
+backlog advances from the newest eligible archives by up to five per daily run.
+Older unprocessed archives inside the 60-day window are retained and become
+eligible as newer archives are processed. Successful
 handoffs are retained in the Oracle state; an archive whose Oracle acquisition
 or material preparation fails is not marked processed and is retried on a
 later run. Published IDs are also excluded, so a stale state file does not
@@ -107,8 +109,8 @@ start; there is no separate periodic code-sync timer, and sync alone does not
 start this acquisition job.
 Archives that appear after the 06:07 JST check stay unprocessed until the next
 acquisition run. Unprocessed archives inside the 60-day window are not
-discarded; each run chooses the oldest eligible five (or fewer) and later runs
-continue through the backlog. Archives older than 60 days are outside the
+discarded; each run chooses the newest eligible five (or fewer) and later runs
+continue through the remaining backlog. Archives older than 60 days are outside the
 processing window.
 
 Useful one-shot checks are `systemctl start youtube-highlight.service` and
