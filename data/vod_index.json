@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-01T02:18:28+09:00",
+  "updated_at": "2026-10-01T03:21:45+09:00",
   "next_update_at": "2026-10-01T00:00:00+00:00",
   "videos": [
     {
@@ -247,6 +247,45 @@
       "chat_total": 1572,
       "comments_per_hour": 280.951,
       "detail_path": "/data/vods/13GjlTnKb5w.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "eOjsiBstzMw",
+      "vod_url": "https://www.youtube.com/watch?v=eOjsiBstzMw",
+      "title": "【本日公開】セキロ映画の予習復習で一周クリアするよ！【SEKIRO: SHADOWS DIE TWICE】",
+      "published_at": "2026-09-04T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/eOjsiBstzMw/maxresdefault.jpg",
+      "duration_sec": 10573,
+      "count": 3,
+      "chat_total": 640,
+      "comments_per_hour": 217.914,
+      "detail_path": "/data/vods/eOjsiBstzMw.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "pLDVnsAqhAI",
+      "vod_url": "https://www.youtube.com/watch?v=pLDVnsAqhAI",
+      "title": "【公開前日】映画セキロ予習会！映画までに再度クリアしておきたい【SEKIRO: SHADOWS DIE TWICE】",
+      "published_at": "2026-09-03T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/pLDVnsAqhAI/maxresdefault.jpg",
+      "duration_sec": 22251,
+      "count": 3,
+      "chat_total": 1381,
+      "comments_per_hour": 223.433,
+      "detail_path": "/data/vods/pLDVnsAqhAI.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "V4ptTBDfRvk",
+      "vod_url": "https://www.youtube.com/watch?v=V4ptTBDfRvk",
+      "title": "【祭】既プレイを疑われている女のエルデン←どちらとも読める【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-09-02T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/V4ptTBDfRvk/maxresdefault.jpg",
+      "duration_sec": 17778,
+      "count": 3,
+      "chat_total": 1786,
+      "comments_per_hour": 361.66,
+      "detail_path": "/data/vods/V4ptTBDfRvk.json",
       "provider": "youtube"
     },
     {
