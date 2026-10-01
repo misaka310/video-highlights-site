@@ -97,6 +97,9 @@ run. Published IDs are excluded, so a stale state file does not cause already
 public VODs to be processed again. A fixed
 `YOUTUBE_ORACLE_VIDEO_URL` remains supported as a one-video manual fallback
 when streams discovery is unset.
+That direct-video path also checks the published `data/vod_index.json` IDs
+before acquisition. A published ID is logged as `already_published` and exits
+without downloading media or dispatching another GitHub run.
 
 Install and enable the timer:
 
