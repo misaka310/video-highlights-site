@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-02T03:39:06+09:00",
+  "updated_at": "2026-10-02T06:57:47+09:00",
   "next_update_at": "2026-10-02T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "niXihsoXHzs",
+      "vod_url": "https://www.youtube.com/watch?v=niXihsoXHzs",
+      "title": "疲れた夜こそナイトレインに癒されたいわけ【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-01T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/niXihsoXHzs/maxresdefault.jpg",
+      "duration_sec": 11136,
+      "count": 3,
+      "chat_total": 760,
+      "comments_per_hour": 245.69,
+      "detail_path": "/data/vods/niXihsoXHzs.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "fHXrGwQAn-A",
       "vod_url": "https://www.youtube.com/watch?v=fHXrGwQAn-A",
@@ -624,6 +637,45 @@
       "chat_total": 647,
       "comments_per_hour": 325.58,
       "detail_path": "/data/vods/hzjvbPZzELE.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "zOIP5DucN1M",
+      "vod_url": "https://www.youtube.com/watch?v=zOIP5DucN1M",
+      "title": "【謝罪】先日の配信について、お話させていただきます。【閲覧注意】",
+      "published_at": "2026-08-08T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/zOIP5DucN1M/maxresdefault.jpg",
+      "duration_sec": 590,
+      "count": 1,
+      "chat_total": 333,
+      "comments_per_hour": 2031.864,
+      "detail_path": "/data/vods/zOIP5DucN1M.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "HtZo7fqNV0A",
+      "vod_url": "https://www.youtube.com/watch?v=HtZo7fqNV0A",
+      "title": "【閲覧注意】ネットワークテスト当落確認配信【T】",
+      "published_at": "2026-08-07T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/HtZo7fqNV0A/maxresdefault.jpg",
+      "duration_sec": 18045,
+      "count": 3,
+      "chat_total": 10033,
+      "comments_per_hour": 2001.596,
+      "detail_path": "/data/vods/HtZo7fqNV0A.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "PnQANAXovDA",
+      "vod_url": "https://www.youtube.com/watch?v=PnQANAXovDA",
+      "title": "2000時間プレイヤー魂の深度5到達※明日ダスブラ当落のためホルモンが乱れております【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-08-06T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/PnQANAXovDA/maxresdefault.jpg",
+      "duration_sec": 20584,
+      "count": 3,
+      "chat_total": 1463,
+      "comments_per_hour": 255.869,
+      "detail_path": "/data/vods/PnQANAXovDA.json",
       "provider": "youtube"
     }
   ]
