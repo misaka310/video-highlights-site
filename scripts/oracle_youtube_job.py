@@ -301,6 +301,57 @@ def _read_state() -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _merge_discovered_stream_records(
+    current_records: list[dict[str, Any]],
+    cached_records: list[dict[str, Any]],
+    *,
+    published_ids: set[str],
+    now: dt.datetime | None = None,
+) -> list[dict[str, str]]:
+    now_utc = now or _utc_now()
+    if now_utc.tzinfo is None:
+        now_utc = now_utc.replace(tzinfo=dt.timezone.utc)
+    now_utc = now_utc.astimezone(dt.timezone.utc)
+    cutoff = now_utc - dt.timedelta(days=PUBLIC_VOD_RETENTION_DAYS)
+    merged: dict[str, tuple[dt.datetime, dict[str, str]]] = {}
+
+    for source_records in (cached_records, current_records):
+        for record in source_records:
+            if not isinstance(record, dict):
+                continue
+            try:
+                video_id = parse_youtube_video_id(str(record.get("id") or ""))
+            except ValueError:
+                continue
+            if video_id in published_ids:
+                continue
+            upload_date = str(record.get("upload_date") or "").strip()
+            if not re.fullmatch(r"\d{8}", upload_date):
+                continue
+            try:
+                published_at = dt.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=dt.timezone.utc)
+            except ValueError:
+                continue
+            if published_at < cutoff or published_at > now_utc:
+                continue
+            timestamp = str(record.get("timestamp") or "").strip()
+            sort_at = published_at
+            if timestamp:
+                try:
+                    sort_at = dt.datetime.fromtimestamp(float(timestamp), tz=dt.timezone.utc)
+                except (OverflowError, OSError, ValueError):
+                    timestamp = ""
+            existing = merged.get(video_id)
+            if existing and not timestamp:
+                timestamp = existing[1]["timestamp"]
+                if timestamp:
+                    sort_at = dt.datetime.fromtimestamp(float(timestamp), tz=dt.timezone.utc)
+            normalized = {"id": video_id, "upload_date": upload_date, "timestamp": timestamp}
+            merged[video_id] = (sort_at, normalized)
+
+    return [item[1] for item in sorted(merged.values(), key=lambda item: item[0], reverse=True)]
+
+
 def _write_state(state: dict[str, Any]) -> None:
     path = _state_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -793,16 +844,29 @@ def main() -> int:
             if not Path(cookies).is_file():
                 raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
             run_started_at = _utc_now()
-            records = _resolve_stream_archive_records(
+            state = _read_state()
+            cached_records = state.get("discovered_stream_records")
+            if not isinstance(cached_records, list):
+                cached_records = []
+            current_records = _resolve_stream_archive_records(
                 args.streams_url,
                 ytdlp,
                 deno,
                 cookies,
                 now=run_started_at,
             )
+            published_ids = _read_published_video_ids()
+            records = _merge_discovered_stream_records(
+                current_records,
+                cached_records,
+                published_ids=published_ids,
+                now=run_started_at,
+            )
+            state["discovered_stream_records"] = records
+            _write_state(state)
             video_urls = _select_unpublished_stream_urls(
                 records,
-                published_ids=_read_published_video_ids(),
+                published_ids=published_ids,
                 limit=args.max_videos,
                 now=run_started_at,
             )

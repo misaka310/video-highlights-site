@@ -81,16 +81,20 @@ lifecycle rule that deletes the temporary object within one day. The GitHub toke
 When `YOUTUBE_ORACLE_STREAMS_URL` is set, the timer discovers archives from the
 last 60 days, removes IDs already present in the repository's published
 `data/vod_index.json`, then selects up to five in newest-first order for one
-Actions run. Oracle state records successful handoffs for diagnostics but does
-not suppress unpublished archives: a later GitHub processing or publication
-failure must leave the archive eligible for retry. `YOUTUBE_ORACLE_MAX_VIDEOS`
-can lower the five-item bound. A larger backlog advances from the newest
-eligible archives by up to five per daily run. Older unprocessed archives inside
-the 60-day window are retained and become eligible as newer archives are
-published. An archive whose Oracle acquisition or material preparation fails
-is not marked processed and is retried on a later run. Published IDs are
-excluded, so a stale state file does not cause already public VODs to be
-processed again. A fixed
+Actions run. Oracle state also keeps discovered archive IDs, upload dates, and
+timestamps for the 60-day window. Each run merges that cache with the current
+`/streams` listing, so a temporary listing omission does not lose an archive
+that was already discovered. The cache contains no titles, chat, or captions;
+published IDs and expired records are pruned before selection. State records of
+discovery or successful handoff do not suppress unpublished archives: a later
+GitHub processing or publication failure must leave the archive eligible for
+retry. `YOUTUBE_ORACLE_MAX_VIDEOS` can lower the five-item bound. A larger
+backlog advances from the newest eligible archives by up to five per daily run.
+Older unprocessed archives inside the 60-day window are retained and become
+eligible as newer archives are published. An archive whose Oracle acquisition
+or material preparation fails is not marked processed and is retried on a later
+run. Published IDs are excluded, so a stale state file does not cause already
+public VODs to be processed again. A fixed
 `YOUTUBE_ORACLE_VIDEO_URL` remains supported as a one-video manual fallback
 when streams discovery is unset.
 

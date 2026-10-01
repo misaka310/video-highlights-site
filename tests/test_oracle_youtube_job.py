@@ -77,6 +77,85 @@ class OracleYoutubeJobTests(unittest.TestCase):
             ],
         )
 
+    def test_merges_recent_cached_archives_when_streams_listing_omits_them(self):
+        now = dt.datetime(2026, 10, 1, tzinfo=dt.timezone.utc)
+        merged = oracle_youtube_job._merge_discovered_stream_records(
+            current_records=[
+                {"id": "2a_ATYeOiAQ", "upload_date": "20260929"},
+                {"id": "fHXrGwQAn-A", "upload_date": "20260930"},
+            ],
+            cached_records=[
+                {"id": "fHXrGwQAn-A", "upload_date": "20260930", "timestamp": "1790722800"},
+                {"id": "aTCWAb8wRd8", "upload_date": "20260928"},
+                {"id": "d41zBjWSGcc", "upload_date": "20260701"},
+                {"id": "bad-id", "upload_date": "20260930"},
+            ],
+            published_ids={"aTCWAb8wRd8"},
+            now=now,
+        )
+
+        self.assertEqual(
+            merged,
+            [
+                {"id": "fHXrGwQAn-A", "upload_date": "20260930", "timestamp": "1790722800"},
+                {"id": "2a_ATYeOiAQ", "upload_date": "20260929", "timestamp": ""},
+            ],
+        )
+
+    def test_main_retries_cached_candidate_omitted_from_streams_listing(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookie_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookie_path.write_text("", encoding="utf-8")
+            state = {
+                "processed_video_ids": [],
+                "discovered_stream_records": [
+                    {"id": "fHXrGwQAn-A", "upload_date": "20260930", "timestamp": "1790722800"}
+                ],
+            }
+            output = StringIO()
+            expected_urls = [
+                "https://www.youtube.com/watch?v=fHXrGwQAn-A",
+                "https://www.youtube.com/watch?v=2a_ATYeOiAQ",
+            ]
+            with patch.dict(
+                os.environ,
+                {
+                    "YOUTUBE_ORACLE_STREAMS_URL": "https://www.youtube.com/@dotitube/streams",
+                    "YOUTUBE_ORACLE_COOKIES_PATH": str(cookie_path),
+                },
+                clear=True,
+            ), patch.object(sys, "argv", ["oracle_youtube_job"]), patch.object(
+                oracle_youtube_job,
+                "_utc_now",
+                return_value=dt.datetime(2026, 10, 1, tzinfo=dt.timezone.utc),
+            ), patch.object(
+                oracle_youtube_job,
+                "_resolve_stream_archive_records",
+                return_value=[{"id": "2a_ATYeOiAQ", "upload_date": "20260929"}],
+            ), patch.object(
+                oracle_youtube_job, "_read_published_video_ids", return_value=set()
+            ), patch.object(
+                oracle_youtube_job, "_read_state", return_value=state
+            ), patch.object(
+                oracle_youtube_job, "_write_state"
+            ) as write_state, patch.object(
+                oracle_youtube_job, "run_batch", return_value=[]
+            ) as run_batch, patch.object(
+                oracle_youtube_job, "_notify"
+            ), redirect_stdout(output):
+                exit_code = oracle_youtube_job.main()
+
+        self.assertEqual(exit_code, 0)
+        run_batch.assert_called_once_with(expected_urls)
+        write_state.assert_called_once()
+        self.assertEqual(
+            state["discovered_stream_records"],
+            [
+                {"id": "fHXrGwQAn-A", "upload_date": "20260930", "timestamp": "1790722800"},
+                {"id": "2a_ATYeOiAQ", "upload_date": "20260929", "timestamp": ""},
+            ],
+        )
+
     def test_main_selects_newest_unpublished_before_limiting_to_five(self):
         with tempfile.TemporaryDirectory() as raw_dir:
             cookie_path = Path(raw_dir) / "youtube-cookies.txt"
@@ -118,6 +197,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 oracle_youtube_job, "_read_published_video_ids", return_value={"2a_ATYeOiAQ"}
             ), patch.object(
                 oracle_youtube_job, "_read_state", return_value={"processed_video_ids": ["aTCWAb8wRd8"]}
+            ), patch.object(
+                oracle_youtube_job, "_write_state"
             ), patch.object(
                 oracle_youtube_job, "run_batch", return_value=[]
             ) as run_batch, patch.object(
