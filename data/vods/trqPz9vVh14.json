@@ -1,0 +1,81 @@
+{
+  "vod_id": "trqPz9vVh14",
+  "vod_url": "https://www.youtube.com/watch?v=trqPz9vVh14",
+  "title": "【新情報】試写会現地レポ有！SEKIRO周りの新情報を全部追う！【SEKIRO: NO DEFEAT】",
+  "published_at": "2026-08-14T00:00:00+00:00",
+  "thumbnail_url": "https://i.ytimg.com/vi/trqPz9vVh14/maxresdefault.jpg",
+  "duration_sec": 5217,
+  "count": 3,
+  "chat_total": 326,
+  "comments_per_hour": 224.957,
+  "items": [
+    {
+      "rank": 1,
+      "id": "trqPz9vVh14_1760_1880",
+      "start_sec": 1760,
+      "end_sec": 1880,
+      "duration_sec": 120,
+      "start_time": "00:29:20",
+      "end_time": "00:31:20",
+      "reason": "Chat activity spike around 0h29m20s (z-score=3.99).",
+      "headline": "ラウンジが使う高そうなソファ",
+      "tags": [
+        "ww",
+        "ホラー",
+        "好プレー"
+      ],
+      "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=1760s",
+      "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_1760_1880.webp"
+    },
+    {
+      "rank": 2,
+      "id": "trqPz9vVh14_3680_3730",
+      "start_sec": 3680,
+      "end_sec": 3730,
+      "duration_sec": 50,
+      "start_time": "01:01:20",
+      "end_time": "01:02:10",
+      "reason": "Chat activity spike around 1h1m20s (z-score=3.99).",
+      "headline": "エンディング話し合いは大したことなし",
+      "tags": [],
+      "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=3680s",
+      "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_3680_3730.webp"
+    },
+    {
+      "rank": 3,
+      "id": "trqPz9vVh14_650_700",
+      "start_sec": 650,
+      "end_sec": 700,
+      "duration_sec": 50,
+      "start_time": "00:10:50",
+      "end_time": "00:11:40",
+      "reason": "Chat activity spike around 0h10m50s (z-score=3.99).",
+      "headline": "最近、おにぎりは300円程度",
+      "tags": [],
+      "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=650s",
+      "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_650_700.webp"
+    }
+  ],
+  "activity_map": {
+    "bucket_sec": 10,
+    "duration_sec": 5217,
+    "last_comment_sec": 5182,
+    "buckets": [
+      2, 0, 0, 1, 1, 1, 0, 1, 2, 0, 0, 0, 0, 0, 2, 2, 1, 1, 1, 0, 0, 3, 0, 1, 1, 0, 1, 0, 2, 1, 1, 2, 0, 0, 1, 0, 1, 0, 0, 1,
+      2, 0, 0, 2, 1, 2, 0, 0, 1, 1, 0, 0, 2, 2, 0, 1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 0, 4, 2, 0, 0, 2, 0, 1, 0, 1, 1, 0, 2, 0,
+      0, 2, 2, 1, 2, 0, 0, 1, 1, 2, 0, 1, 2, 1, 1, 3, 0, 0, 0, 2, 2, 1, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0, 2, 3, 2, 3, 0, 2,
+      0, 2, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 3, 1, 2, 2, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 1, 2, 0, 0, 0, 1, 1, 2, 0, 1, 1, 0, 2,
+      0, 0, 2, 1, 1, 1, 0, 1, 2, 0, 0, 1, 0, 0, 2, 2, 1, 1, 4, 3, 0, 1, 4, 3, 1, 3, 0, 2, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1,
+      2, 1, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 2, 0, 3, 2, 2, 1, 2, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 2, 1, 0, 0, 0, 2, 0,
+      1, 2, 3, 1, 2, 1, 0, 1, 1, 2, 2, 0, 0, 0, 0, 0, 2, 0, 3, 0, 2, 0, 1, 1, 2, 2, 0, 0, 2, 0, 2, 1, 0, 1, 2, 1, 2, 1, 0, 0,
+      1, 0, 1, 0, 0, 0, 0, 2, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
+      0, 1, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0,
+      0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4, 2, 0, 0, 1, 0, 1, 2, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 2, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0,
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 1, 0, 1, 1, 2, 0, 0, 0, 1, 1, 1, 0, 2, 0, 0, 0, 0, 3, 1, 0, 1, 0, 1, 0,
+      0, 0, 0
+    ]
+  },
+  "provider": "youtube"
+}
