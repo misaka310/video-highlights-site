@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import tempfile
+import time
 import unittest
 from contextlib import redirect_stdout
 from io import StringIO
@@ -18,6 +19,56 @@ import oracle_youtube_job  # noqa: E402
 
 
 class OracleYoutubeJobTests(unittest.TestCase):
+    def assert_process_stopped(self, process_id):
+        for _ in range(40):
+            try:
+                os.kill(process_id, 0)
+            except ProcessLookupError:
+                return
+            stat_path = Path(f"/proc/{process_id}/stat")
+            if stat_path.exists() and stat_path.read_text(encoding="utf-8").rsplit(")", 1)[1].split()[0] == "Z":
+                return
+            time.sleep(0.05)
+        self.fail(f"child process {process_id} remained running")
+
+    @unittest.skipUnless(os.name == "posix", "POSIX process groups are used on Oracle")
+    def test_cleans_up_child_processes_after_command_exits(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            child_pid_path = Path(raw_dir) / "child.pid"
+            parent_code = (
+                "import subprocess, sys, time; "
+                "child = subprocess.Popen([sys.executable, '-c', "
+                "'import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)']); "
+                f"open({str(child_pid_path)!r}, 'w').write(str(child.pid)); "
+                "time.sleep(0.1)"
+            )
+
+            with patch.object(oracle_youtube_job, "PROCESS_GROUP_TERMINATION_GRACE_SECONDS", 0.2):
+                completed = oracle_youtube_job._run_captured([sys.executable, "-c", parent_code], timeout=5)
+
+            self.assertEqual(completed.returncode, 0)
+            child_pid = int(child_pid_path.read_text(encoding="utf-8"))
+            self.assert_process_stopped(child_pid)
+
+    @unittest.skipUnless(os.name == "posix", "POSIX process groups are used on Oracle")
+    def test_timeout_stops_child_processes_before_raising(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            child_pid_path = Path(raw_dir) / "child.pid"
+            child_code = "import signal, time; signal.signal(signal.SIGTERM, signal.SIG_IGN); time.sleep(60)"
+            parent_code = (
+                "import subprocess, sys, time; "
+                f"child = subprocess.Popen([sys.executable, '-c', {child_code!r}]); "
+                f"open({str(child_pid_path)!r}, 'w').write(str(child.pid)); "
+                "time.sleep(60)"
+            )
+
+            with patch.object(oracle_youtube_job, "PROCESS_GROUP_TERMINATION_GRACE_SECONDS", 0.2):
+                with self.assertRaises(oracle_youtube_job.subprocess.TimeoutExpired):
+                    oracle_youtube_job._run_captured([sys.executable, "-c", parent_code], timeout=0.1)
+
+            child_pid = int(child_pid_path.read_text(encoding="utf-8"))
+            self.assert_process_stopped(child_pid)
+
     def test_selects_newest_unpublished_public_window_archives_before_capping(self):
         now = dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc)
         records = [
@@ -435,7 +486,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
         def fake_run(_command, **_kwargs):
             return responses.pop(0)
 
-        with patch.object(oracle_youtube_job.subprocess, "run", side_effect=fake_run), patch.object(
+        with patch.object(oracle_youtube_job, "_run_captured", side_effect=fake_run), patch.object(
             oracle_youtube_job.time, "sleep", return_value=None
         ) as sleep:
             completed = oracle_youtube_job._run_ytdlp(["yt-dlp"], timeout=10)
@@ -447,7 +498,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
         def fake_run(_command, **_kwargs):
             return SimpleNamespace(returncode=1, stdout="", stderr="ERROR: Sign in to confirm your age")
 
-        with patch.object(oracle_youtube_job.subprocess, "run", side_effect=fake_run), patch.object(
+        with patch.object(oracle_youtube_job, "_run_captured", side_effect=fake_run), patch.object(
             oracle_youtube_job.time, "sleep", return_value=None
         ) as sleep:
             with self.assertRaises(oracle_youtube_job.OracleJobFailure) as caught:
@@ -460,7 +511,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
         def fake_run(_command, **_kwargs):
             return SimpleNamespace(returncode=1, stdout="", stderr="ERROR: The page needs to be reloaded.")
 
-        with patch.object(oracle_youtube_job.subprocess, "run", side_effect=fake_run), patch.object(
+        with patch.object(oracle_youtube_job, "_run_captured", side_effect=fake_run), patch.object(
             oracle_youtube_job.time, "sleep", return_value=None
         ) as sleep:
             with self.assertRaises(oracle_youtube_job.OracleJobFailure) as caught:
@@ -478,7 +529,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
 
         fake_run.calls = 0
 
-        with patch.object(oracle_youtube_job.subprocess, "run", side_effect=fake_run), patch.object(
+        with patch.object(oracle_youtube_job, "_run_captured", side_effect=fake_run), patch.object(
             oracle_youtube_job.time, "sleep", return_value=None
         ) as sleep:
             completed = oracle_youtube_job._run_ytdlp(["yt-dlp"], timeout=10)
@@ -494,7 +545,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 stderr="ERROR: [youtube] abc: Join this channel to get access to members-only content",
             )
 
-        with patch.object(oracle_youtube_job.subprocess, "run", side_effect=fake_run), patch.object(
+        with patch.object(oracle_youtube_job, "_run_captured", side_effect=fake_run), patch.object(
             oracle_youtube_job.time, "sleep", return_value=None
         ) as sleep:
             with self.assertRaises(oracle_youtube_job.OracleJobFailure) as caught:

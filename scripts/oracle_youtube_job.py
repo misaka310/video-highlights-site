@@ -11,9 +11,11 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import locale
 import math
 import os
 import re
+import signal
 import subprocess
 import tempfile
 import time
@@ -60,6 +62,7 @@ STREAM_DISCOVERY_DATE_BUFFER_DAYS = 2
 YTDLP_TRANSIENT_RETRY_ATTEMPTS = 3
 YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS = 20
 TRANSIENT_YTDLP_CATEGORIES = {"temporary_network_failure", "yt_dlp_failure"}
+PROCESS_GROUP_TERMINATION_GRACE_SECONDS = 2.0
 
 
 def _env(name: str, default: str = "") -> str:
@@ -74,15 +77,79 @@ def _path_env(name: str, default: str) -> str:
     return os.path.expandvars(os.path.expanduser(_env(name, default)))
 
 
+def _terminate_process_group(process_group_id: int) -> None:
+    if os.name != "posix":
+        return
+    try:
+        os.killpg(process_group_id, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+
+    deadline = time.monotonic() + PROCESS_GROUP_TERMINATION_GRACE_SECONDS
+    while time.monotonic() < deadline:
+        try:
+            os.killpg(process_group_id, 0)
+        except ProcessLookupError:
+            return
+        time.sleep(0.05)
+
+    try:
+        os.killpg(process_group_id, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+
+
+def _read_captured_output(stream: Any) -> str:
+    stream.flush()
+    stream.seek(0)
+    return stream.read().decode(locale.getpreferredencoding(False), errors="replace")
+
+
+def _run_captured(command: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+    if os.name != "posix":
+        return subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
+
+    # File-backed capture lets wait() observe the command even if a child inherits stdout/stderr.
+    with tempfile.TemporaryFile(mode="w+b") as stdout_file, tempfile.TemporaryFile(mode="w+b") as stderr_file:
+        process = subprocess.Popen(
+            command,
+            stdout=stdout_file,
+            stderr=stderr_file,
+            start_new_session=True,
+        )
+        try:
+            return_code = process.wait(timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            _terminate_process_group(process.pid)
+            try:
+                process.wait(timeout=PROCESS_GROUP_TERMINATION_GRACE_SECONDS + 1)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+            stdout = _read_captured_output(stdout_file)
+            stderr = _read_captured_output(stderr_file)
+            raise subprocess.TimeoutExpired(command, timeout, output=stdout, stderr=stderr) from exc
+        except BaseException:
+            _terminate_process_group(process.pid)
+            try:
+                process.wait(timeout=PROCESS_GROUP_TERMINATION_GRACE_SECONDS + 1)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait()
+            raise
+
+        _terminate_process_group(process.pid)
+        return subprocess.CompletedProcess(
+            command,
+            return_code,
+            stdout=_read_captured_output(stdout_file),
+            stderr=_read_captured_output(stderr_file),
+        )
+
+
 def _run(command: list[str], *, category: str, timeout: int = 900) -> subprocess.CompletedProcess[str]:
     try:
-        completed = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            check=False,
-        )
+        completed = _run_captured(command, timeout=timeout)
     except FileNotFoundError as exc:
         raise OracleJobFailure(category, "required runtime was not found") from exc
     except subprocess.TimeoutExpired as exc:
@@ -124,7 +191,7 @@ def _run_ytdlp(
     bounded_attempts = max(1, int(attempts))
     for attempt in range(1, bounded_attempts + 1):
         try:
-            completed = subprocess.run(command, capture_output=True, text=True, timeout=timeout, check=False)
+            completed = _run_captured(command, timeout=timeout)
         except FileNotFoundError as exc:
             raise OracleJobFailure("yt_dlp_deno_failure", "yt-dlp or its runtime was not found") from exc
         except subprocess.TimeoutExpired as exc:
