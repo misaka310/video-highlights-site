@@ -1,0 +1,83 @@
+{
+  "vod_id": "ZRkL_2jJYuU",
+  "vod_url": "https://www.youtube.com/watch?v=ZRkL_2jJYuU",
+  "title": "【GRWM】ネットワークテストを完ぺきにこなすためルールを再確認いたします→行ってきます【The Duskbloods/ダスクブラッド】",
+  "published_at": "2026-08-21T00:00:00+00:00",
+  "thumbnail_url": "https://i.ytimg.com/vi/ZRkL_2jJYuU/maxresdefault.jpg",
+  "duration_sec": 4723,
+  "count": 3,
+  "chat_total": 913,
+  "comments_per_hour": 695.914,
+  "items": [
+    {
+      "rank": 1,
+      "id": "ZRkL_2jJYuU_2210_2300",
+      "start_sec": 2210,
+      "end_sec": 2300,
+      "duration_sec": 90,
+      "start_time": "00:36:50",
+      "end_time": "00:38:20",
+      "reason": "Chat activity spike around 0h36m50s (z-score=3.869).",
+      "headline": "フェーズに行けず謝罪",
+      "tags": [
+        "ww",
+        "好プレー"
+      ],
+      "watch_url": "https://www.youtube.com/watch?v=ZRkL_2jJYuU&t=2210s",
+      "screenshot_url": "/data/segment-thumbnails/ZRkL_2jJYuU/ZRkL_2jJYuU_2210_2300.webp"
+    },
+    {
+      "rank": 2,
+      "id": "ZRkL_2jJYuU_4610_4660",
+      "start_sec": 4610,
+      "end_sec": 4660,
+      "duration_sec": 50,
+      "start_time": "01:16:50",
+      "end_time": "01:17:40",
+      "reason": "Chat activity spike around 1h16m50s (z-score=3.869).",
+      "headline": "言われたレベルを信じた",
+      "tags": [
+        "ww",
+        "好プレー"
+      ],
+      "watch_url": "https://www.youtube.com/watch?v=ZRkL_2jJYuU&t=4610s",
+      "screenshot_url": "/data/segment-thumbnails/ZRkL_2jJYuU/ZRkL_2jJYuU_4610_4660.webp"
+    },
+    {
+      "rank": 3,
+      "id": "ZRkL_2jJYuU_3690_3740",
+      "start_sec": 3690,
+      "end_sec": 3740,
+      "duration_sec": 50,
+      "start_time": "01:01:30",
+      "end_time": "01:02:20",
+      "reason": "Chat activity spike around 1h1m30s (z-score=3.232).",
+      "headline": "パションゲージオうんのすごい音楽",
+      "tags": [
+        "好プレー"
+      ],
+      "watch_url": "https://www.youtube.com/watch?v=ZRkL_2jJYuU&t=3690s",
+      "screenshot_url": "/data/segment-thumbnails/ZRkL_2jJYuU/ZRkL_2jJYuU_3690_3740.webp"
+    }
+  ],
+  "activity_map": {
+    "bucket_sec": 10,
+    "duration_sec": 4725,
+    "last_comment_sec": 4725,
+    "buckets": [
+      3, 0, 0, 0, 2, 2, 0, 3, 0, 0, 1, 1, 2, 2, 0, 2, 1, 1, 0, 4, 2, 1, 3, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0, 0, 1, 0,
+      1, 1, 2, 1, 0, 2, 1, 0, 1, 1, 1, 1, 2, 0, 1, 2, 0, 2, 2, 1, 1, 0, 3, 0, 1, 0, 4, 2, 2, 3, 2, 1, 2, 0, 0, 0, 0, 5, 1, 1,
+      2, 0, 2, 0, 1, 1, 4, 0, 2, 1, 0, 2, 2, 4, 3, 2, 1, 0, 0, 0, 1, 2, 6, 1, 0, 0, 1, 1, 1, 4, 3, 5, 1, 4, 4, 3, 3, 1, 3, 0,
+      2, 1, 0, 2, 1, 4, 3, 0, 2, 2, 2, 3, 1, 1, 1, 5, 2, 1, 1, 1, 0, 1, 2, 2, 3, 1, 0, 1, 2, 3, 3, 6, 1, 4, 2, 1, 1, 1, 3, 2,
+      2, 2, 2, 3, 2, 1, 0, 0, 1, 2, 1, 3, 2, 0, 0, 4, 2, 2, 1, 0, 2, 3, 3, 2, 1, 2, 3, 3, 5, 1, 1, 0, 0, 6, 1, 3, 3, 0, 5, 4,
+      0, 1, 0, 5, 3, 2, 3, 3, 0, 0, 2, 2, 0, 0, 1, 0, 2, 3, 1, 2, 2, 2, 0, 7, 8, 2, 3, 6, 2, 2, 0, 4, 3, 0, 1, 3, 3, 2, 2, 3,
+      3, 2, 0, 2, 2, 1, 1, 1, 5, 3, 1, 6, 4, 2, 3, 3, 4, 3, 3, 2, 4, 6, 0, 0, 3, 1, 0, 0, 0, 2, 3, 0, 1, 2, 0, 0, 3, 1, 2, 3,
+      1, 1, 0, 0, 0, 1, 3, 3, 6, 5, 3, 1, 4, 1, 2, 0, 3, 2, 1, 3, 4, 2, 0, 1, 0, 2, 3, 5, 3, 2, 3, 2, 3, 5, 1, 2, 3, 0, 1, 3,
+      4, 4, 0, 0, 0, 0, 0, 3, 1, 2, 2, 2, 2, 1, 1, 0, 3, 3, 4, 1, 1, 3, 1, 2, 3, 0, 1, 1, 1, 0, 2, 2, 1, 2, 0, 2, 1, 2, 3, 3,
+      4, 4, 4, 2, 1, 3, 3, 4, 1, 1, 3, 7, 0, 3, 2, 2, 1, 3, 2, 3, 4, 2, 3, 1, 3, 1, 2, 1, 0, 3, 2, 3, 1, 1, 2, 3, 3, 0, 2, 1,
+      3, 3, 0, 3, 2, 0, 4, 2, 1, 2, 5, 0, 6, 3, 1, 2, 2, 3, 4, 1, 2, 2, 5, 0, 5, 3, 3, 1, 1, 1, 6, 4, 3, 1, 2, 1, 3, 5, 1, 2,
+      4, 0, 0, 2, 6, 2, 1, 1, 3, 3, 2, 3, 5, 4, 3, 2, 2, 1, 2, 2, 3, 4, 2, 8, 5, 3, 1, 4, 3, 1, 4, 6, 5, 0
+    ]
+  },
+  "provider": "youtube"
+}
