@@ -260,6 +260,35 @@ class OracleYoutubeJobTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         run_batch.assert_called_once_with(expected_urls)
 
+    def test_main_skips_direct_video_url_when_already_published(self):
+        video_id = "ndKhBP5HXvc"
+        output = StringIO()
+        with patch.dict(os.environ, {}, clear=True), patch.object(
+            sys,
+            "argv",
+            [
+                "oracle_youtube_job",
+                "--streams-url",
+                "",
+                "--video-url",
+                f"https://www.youtube.com/watch?v={video_id}",
+            ],
+        ), patch.object(
+            oracle_youtube_job, "_read_published_video_ids", return_value={video_id}
+        ) as read_published_ids, patch.object(
+            oracle_youtube_job, "run"
+        ) as run, patch.object(
+            oracle_youtube_job, "_notify"
+        ) as notify, redirect_stdout(output):
+            exit_code = oracle_youtube_job.main()
+
+        self.assertEqual(exit_code, 0)
+        read_published_ids.assert_called_once_with()
+        run.assert_not_called()
+        notify.assert_called_once_with(None)
+        self.assertIn(f"selected video_id={video_id}", output.getvalue())
+        self.assertIn(f"skipped video_id={video_id} category=already_published", output.getvalue())
+
     def test_processed_state_keeps_all_ids_instead_of_truncating_history(self):
         with tempfile.TemporaryDirectory() as raw_dir:
             state_path = Path(raw_dir) / "state.json"
@@ -292,6 +321,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 },
                 clear=True,
             ), patch.object(sys, "argv", ["oracle_youtube_job"]), patch.object(
+                oracle_youtube_job, "_read_published_video_ids", return_value=set()
+            ), patch.object(
                 oracle_youtube_job, "run", return_value=result
             ), patch.object(
                 oracle_youtube_job, "_mark_processed"
