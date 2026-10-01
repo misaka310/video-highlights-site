@@ -1,9 +1,9 @@
 {
   "verified": true,
-  "verified_at": "2026-10-01T00:58:48.357526+00:00",
-  "main_sha": "d8c807fa0f8a88f9296b71e74466195a71bed357",
-  "updated_at": "2026-10-01T09:34:38+09:00",
-  "latest_vod_id": "AI5K5VH3BhY",
-  "expected_sha256": "3445269fb3c474e025e8f12f9774f2c245502f3facc36286ec51f78286e97b76",
-  "live_sha256": "3445269fb3c474e025e8f12f9774f2c245502f3facc36286ec51f78286e97b76"
+  "verified_at": "2026-10-01T17:01:48.589530+00:00",
+  "main_sha": "1896f5192f4200583113117c03a10d9a025f5bde",
+  "updated_at": "2026-10-02T00:12:16+09:00",
+  "latest_vod_id": "fHXrGwQAn-A",
+  "expected_sha256": "8d3a422df927fb6224156d5a5710a8f03ed5d277c1e4fc84d0778bb026359861",
+  "live_sha256": "8d3a422df927fb6224156d5a5710a8f03ed5d277c1e4fc84d0778bb026359861"
 }
