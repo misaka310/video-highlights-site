@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-01T10:38:30+09:00",
+  "updated_at": "2026-10-02T00:12:16+09:00",
   "next_update_at": "2026-10-02T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "fHXrGwQAn-A",
+      "vod_url": "https://www.youtube.com/watch?v=fHXrGwQAn-A",
+      "title": "【初回】神ゲーらしいと評判の鬼武者新作で弾き欲を満たす！【鬼武者 Way of the Sword】",
+      "published_at": "2026-09-30T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/fHXrGwQAn-A/maxresdefault.jpg",
+      "duration_sec": 14199,
+      "count": 3,
+      "chat_total": 1748,
+      "comments_per_hour": 443.186,
+      "detail_path": "/data/vods/fHXrGwQAn-A.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "AI5K5VH3BhY",
       "vod_url": "https://www.youtube.com/watch?v=AI5K5VH3BhY",
@@ -533,6 +546,45 @@
       "chat_total": 1326,
       "comments_per_hour": 511.366,
       "detail_path": "/data/vods/Q3Yv0juD0MQ.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "5VzXYJdQwMY",
+      "vod_url": "https://www.youtube.com/watch?v=5VzXYJdQwMY",
+      "title": "【が、ま】カンストさん()本当にガチれば負けなかったのか？連勝チャレンジしてみる【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-08-16T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/5VzXYJdQwMY/maxresdefault.jpg",
+      "duration_sec": 20209,
+      "count": 3,
+      "chat_total": 2047,
+      "comments_per_hour": 364.649,
+      "detail_path": "/data/vods/5VzXYJdQwMY.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "trqPz9vVh14",
+      "vod_url": "https://www.youtube.com/watch?v=trqPz9vVh14",
+      "title": "【新情報】試写会現地レポ有！SEKIRO周りの新情報を全部追う！【SEKIRO: NO DEFEAT】",
+      "published_at": "2026-08-14T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/trqPz9vVh14/maxresdefault.jpg",
+      "duration_sec": 5217,
+      "count": 3,
+      "chat_total": 326,
+      "comments_per_hour": 224.957,
+      "detail_path": "/data/vods/trqPz9vVh14.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "e3Y_F3kFS-4",
+      "vod_url": "https://www.youtube.com/watch?v=e3Y_F3kFS-4",
+      "title": "【条件付参加型】果たしてあなたはこの深き夜に参加できるのか【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-08-13T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/e3Y_F3kFS-4/maxresdefault.jpg",
+      "duration_sec": 8240,
+      "count": 3,
+      "chat_total": 499,
+      "comments_per_hour": 218.01,
+      "detail_path": "/data/vods/e3Y_F3kFS-4.json",
       "provider": "youtube"
     }
   ]
