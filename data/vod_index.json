@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-01T09:34:38+09:00",
+  "updated_at": "2026-10-01T10:38:30+09:00",
   "next_update_at": "2026-10-02T00:00:00+00:00",
   "videos": [
     {
@@ -494,6 +494,45 @@
       "chat_total": 2759,
       "comments_per_hour": 667.904,
       "detail_path": "/data/vods/6BFwPp7-Ulw.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "_ntSaLv5LEs",
+      "vod_url": "https://www.youtube.com/watch?v=_ntSaLv5LEs",
+      "title": "【検証】カンストさん()本当にガチれば負けなかったのか？連勝チャレンジしてみる②【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-08-20T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/_ntSaLv5LEs/maxresdefault.jpg",
+      "duration_sec": 12325,
+      "count": 3,
+      "chat_total": 1146,
+      "comments_per_hour": 334.734,
+      "detail_path": "/data/vods/_ntSaLv5LEs.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "mZD_9m0T4M4",
+      "vod_url": "https://www.youtube.com/watch?v=mZD_9m0T4M4",
+      "title": "【検証】カンストさん()本当にガチれば負けなかったのか？連勝チャレンジしてみる②【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-08-19T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/mZD_9m0T4M4/maxresdefault.jpg",
+      "duration_sec": 13218,
+      "count": 3,
+      "chat_total": 1506,
+      "comments_per_hour": 410.168,
+      "detail_path": "/data/vods/mZD_9m0T4M4.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "Q3Yv0juD0MQ",
+      "vod_url": "https://www.youtube.com/watch?v=Q3Yv0juD0MQ",
+      "title": "【本日DL開始！】私の読みだと新情報そろそろ出てしまうのでテスト前に妄想出し尽くす会【The Duskbloods/ダスクブラッド】",
+      "published_at": "2026-08-18T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/Q3Yv0juD0MQ/maxresdefault.jpg",
+      "duration_sec": 9335,
+      "count": 3,
+      "chat_total": 1326,
+      "comments_per_hour": 511.366,
+      "detail_path": "/data/vods/Q3Yv0juD0MQ.json",
       "provider": "youtube"
     }
   ]
