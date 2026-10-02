@@ -301,6 +301,118 @@ class OracleYoutubeJobTests(unittest.TestCase):
 
         self.assertEqual(state["processed_video_ids"], initial_ids + ["new-video"])
 
+    def test_failure_state_retains_only_bounded_safe_diagnostics(self):
+        video_id = "ndKhBP5HXvc"
+        now = dt.datetime(2026, 10, 2, 6, 59, tzinfo=dt.timezone.utc)
+        with tempfile.TemporaryDirectory() as raw_dir:
+            state_path = Path(raw_dir) / "state.json"
+            expired_failure = {
+                "video_id": "aTCWAb8wRd8",
+                "failed_at": "2026-07-01T00:00:00Z",
+                "category": "yt_dlp_failure",
+                "stage": "media_cut",
+                "reason_code": "media_section_not_created",
+            }
+            recent_failures = [
+                {
+                    "video_id": "fHXrGwQAn-A",
+                    "failed_at": "2026-10-01T06:59:00Z",
+                    "category": "yt_dlp_failure",
+                    "stage": "media_cut",
+                    "reason_code": "media_section_not_created",
+                }
+                for _ in range(oracle_youtube_job.MAX_FAILURE_RECORDS)
+            ]
+            state_path.write_text(
+                json.dumps({"failure_records": [expired_failure, *recent_failures]}),
+                encoding="utf-8",
+            )
+            failure = oracle_youtube_job.OracleJobFailure(
+                "yt_dlp_failure",
+                "private stderr and URL must not be retained: https://example.invalid/token=secret",
+                stage="media_cut",
+                reason_code="media_section_not_created",
+            )
+            with patch.dict(os.environ, {"YOUTUBE_ORACLE_STATE_PATH": str(state_path)}):
+                oracle_youtube_job._record_failure(video_id, failure, now=now)
+
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            serialized_state = state_path.read_text(encoding="utf-8")
+
+        self.assertEqual(len(state["failure_records"]), oracle_youtube_job.MAX_FAILURE_RECORDS)
+        self.assertEqual(
+            state["failure_records"][-1],
+            {
+                "video_id": video_id,
+                "failed_at": "2026-10-02T06:59:00Z",
+                "category": "yt_dlp_failure",
+                "stage": "media_cut",
+                "reason_code": "media_section_not_created",
+            },
+        )
+        self.assertNotIn("aTCWAb8wRd8", [record["video_id"] for record in state["failure_records"]])
+        self.assertNotIn("private stderr", serialized_state)
+
+    def test_run_persists_failure_reason_without_marking_video_processed(self):
+        video_id = "ndKhBP5HXvc"
+        with tempfile.TemporaryDirectory() as raw_dir:
+            root = Path(raw_dir)
+            cookies_path = root / "youtube-cookies.txt"
+            cookies_path.write_text("", encoding="utf-8")
+            state_path = root / "state.json"
+            state_path.write_text("{}", encoding="utf-8")
+            failure = oracle_youtube_job.OracleJobFailure(
+                "yt_dlp_failure",
+                "selected media section was not created",
+                stage="media_cut",
+                reason_code="media_section_not_created",
+            )
+            env = {
+                "YOUTUBE_ORACLE_STATE_PATH": str(state_path),
+                "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
+                "YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL": "https://par.example/upload",
+                "YOUTUBE_ORACLE_WORK_ROOT": str(root),
+            }
+            with patch.dict(os.environ, env), patch.object(
+                oracle_youtube_job, "_prepare_material", side_effect=failure
+            ):
+                with self.assertRaises(oracle_youtube_job.OracleJobFailure):
+                    oracle_youtube_job.run(f"https://www.youtube.com/watch?v={video_id}")
+
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(state.get("processed_video_ids", []), [])
+        self.assertEqual(state["failure_records"][0]["video_id"], video_id)
+        self.assertEqual(state["failure_records"][0]["reason_code"], "media_section_not_created")
+
+    def test_run_persists_safe_reason_for_unexpected_exception(self):
+        video_id = "ndKhBP5HXvc"
+        with tempfile.TemporaryDirectory() as raw_dir:
+            root = Path(raw_dir)
+            cookies_path = root / "youtube-cookies.txt"
+            cookies_path.write_text("", encoding="utf-8")
+            state_path = root / "state.json"
+            state_path.write_text("{}", encoding="utf-8")
+            env = {
+                "YOUTUBE_ORACLE_STATE_PATH": str(state_path),
+                "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
+                "YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL": "https://par.example/upload",
+                "YOUTUBE_ORACLE_WORK_ROOT": str(root),
+            }
+            with patch.dict(os.environ, env), patch.object(
+                oracle_youtube_job,
+                "_prepare_material",
+                side_effect=ValueError("private URL and token must not be retained"),
+            ):
+                with self.assertRaisesRegex(ValueError, "private URL"):
+                    oracle_youtube_job.run(f"https://www.youtube.com/watch?v={video_id}")
+
+            state_text = state_path.read_text(encoding="utf-8")
+            state = json.loads(state_text)
+
+        self.assertEqual(state["failure_records"][0]["reason_code"], "unexpected_exception")
+        self.assertNotIn("private URL", state_text)
+
     def test_main_wraps_single_run_result_before_marking_processed(self):
         with tempfile.TemporaryDirectory() as raw_dir:
             cookie_path = Path(raw_dir) / "youtube-cookies.txt"
@@ -648,6 +760,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
                 "YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL": "https://par.example/upload",
                 "YOUTUBE_ORACLE_WORK_ROOT": str(raw_dir),
+                "YOUTUBE_ORACLE_STATE_PATH": str(Path(raw_dir) / "state.json"),
             }
             with patch.dict(os.environ, env), patch.object(
                 oracle_youtube_job, "_prepare_material", side_effect=fake_prepare
@@ -665,10 +778,40 @@ class OracleYoutubeJobTests(unittest.TestCase):
                         "https://www.youtube.com/watch?v=930HUhvRKHc",
                     ]
                 )
+            state = json.loads(Path(env["YOUTUBE_ORACLE_STATE_PATH"]).read_text(encoding="utf-8"))
 
         self.assertEqual([item["video_id"] for item in results], ["aTCWAb8wRd8", "930HUhvRKHc"])
         self.assertEqual(dispatch.call_args.args[0], ["aTCWAb8wRd8", "930HUhvRKHc"])
         bundle.assert_called_once()
+        self.assertEqual(state["failure_records"][0]["video_id"], "2a_ATYeOiAQ")
+        self.assertEqual(state["failure_records"][0]["category"], "live_chat_zero")
+
+    def test_batch_preflight_failure_is_retained_for_every_selected_video(self):
+        video_urls = [
+            "https://www.youtube.com/watch?v=aTCWAb8wRd8",
+            "https://www.youtube.com/watch?v=2a_ATYeOiAQ",
+        ]
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookies_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookies_path.write_text("", encoding="utf-8")
+            state_path = Path(raw_dir) / "state.json"
+            state_path.write_text("{}", encoding="utf-8")
+            env = {
+                "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
+                "YOUTUBE_ORACLE_STATE_PATH": str(state_path),
+                "YOUTUBE_ORACLE_WORK_ROOT": str(raw_dir),
+            }
+            with patch.dict(os.environ, env, clear=True):
+                with self.assertRaises(oracle_youtube_job.OracleJobFailure) as caught:
+                    oracle_youtube_job.run_batch(video_urls)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(caught.exception.category, "handoff_configuration")
+        self.assertEqual(
+            [record["video_id"] for record in state["failure_records"]],
+            ["aTCWAb8wRd8", "2a_ATYeOiAQ"],
+        )
+        self.assertTrue(all(record["reason_code"] == "handoff_configuration_failed" for record in state["failure_records"]))
 
     def test_batch_raises_when_every_archive_fails(self):
         def fake_prepare(_video_url, _work_dir, *_args, **_kwargs):

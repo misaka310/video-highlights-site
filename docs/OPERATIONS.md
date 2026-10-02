@@ -60,7 +60,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 ```
 
 - Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から直近60日以内の未公開アーカイブを新しい順に最大5件選ぶ。Oracle stateにも最近発見した配信のID・投稿日・timestampを保持し、毎回の`/streams`結果と統合する。公開済みIDと60日より古い配信を除外してから上限を適用し、選んだ配信を1つのbundleへまとめてActionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。stateの発見記録・引き渡し記録はいずれもGitHub公開完了の根拠にはせず、`data/vod_index.json`を公開済み判定に使う。GitHub ActionsのcronはYouTube取得経路に使わない。
-- 60日内の未公開が5件を超える場合、新しいものから1日最大5件ずつ後続の定期実行へ進む。`/streams`の一時的な一覧抜けがあっても、stateに保存した発見済みIDを再試行対象に保つ。公開済みは再取得しない。GitHub処理や公開に失敗した配信は公開済み一覧に入らないため、60日以内ならより新しい未公開配信の処理後に再試行する。Oracleでの取得・素材準備に失敗した配信も未公開のまま残り、翌日の実行で再試行する。`/streams`確認時点でYouTubeにまだ公開されていない配信や06:07 JST後に公開された配信は、原則として翌日の確認まで待つ。stateにはIDと日時だけを保存し、コメント本文や字幕本文は保存しない。
+- 60日内の未公開が5件を超える場合、新しいものから1日最大5件ずつ後続の定期実行へ進む。`/streams`の一時的な一覧抜けがあっても、stateに保存した発見済みIDを再試行対象に保つ。公開済みは再取得しない。GitHub処理や公開に失敗した配信は公開済み一覧に入らないため、60日以内ならより新しい未公開配信の処理後に再試行する。Oracleでの取得・素材準備に失敗した配信も未公開のまま残り、翌日の実行で再試行する。`/streams`確認時点でYouTubeにまだ公開されていない配信や06:07 JST後に公開された配信は、原則として翌日の確認まで待つ。stateは発見済みID・配信日時に加え、失敗した試行の動画ID・時刻・分類・処理段階・安全な理由コードを60日間、最大500件保持する。生のエラー出力、コメント本文、字幕本文はstateへ保存しない。
 - OracleのGitHubコード同期は、配信取得serviceの`ExecStartPre`で各起動の直前に行う。毎日06:07 JSTの定期起動では、その時点の公開GitHub `main`をcleanなcheckoutへfast-forwardしてから配信処理を開始する。手動起動でも同じpreflightが先に走る。別の5分間隔コード同期timerは設けない。同期は許可済みorigin、`main` branch、fast-forwardだけを受け入れ、dirty checkout・origin不一致・非fast-forward・通信失敗ではローカル変更を上書きせず、配信処理を開始せずに失敗する。
 - streams discoveryを使わない手動の`--video-url`指定も、取得前に公開済み一覧`data/vod_index.json`と照合する。すでに公開済みなら`already_published`として正常終了し、再取得やGitHub dispatchを行わない。
 - この同期対象はGitHubで`main`へ入ったcommitであり、未mergeのPRやbranchは対象外。Renderの公開反映とは別で、静的サイトの更新は既存のGitHub Actions / Render経路に従う。
@@ -79,7 +79,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 - Oracleの定期実行は`YOUTUBE_ORACLE_STREAMS_URL=https://www.youtube.com/@dotitube/streams`を優先し、固定の`YOUTUBE_ORACLE_VIDEO_URL`へ戻さない。Cookieは`YOUTUBE_ORACLE_REMOTE_COOKIES_PATH`で指定したOracle上のファイルだけを使う。
 - YouTubeの内部音声解析は、スクリーンショット不要時はHTTPS音声のみ、必要時はHTTPSの軽量映像・音声を選ぶ。Twitchの区間取得フォーマットは変更しない。
 - 公開準備チェックは、生成済み `headline` の品質と見どころサムネイルの存在を検証する。見出しが欠損する場合や、生成済み見出しが品質基準を満たさない場合は従来どおり失敗させる。
-- Oracleジョブの一時的な取得失敗（`temporary_network_failure`、`yt_dlp_failure`）は、同一コマンドを20秒間隔のバックオフで最大3回再試行する。Cookie認証・bot判定・Deno起動など恒久区分の失敗は再試行せず、yt-dlp失敗時はstderr末尾をjournalへ出力する。
+- Oracleジョブの一時的な取得失敗（`temporary_network_failure`、`yt_dlp_failure`）は、同一コマンドを20秒間隔のバックオフで最大3回再試行する。Cookie認証・bot判定・Deno起動など恒久区分の失敗は再試行せず、yt-dlp失敗時はstderr末尾をjournalへ出力する。対象配信の失敗理由はstateにも安全な理由コードで保存し、journalのローテーション後もProbeから確認できる。生のstderrはstateやProbe応答へ含めない。
 - Oracleジョブはyt-dlpとffmpegを専用のprocess groupで起動し、主プロセス終了後に残った同groupの子プロセスを停止してから次の処理へ進む。コマンドがtimeoutした場合も同groupを停止してから失敗・再試行を扱う。
 - 複数件のバッチ処理では、1件の失敗を隔離して残りを1つのbundleへ渡す。全件失敗のときだけ失敗終了する。失敗した配信は未処理のまま残り、翌日のtimer実行で再試行される。
 
