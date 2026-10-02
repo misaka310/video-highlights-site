@@ -38,6 +38,26 @@ class CheckedPullRequestMergeTests(unittest.TestCase):
         )
         self.assertEqual(tuple(selected), REQUIRED_PR_WORKFLOWS)
 
+    def test_selects_all_workflows_from_one_shot_iterable(self):
+        runs = iter(
+            [
+                {"databaseId": 20, "workflowName": "Repository hygiene"},
+                {"databaseId": 21, "workflowName": "Repo Launch Doctor"},
+                {"databaseId": 22, "workflowName": "Frontend CI"},
+            ]
+        )
+
+        selected = select_latest_workflow_run_ids(runs)
+
+        self.assertEqual(
+            selected,
+            {
+                "Frontend CI": 22,
+                "Repository hygiene": 20,
+                "Repo Launch Doctor": 21,
+            },
+        )
+
     def test_trusted_dispatch_mode_has_explicit_workflow_files(self):
         self.assertEqual(
             REQUIRED_DISPATCH_WORKFLOWS,

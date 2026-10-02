@@ -43,9 +43,36 @@ from youtube_sources import parse_youtube_video_id
 
 
 class OracleJobFailure(RuntimeError):
-    def __init__(self, category: str, message: str):
+    def __init__(
+        self,
+        category: str,
+        message: str,
+        *,
+        stage: str | None = None,
+        reason_code: str | None = None,
+    ):
         super().__init__(message)
         self.category = category
+        self.stage = stage or _default_failure_stage(category)
+        self.reason_code = reason_code or f"{category}_failed"
+
+
+def _default_failure_stage(category: str) -> str:
+    if category.startswith("yt_dlp") or category == "temporary_network_failure":
+        return "youtube_download"
+    if category == "live_chat_zero":
+        return "live_chat"
+    if category == "highlight_detection_failure":
+        return "highlight_detection"
+    if category.startswith("handoff_"):
+        return "material_handoff"
+    if category.startswith("github_dispatch"):
+        return "github_dispatch"
+    if category.startswith("cookie_") or category.startswith("youtube_"):
+        return "youtube_access"
+    if category == "public_vod_index_failure":
+        return "archive_selection"
+    return "oracle_runtime"
 
 
 DEFAULT_YTDLP = "$HOME/yt-dlp"
@@ -55,6 +82,8 @@ DEFAULT_WORK_ROOT = "$HOME/ytprobe"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 MAX_STREAM_ARCHIVES_PER_RUN = 5
 STREAM_DISCOVERY_DATE_BUFFER_DAYS = 2
+MAX_FAILURE_RECORDS = 500
+FAILURE_RECORD_RETENTION_DAYS = PUBLIC_VOD_RETENTION_DAYS
 
 # Transient YouTube extraction failures (for example "The page needs to be
 # reloaded.") come and go within minutes, so the same yt-dlp call is retried
@@ -425,6 +454,102 @@ def _write_state(state: dict[str, Any]) -> None:
     path.write_text(json.dumps(state, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _record_failure(video_id: str, failure: OracleJobFailure, *, now: dt.datetime | None = None) -> None:
+    """Persist a bounded, privacy-safe reason for a failed archive attempt."""
+
+    normalized_id = parse_youtube_video_id(video_id)
+    timestamp = now or _utc_now()
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=dt.timezone.utc)
+    timestamp = timestamp.astimezone(dt.timezone.utc)
+    cutoff = timestamp - dt.timedelta(days=FAILURE_RECORD_RETENTION_DAYS)
+    record = {
+        "video_id": normalized_id,
+        "failed_at": timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "category": failure.category,
+        "stage": failure.stage,
+        "reason_code": failure.reason_code,
+    }
+
+    state = _read_state()
+    old_records = state.get("failure_records")
+    retained: list[tuple[dt.datetime, dict[str, str]]] = []
+    if isinstance(old_records, list):
+        for old_record in old_records:
+            if not isinstance(old_record, dict):
+                continue
+            try:
+                old_id = parse_youtube_video_id(str(old_record.get("video_id") or ""))
+                old_timestamp = dt.datetime.fromisoformat(
+                    str(old_record.get("failed_at") or "").replace("Z", "+00:00")
+                )
+            except (TypeError, ValueError):
+                continue
+            if old_timestamp.tzinfo is None:
+                old_timestamp = old_timestamp.replace(tzinfo=dt.timezone.utc)
+            old_timestamp = old_timestamp.astimezone(dt.timezone.utc)
+            if old_timestamp < cutoff or old_timestamp > timestamp + dt.timedelta(minutes=5):
+                continue
+            old_category = str(old_record.get("category") or "")
+            old_stage = str(old_record.get("stage") or "")
+            old_reason_code = str(old_record.get("reason_code") or "")
+            if not all(
+                re.fullmatch(r"[a-z0-9_]{1,64}", value)
+                for value in (old_category, old_stage, old_reason_code)
+            ):
+                continue
+            retained.append(
+                (
+                    old_timestamp,
+                    {
+                        "video_id": old_id,
+                        "failed_at": old_timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+                        "category": old_category,
+                        "stage": old_stage,
+                        "reason_code": old_reason_code,
+                    },
+                )
+            )
+
+    if not all(
+        re.fullmatch(r"[a-z0-9_]{1,64}", record[key])
+        for key in ("category", "stage", "reason_code")
+    ):
+        raise OracleJobFailure(
+            "state_persistence_failure",
+            "failure diagnostic fields were invalid",
+            stage="state_write",
+            reason_code="invalid_failure_diagnostic",
+        )
+    retained.append((timestamp, record))
+    retained.sort(key=lambda item: item[0])
+    state["failure_records"] = [item[1] for item in retained[-MAX_FAILURE_RECORDS:]]
+    try:
+        _write_state(state)
+    except OSError as exc:
+        print(
+            f"failure diagnostic persistence failed: video_id={normalized_id} category={failure.category}",
+            flush=True,
+        )
+        raise OracleJobFailure(
+            "state_persistence_failure",
+            "failure diagnostic could not be retained",
+            stage="state_write",
+            reason_code="failure_record_write_failed",
+        ) from exc
+    print(
+        f"failure video_id={normalized_id} category={failure.category}"
+        f" stage={failure.stage} reason={failure.reason_code}",
+        flush=True,
+    )
+
+
+def _raise_batch_failure(video_urls: list[str], failure: OracleJobFailure) -> None:
+    for video_url in video_urls:
+        _record_failure(parse_youtube_video_id(video_url), failure)
+    raise failure
+
+
 def _mark_processed(video_id: str) -> None:
     state = _read_state()
     processed = [str(item).strip() for item in state.get("processed_video_ids", []) if str(item).strip()]
@@ -654,7 +779,12 @@ def _cut_media(video_url: str, item: dict[str, Any], index: int, work_dir: Path,
     )
     sources = [path for path in work_dir.glob(f"{source_prefix.name}.*") if path.suffix not in {".part", ".ytdl"}]
     if not sources:
-        raise OracleJobFailure("yt_dlp_failure", "selected media section was not created")
+        raise OracleJobFailure(
+            "yt_dlp_failure",
+            "selected media section was not created",
+            stage="media_cut",
+            reason_code="media_section_not_created",
+        )
     source = max(sources, key=lambda path: path.stat().st_size)
     audio = work_dir / f"clip-{index}.wav"
     screenshot = work_dir / f"clip-{index}.webp"
@@ -808,7 +938,7 @@ def _prepare_material(
     }
 
 
-def run(video_url: str) -> dict[str, Any]:
+def _run_one(video_url: str) -> dict[str, Any]:
     ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
     deno = _path_env("YOUTUBE_ORACLE_DENO_PATH", DEFAULT_DENO)
     cookies = _path_env("YOUTUBE_ORACLE_COOKIES_PATH", DEFAULT_COOKIES)
@@ -845,6 +975,25 @@ def run(video_url: str) -> dict[str, Any]:
         }
 
 
+def run(video_url: str) -> dict[str, Any]:
+    video_id = parse_youtube_video_id(video_url)
+    try:
+        return _run_one(video_url)
+    except OracleJobFailure as exc:
+        _record_failure(video_id, exc)
+        raise
+    except Exception:
+        # Preserve the traceback while storing only a non-sensitive reason code.
+        failure = OracleJobFailure(
+            "oracle_runtime_failure",
+            "unexpected processing failure",
+            stage="archive_processing",
+            reason_code="unexpected_exception",
+        )
+        _record_failure(video_id, failure)
+        raise
+
+
 def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
     """Acquire several archives and hand them to one checked Actions run."""
 
@@ -855,15 +1004,44 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
     cookies = _path_env("YOUTUBE_ORACLE_COOKIES_PATH", DEFAULT_COOKIES)
     upload_url = _env("YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL")
     if not upload_url:
-        raise OracleJobFailure("handoff_configuration", "bundle upload PAR is not configured")
+        _raise_batch_failure(
+            video_urls,
+            OracleJobFailure("handoff_configuration", "bundle upload PAR is not configured"),
+        )
     if not Path(cookies).is_file():
-        raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
+        _raise_batch_failure(
+            video_urls,
+            OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing"),
+        )
 
     work_root = Path(_path_env("YOUTUBE_ORACLE_WORK_ROOT", DEFAULT_WORK_ROOT))
-    work_root.mkdir(parents=True, exist_ok=True)
+    try:
+        work_root.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        _raise_batch_failure(
+            video_urls,
+            OracleJobFailure(
+                "oracle_runtime_failure",
+                "working directory is unavailable",
+                stage="batch_setup",
+                reason_code="work_root_unavailable",
+            ),
+        )
     prepared_entries: list[tuple[dict[str, Any], dict[str, Path], Path | None]] = []
     results: list[dict[str, Any]] = []
-    with tempfile.TemporaryDirectory(prefix="batch-", dir=work_root) as temp_dir:
+    try:
+        batch_directory = tempfile.TemporaryDirectory(prefix="batch-", dir=work_root)
+    except OSError:
+        _raise_batch_failure(
+            video_urls,
+            OracleJobFailure(
+                "oracle_runtime_failure",
+                "batch working directory is unavailable",
+                stage="batch_setup",
+                reason_code="batch_work_dir_unavailable",
+            ),
+        )
+    with batch_directory as temp_dir:
         root = Path(temp_dir)
         for video_url in video_urls:
             video_id = parse_youtube_video_id(video_url)
@@ -873,8 +1051,23 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
                 # One bad archive must not block the rest of the daily batch.
                 # The skipped video stays unprocessed and the next timer run
                 # retries it.
-                print(f"skipped video_id={video_id} category={exc.category}", flush=True)
+                _record_failure(video_id, exc)
+                print(
+                    f"skipped video_id={video_id} category={exc.category}"
+                    f" stage={exc.stage} reason={exc.reason_code}",
+                    flush=True,
+                )
                 continue
+            except Exception:
+                # Keep unexpected exceptions fatal after persisting a safe marker.
+                failure = OracleJobFailure(
+                    "oracle_runtime_failure",
+                    "unexpected processing failure",
+                    stage="archive_processing",
+                    reason_code="unexpected_exception",
+                )
+                _record_failure(video_id, failure)
+                raise
             prepared_entries.append((prepared["manifest"], prepared["media_files"], prepared["captions_file"]))
             results.append(
                 {
@@ -887,13 +1080,30 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
             )
         if not results:
             raise OracleJobFailure("yt_dlp_failure", "no YouTube archives could be prepared")
-        bundle_path = root / "youtube-material-batch.tar.gz"
-        create_material_batch_bundle(bundle_path, prepared_entries)
         try:
+            bundle_path = root / "youtube-material-batch.tar.gz"
+            create_material_batch_bundle(bundle_path, prepared_entries)
             upload_bundle_to_url(bundle_path, upload_url)
+            _dispatch_github([item["video_id"] for item in results])
+        except OracleJobFailure as exc:
+            for result in results:
+                _record_failure(result["video_id"], exc)
+            raise
         except (OSError, error.URLError, TimeoutError, RuntimeError) as exc:
-            raise OracleJobFailure("handoff_upload_failure", "temporary material upload failed") from exc
-        _dispatch_github([item["video_id"] for item in results])
+            failure = OracleJobFailure("handoff_upload_failure", "temporary material upload failed")
+            for result in results:
+                _record_failure(result["video_id"], failure)
+            raise failure from exc
+        except Exception as exc:
+            failure = OracleJobFailure(
+                "oracle_runtime_failure",
+                "unexpected batch handoff failure",
+                stage="batch_handoff",
+                reason_code="unexpected_batch_handoff_failure",
+            )
+            for result in results:
+                _record_failure(result["video_id"], failure)
+            raise failure from exc
     return results
 
 

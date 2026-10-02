@@ -19,6 +19,7 @@ RETRY_EXIT_CODE = 75
 
 
 def select_latest_workflow_run_ids(runs: Iterable[Mapping[str, object]]) -> dict[str, int]:
+    runs = tuple(runs)
     selected: dict[str, int] = {}
     for workflow_name in REQUIRED_PR_WORKFLOWS:
         matching = [
