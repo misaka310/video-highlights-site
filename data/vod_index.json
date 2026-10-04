@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-04T07:57:00+09:00",
-  "next_update_at": "2026-10-04T00:00:00+00:00",
+  "updated_at": "2026-10-04T18:55:37+09:00",
+  "next_update_at": "2026-10-05T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "ndKhBP5HXvc",
+      "vod_url": "https://www.youtube.com/watch?v=ndKhBP5HXvc",
+      "title": "カンストするまでやめない配信【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-03T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/ndKhBP5HXvc/maxresdefault.jpg",
+      "duration_sec": 32278,
+      "count": 3,
+      "chat_total": 2932,
+      "comments_per_hour": 327.009,
+      "detail_path": "/data/vods/ndKhBP5HXvc.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "niXihsoXHzs",
       "vod_url": "https://www.youtube.com/watch?v=niXihsoXHzs",
