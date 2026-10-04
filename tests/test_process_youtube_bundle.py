@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -13,9 +14,49 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import process_youtube_bundle  # noqa: E402
+from youtube_handoff import create_material_batch_bundle  # noqa: E402
 
 
 class ProcessYoutubeBundleTests(unittest.TestCase):
+    def test_caption_only_retry_updates_existing_vod_without_reenrichment(self) -> None:
+        video_id = "WGTrmrSvZH0"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            data_dir = root / "data"
+            data_dir.mkdir()
+            (data_dir / "vod_index.json").write_text(
+                '{"videos":[{"provider":"youtube","vod_id":"WGTrmrSvZH0"}]}',
+                encoding="utf-8",
+            )
+            captions = root / "captions.json"
+            captions.write_text(
+                '{"video_id":"WGTrmrSvZH0","source":"youtube_automatic_captions",'
+                '"language":"ja","language_source":"ja","fetched_at":"2026-10-05T00:00:00Z",'
+                '"cues":[{"start_sec":0,"end_sec":1,"text":"字幕"}]}',
+                encoding="utf-8",
+            )
+            bundle = root / "captions-only.tar.gz"
+            create_material_batch_bundle(bundle, [], caption_updates=[(video_id, captions)])
+
+            with (
+                patch.object(process_youtube_bundle, "DATA_DIR", data_dir),
+                patch.object(process_youtube_bundle, "enrich_youtube_video") as enrich,
+                patch.object(process_youtube_bundle, "write_public_data") as write_public,
+                patch.object(process_youtube_bundle, "write_processed_cache") as write_cache,
+            ):
+                result = process_youtube_bundle.process_bundle(
+                    bundle,
+                    now=datetime(2026, 10, 5, tzinfo=timezone.utc),
+                )
+
+            stored = json.loads((data_dir / "captions" / f"{video_id}.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(stored["cues"][0]["text"], "字幕")
+        self.assertEqual(result["caption_updates"][0]["status"], "written")
+        enrich.assert_not_called()
+        write_public.assert_not_called()
+        write_cache.assert_not_called()
+
     def test_uses_oracle_selected_intervals_without_redetecting_from_offsets(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

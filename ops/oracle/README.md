@@ -85,7 +85,15 @@ Actions run. Oracle state also keeps discovered archive IDs, upload dates, and
 timestamps for the 60-day window. Each run merges that cache with the current
 `/streams` listing, so a temporary listing omission does not lose an archive
 that was already discovered. The cache contains no titles, chat, or captions;
-published IDs and expired records are pruned before selection. State records of
+published IDs and expired records are pruned before selection. Separate
+caption-retry state stores only video IDs, per-attempt dates/counts, safe reason
+codes, and manual/automatic subtitle source outcomes; it retries published
+VODs without captions at the first daily run at least 24 and 72 hours after the
+initial attempt, then stops after the initial attempt plus two retries. A
+successful fetch waits for the existing checked publication path instead of
+fetching again. The caption content is sent only in the existing short-lived
+OCI bundle when an Oracle retry succeeds.
+State records of
 discovery or successful handoff do not suppress unpublished archives: a later
 GitHub processing or publication failure must leave the archive eligible for
 retry. `YOUTUBE_ORACLE_MAX_VIDEOS` can lower the five-item bound. A larger
@@ -93,8 +101,9 @@ backlog advances from the newest eligible archives by up to five per daily run.
 Older unprocessed archives inside the 60-day window are retained and become
 eligible as newer archives are published. An archive whose Oracle acquisition
 or material preparation fails is not marked processed and is retried on a later
-run. Published IDs are excluded, so a stale state file does not cause already
-public VODs to be processed again. A fixed
+run. Published IDs are excluded from full chat/highlight processing, while the
+separate caption-only retry path may update a missing `data/captions/<id>.json`
+without reprocessing a published VOD. A fixed
 `YOUTUBE_ORACLE_VIDEO_URL` remains supported as a one-video manual fallback
 when streams discovery is unset.
 That direct-video path also checks the published `data/vod_index.json` IDs
