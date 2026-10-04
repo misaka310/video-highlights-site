@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-04T23:03:15+09:00",
+  "updated_at": "2026-10-05T08:20:09+09:00",
   "next_update_at": "2026-10-05T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "Y8YpU6kQ6io",
+      "vod_url": "https://www.youtube.com/watch?v=Y8YpU6kQ6io",
+      "title": "【初見】メチャ気持ちよくなれると評判の鬼武者新作【鬼武者 Way of the Sword】",
+      "published_at": "2026-10-04T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/Y8YpU6kQ6io/maxresdefault.jpg",
+      "duration_sec": 19032,
+      "count": 3,
+      "chat_total": 1546,
+      "comments_per_hour": 292.434,
+      "detail_path": "/data/vods/Y8YpU6kQ6io.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "ndKhBP5HXvc",
       "vod_url": "https://www.youtube.com/watch?v=ndKhBP5HXvc",
