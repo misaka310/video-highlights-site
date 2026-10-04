@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-04T18:55:37+09:00",
+  "updated_at": "2026-10-04T23:03:15+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -10197,7 +10197,7 @@
           "start_time": "00:04:20",
           "end_time": "00:08:00",
           "reason": "Chat activity spike around 0h4m20s (z-score=3.814).",
-          "headline": "割とむずい、超ゲームはハードに決定",
+          "headline": "割とむずい・超ゲームはハード決定",
           "tags": [
             "えっど"
           ],
@@ -10213,7 +10213,7 @@
           "start_time": "01:38:50",
           "end_time": "01:39:50",
           "reason": "Chat activity spike around 1h38m50s (z-score=7.554).",
-          "headline": "死んでた私が溺れ陣で帰還",
+          "headline": "死んでた私、溺れ陣で帰還",
           "tags": [
             "ww"
           ],
@@ -10229,7 +10229,7 @@
           "start_time": "00:49:10",
           "end_time": "00:50:00",
           "reason": "Chat activity spike around 0h49m10s (z-score=5.684).",
-          "headline": "デフォ設定の地図が現れる",
+          "headline": "そこら辺はデフォの地図",
           "tags": [
             "ww"
           ],
@@ -10284,7 +10284,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-04T07:57:00+09:00"
+      "analyzed_at": "2026-10-04T23:03:15+09:00"
     },
     {
       "vod_id": "2834998317",
@@ -10458,7 +10458,7 @@
           "start_time": "06:05:00",
           "end_time": "06:10:20",
           "reason": "Chat activity spike around 6h5m0s (z-score=7.099).",
-          "headline": "回復のおこぼれか、死の予感",
+          "headline": "ふくちゃんの回復おこぼれ取得",
           "tags": [
             "好プレー",
             "ww",
@@ -10476,7 +10476,7 @@
           "start_time": "01:32:50",
           "end_time": "01:37:20",
           "reason": "Chat activity spike around 1h32m50s (z-score=4.859).",
-          "headline": "未だに朝待ち続く笑い",
+          "headline": "未だに朝待ちが続く笑い",
           "tags": [
             "ww"
           ],
@@ -10492,7 +10492,7 @@
           "start_time": "00:22:40",
           "end_time": "00:27:30",
           "reason": "Chat activity spike around 0h22m40s (z-score=3.739).",
-          "headline": "本気で恋してるからそこもしない",
+          "headline": "セクハしていい相手と見下す",
           "tags": [
             "ww",
             "えっ",
@@ -10588,7 +10588,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-04T18:55:37+09:00"
+      "analyzed_at": "2026-10-04T23:03:15+09:00"
     },
     {
       "vod_id": "2833526837",
