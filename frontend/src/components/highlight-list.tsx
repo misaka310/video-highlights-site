@@ -1,4 +1,4 @@
-import { Badge, Empty } from "@cloudflare/kumo";
+import { Empty } from "@cloudflare/kumo";
 import { PlayIcon } from "@phosphor-icons/react";
 import type { HighlightSegment } from "../domain/vod.js";
 import { formatClock, resolveHighlightTitle } from "../lib/formatters.js";
@@ -40,11 +40,6 @@ export function HighlightList({ vodId, provider = "twitch", vodThumbnailUrl, seg
             </span>
             <span className="highlight-copy">
               <strong>{title}</strong>
-              <span className="tag-row">
-                {(segment.tags || []).slice(0, 2).map((tag) => (
-                  <Badge key={tag} className="highlight-tag" variant="neutral">{tag}</Badge>
-                ))}
-              </span>
             </span>
           </button>
         );

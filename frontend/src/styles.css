@@ -126,20 +126,8 @@ h1 { margin: 0; font-size: clamp(1.22rem, 2vw, 1.62rem); letter-spacing: -0.035e
 .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .thumb-fallback { display: grid; width: 100%; height: 100%; place-items: center; color: #8f66ca; }
 .time-chip { position: absolute; right: 5px; bottom: 5px; padding: 2px 5px; border-radius: 3px; background: rgba(0,0,0,.78); color: #fff; font-size: .66rem; font-weight: 700; }
-.highlight-copy { display: flex; flex-direction: column; justify-content: center; min-width: 0; gap: 9px; }
+.highlight-copy { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .highlight-copy > strong { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.42; font-size: .88rem; font-weight: 650; }
-.tag-row { display: flex; gap: 5px; min-height: 20px; flex-wrap: wrap; }
-.highlight-tag {
-  border-color: rgba(89, 111, 140, .34) !important;
-  background: #182231 !important;
-  color: #cbd5e3 !important;
-  box-shadow: none !important;
-}
-.highlight-item.is-selected .highlight-tag {
-  border-color: rgba(126, 101, 164, .42) !important;
-  background: #211d2d !important;
-  color: #d8cce9 !important;
-}
 
 .content-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 10px; padding: 4px; border: 1px solid #1b2635; border-radius: 8px; background: #0a0f17; }
 .content-tabs button { display: flex; align-items: center; justify-content: center; gap: 5px; min-width: 0; padding: 7px 4px; border: 0; border-radius: 6px; background: transparent; color: #8f98a8; cursor: pointer; font-size: .76rem; font-weight: 680; transition: color .14s ease, background .14s ease, box-shadow .14s ease; }
