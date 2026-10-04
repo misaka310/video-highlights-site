@@ -401,6 +401,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
             ), patch.object(
                 oracle_youtube_job, "_read_published_video_ids", return_value={video_id}
             ), patch.object(
+                oracle_youtube_job, "_read_caption_ids", return_value=set()
+            ), patch.object(
                 oracle_youtube_job, "_read_state", return_value=state
             ), patch.object(
                 oracle_youtube_job, "_write_state"
