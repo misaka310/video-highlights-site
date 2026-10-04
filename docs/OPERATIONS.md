@@ -73,6 +73,8 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 - YouTube更新PRの検証はActions botが作成したPRでも停止しないよう、`Frontend CI`、`Repository hygiene`、`Repo Launch Doctor`を`workflow_dispatch`で対象ブランチへ実行してから自動マージする。PRの`pull_request`イベント待ちは使わない（GitHub側の承認待ち`action_required`になり得るため）。
 - YouTubeでWhisperの内容を確定できない区間は `headline` 欠損のまま項目を残し、公開UIでは「コメントが集中した場面」と表示する。統計的な `reason` やチャット本文そのものは見出しとして表示しない。
 - YouTube公開字幕は任意データとして扱う。手動字幕を優先し、なければ自動生成字幕を取得する。字幕取得失敗・字幕なしはVOD更新を失敗させず、字幕パネルを出さない。
+- 初回の字幕取得で字幕が見つからなかった場合、初回取得から24時間後と72時間後以降で最初に到来する日次Oracle実行に、字幕だけを再試行する。初回を含む最大3回で取得できなければ打ち切る。公開済みVODのチャット取得・見どころ解析・Whisper処理は再実行しない。字幕を取得できたら再取得は止め、公開経路の反映を待つ。
+- 字幕取得の各試行について、安全な理由コードで「YouTube字幕トラックなし」「字幕取得エラー」「取得データ不正/空」「字幕取得成功」をOracle stateの履歴とjournalへ記録する。手動字幕・自動字幕それぞれの結果も保存する。字幕本文、Cookie、URL、yt-dlpの生エラーは記録しない。再取得できた字幕は既存のOracle→Actions一時bundle→checked PR経路で`data/captions/{vod_id}.json`だけを追加する。
 - YouTube更新では、タグを見出しへ変換しない。公開用の `headline` は、Oracleから取得した見どころ区間の音声・映像を後段のWhisper/見出し生成へ渡して作る。素材や文字起こしを取得できない項目は `headline` を欠損のまま扱い、反応タグを見出しに見せかけない。
 - Oracle素材を処理する `process-youtube-material.yml` の見出し生成は、見どころ区間をカバーする字幕がbundleに含まれる場合はその字幕テキストを入力にし、その区間のWhisperを実行しない。字幕が区間をカバーしない場合はWhisper文字起こしを入力としてGroqの `openai/gpt-oss-120b` を使う。LLMの見出しが公開判定（`is_publishable_headline`）を通らない場合はローカル抽出フォールバックを試し、それも公開判定を通らない場合や文字起こしが空の場合は、その項目だけ`headline`を欠損のまま公開する。見出しの欠損で更新処理全体を失敗させない。LLMの候補選定と再試行は公開判定（`is_publishable_headline`）と同じ基準を使い、公開判定を通らない候補は再試行の対象として選定から除外する。見出しプロンプトには公開判定の文字数（8〜24文字）、疑問符と引用括弧の禁止を明記する。
 - 既存VODの見出しだけを修復する場合は `workflow_dispatch` の `repair_vod_id` を指定し、保存済みのYouTube公開字幕から同じGPT-OSS 120B見出し生成経路を通して全見どころを再生成する。通常のOracle素材処理ではこの修復経路を使わない。

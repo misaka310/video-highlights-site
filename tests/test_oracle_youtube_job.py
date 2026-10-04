@@ -339,6 +339,254 @@ class OracleYoutubeJobTests(unittest.TestCase):
         self.assertIn(f"selected video_id={video_id}", output.getvalue())
         self.assertIn(f"skipped video_id={video_id} category=already_published", output.getvalue())
 
+    def test_main_dispatches_due_caption_retry_without_new_archives(self):
+        video_id = "ndKhBP5HXvc"
+        caption_url = f"https://www.youtube.com/watch?v={video_id}"
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookie_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookie_path.write_text("", encoding="utf-8")
+            state = {
+                "caption_retry_migration_version": 1,
+                "caption_retry_records": [
+                    {
+                        "video_id": video_id,
+                        "first_attempt_at": "2026-10-04T09:55:37Z",
+                        "first_attempt_date": "2026-10-04",
+                        "attempts": 1,
+                        "last_reason_code": "caption_track_not_found",
+                        "awaiting_publication": False,
+                    }
+                ],
+            }
+            with patch.dict(
+                os.environ,
+                {
+                    "YOUTUBE_ORACLE_STREAMS_URL": "https://www.youtube.com/@dotitube/streams",
+                    "YOUTUBE_ORACLE_COOKIES_PATH": str(cookie_path),
+                },
+                clear=True,
+            ), patch.object(sys, "argv", ["oracle_youtube_job"]), patch.object(
+                oracle_youtube_job,
+                "_utc_now",
+                return_value=dt.datetime(2026, 10, 5, 10, 0, tzinfo=dt.timezone.utc),
+            ), patch.object(
+                oracle_youtube_job, "_resolve_stream_archive_records", return_value=[]
+            ), patch.object(
+                oracle_youtube_job, "_read_published_video_ids", return_value={video_id}
+            ), patch.object(
+                oracle_youtube_job, "_read_state", return_value=state
+            ), patch.object(
+                oracle_youtube_job, "_write_state"
+            ), patch.object(
+                oracle_youtube_job, "run_batch", return_value=[]
+            ) as run_batch, patch.object(
+                oracle_youtube_job, "_notify"
+            ), redirect_stdout(StringIO()):
+                exit_code = oracle_youtube_job.main()
+
+        self.assertEqual(exit_code, 0)
+        run_batch.assert_called_once_with([], caption_retry_urls=[caption_url])
+
+    def test_caption_retry_is_due_after_24_and_72_hours(self):
+        record = {
+            "first_attempt_at": "2026-10-04T09:55:37Z",
+            "first_attempt_date": "2026-10-04",
+            "attempts": 1,
+            "awaiting_publication": False,
+        }
+        before_next_day = dt.datetime(2026, 10, 5, 9, 55, 36, tzinfo=dt.timezone.utc)
+        next_jst_day = dt.datetime(2026, 10, 5, 9, 55, 37, tzinfo=dt.timezone.utc)
+        third_jst_day = dt.datetime(2026, 10, 7, 9, 55, 37, tzinfo=dt.timezone.utc)
+
+        self.assertFalse(oracle_youtube_job._caption_retry_due(record, before_next_day))
+        self.assertTrue(oracle_youtube_job._caption_retry_due(record, next_jst_day))
+        record["attempts"] = 2
+        self.assertFalse(oracle_youtube_job._caption_retry_due(record, dt.datetime(2026, 10, 6, 9, 55, 36, tzinfo=dt.timezone.utc)))
+        self.assertTrue(oracle_youtube_job._caption_retry_due(record, third_jst_day))
+
+    def test_migration_seeds_recent_published_vod_with_unknown_caption_attempt(self):
+        video_id = "ndKhBP5HXvc"
+        first_attempt = dt.datetime(2026, 10, 4, 18, 55, 37, tzinfo=oracle_youtube_job.JST)
+        now = first_attempt.astimezone(dt.timezone.utc) + dt.timedelta(days=1)
+        with tempfile.TemporaryDirectory() as raw_dir:
+            repo_root = Path(raw_dir)
+            data_dir = repo_root / "data"
+            data_dir.mkdir()
+            (data_dir / "processed_vods.json").write_text(
+                json.dumps({"videos": [{"vod_id": video_id, "analyzed_at": first_attempt.isoformat()}]}),
+                encoding="utf-8",
+            )
+            state = {}
+            with patch.object(oracle_youtube_job, "REPOSITORY_ROOT", repo_root):
+                oracle_youtube_job._seed_caption_retry_records(
+                    state,
+                    published_ids={video_id},
+                    caption_ids=set(),
+                    now=now,
+                )
+
+        record = state["caption_retry_records"][0]
+        self.assertEqual(state["caption_retry_migration_version"], 1)
+        self.assertEqual(record["last_reason_code"], "legacy_initial_state_unknown")
+        self.assertEqual(record["attempt_history"][0]["outcome"], "unknown")
+        self.assertTrue(oracle_youtube_job._caption_retry_due(record, now))
+
+    def test_final_caption_retry_miss_is_recorded_as_abandoned(self):
+        video_id = "ndKhBP5HXvc"
+        record = {
+            "video_id": video_id,
+            "first_attempt_at": "2026-10-04T09:55:37Z",
+            "first_attempt_date": "2026-10-04",
+            "attempts": 2,
+            "last_reason_code": "caption_download_error",
+            "awaiting_publication": False,
+        }
+        now = dt.datetime(2026, 10, 7, 9, 55, 37, tzinfo=dt.timezone.utc)
+        with tempfile.TemporaryDirectory() as raw_dir:
+            state_path = Path(raw_dir) / "state.json"
+            state_path.write_text(json.dumps({"caption_retry_records": [record]}), encoding="utf-8")
+            with patch.dict(os.environ, {"YOUTUBE_ORACLE_STATE_PATH": str(state_path)}):
+                result = oracle_youtube_job._record_caption_retry_failure(
+                    video_id,
+                    "caption_track_not_found",
+                    now=now,
+                )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, "abandoned")
+        self.assertEqual(state["caption_retry_records"], [])
+        self.assertEqual(state["caption_retry_history"][-1]["attempts"], 3)
+        self.assertEqual(state["caption_retry_history"][-1]["outcome"], "abandoned")
+
+    def test_caption_retry_batch_dispatches_caption_only_bundle(self):
+        video_id = "ndKhBP5HXvc"
+        caption_path = Path("/tmp/retry-captions.json")
+        record = {
+            "video_id": video_id,
+            "first_attempt_at": "2026-10-04T09:55:37Z",
+            "first_attempt_date": "2026-10-04",
+            "last_attempt_at": "2026-10-04T09:55:37Z",
+            "attempts": 1,
+            "last_reason_code": "caption_track_not_found",
+            "awaiting_publication": False,
+        }
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookies_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookies_path.write_text("", encoding="utf-8")
+            state_path = Path(raw_dir) / "state.json"
+            state_path.write_text(json.dumps({"caption_retry_records": [record]}), encoding="utf-8")
+            env = {
+                "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
+                "YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL": "https://par.example/upload",
+                "YOUTUBE_ORACLE_WORK_ROOT": str(raw_dir),
+                "YOUTUBE_ORACLE_STATE_PATH": str(state_path),
+            }
+            with patch.dict(os.environ, env), patch.object(
+                oracle_youtube_job,
+                "_download_captions",
+                return_value={
+                    "path": caption_path,
+                    "reason_code": None,
+                    "source_outcomes": {"manual": "available", "automatic": "not_attempted"},
+                },
+            ), patch.object(
+                oracle_youtube_job, "create_material_batch_bundle"
+            ) as bundle, patch.object(
+                oracle_youtube_job, "upload_bundle_to_url"
+            ), patch.object(
+                oracle_youtube_job, "_dispatch_github"
+            ) as dispatch:
+                results = oracle_youtube_job.run_batch(
+                    [], caption_retry_urls=[f"https://www.youtube.com/watch?v={video_id}"]
+                )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(results, [])
+        self.assertEqual(bundle.call_args.kwargs["caption_updates"], [(video_id, caption_path)])
+        dispatch.assert_called_once_with([video_id])
+        self.assertTrue(state["caption_retry_records"][0]["awaiting_publication"])
+        self.assertEqual(state["caption_retry_records"][0]["attempts"], 2)
+        self.assertEqual(state["caption_retry_records"][0]["attempt_history"][-1]["outcome"], "caption_available")
+        self.assertFalse(
+            oracle_youtube_job._caption_retry_due(
+                state["caption_retry_records"][0],
+                dt.datetime(2026, 10, 8, tzinfo=dt.timezone.utc),
+            )
+        )
+
+    def test_caption_retry_miss_records_reason_and_schedules_third_day(self):
+        video_id = "ndKhBP5HXvc"
+        record = {
+            "video_id": video_id,
+            "first_attempt_at": "2026-10-04T09:55:37Z",
+            "first_attempt_date": "2026-10-04",
+            "attempts": 1,
+            "last_reason_code": "caption_track_not_found",
+            "awaiting_publication": False,
+        }
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookies_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookies_path.write_text("", encoding="utf-8")
+            state_path = Path(raw_dir) / "state.json"
+            state_path.write_text(json.dumps({"caption_retry_records": [record]}), encoding="utf-8")
+            env = {
+                "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
+                "YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL": "https://par.example/upload",
+                "YOUTUBE_ORACLE_WORK_ROOT": str(raw_dir),
+                "YOUTUBE_ORACLE_STATE_PATH": str(state_path),
+            }
+            with patch.dict(os.environ, env), patch.object(
+                oracle_youtube_job,
+                "_download_captions",
+                return_value={
+                    "path": None,
+                    "reason_code": "caption_download_error",
+                    "source_outcomes": {"manual": "download_error", "automatic": "download_error"},
+                },
+            ), patch.object(
+                oracle_youtube_job, "create_material_batch_bundle"
+            ) as bundle, patch.object(
+                oracle_youtube_job, "_dispatch_github"
+            ) as dispatch:
+                results = oracle_youtube_job.run_batch(
+                    [], caption_retry_urls=[f"https://www.youtube.com/watch?v={video_id}"]
+                )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(results, [])
+        self.assertEqual(state["caption_retry_records"][0]["attempts"], 2)
+        self.assertEqual(state["caption_retry_records"][0]["last_reason_code"], "caption_download_error")
+        self.assertEqual(
+            state["caption_retry_records"][0]["last_source_outcomes"],
+            {"manual": "download_error", "automatic": "download_error"},
+        )
+        bundle.assert_not_called()
+        dispatch.assert_not_called()
+
+    def test_initial_caption_miss_records_safe_reason_and_source_outcomes(self):
+        video_id = "ndKhBP5HXvc"
+        with tempfile.TemporaryDirectory() as raw_dir:
+            state_path = Path(raw_dir) / "state.json"
+            with patch.dict(os.environ, {"YOUTUBE_ORACLE_STATE_PATH": str(state_path)}):
+                oracle_youtube_job._mark_processed(
+                    video_id,
+                    captions_found=False,
+                    caption_reason_code="caption_download_error",
+                    caption_source_outcomes={"manual": "download_error", "automatic": "track_not_found"},
+                    now=dt.datetime(2026, 10, 4, 9, 55, 37, tzinfo=dt.timezone.utc),
+                )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        record = state["caption_retry_records"][0]
+        self.assertEqual(record["attempts"], 1)
+        self.assertEqual(record["last_reason_code"], "caption_download_error")
+        self.assertEqual(
+            record["last_source_outcomes"],
+            {"manual": "download_error", "automatic": "track_not_found"},
+        )
+        self.assertEqual(record["attempt_history"][0]["attempt"], 1)
+        self.assertEqual(record["attempt_history"][0]["reason_code"], "caption_download_error")
+
     def test_processed_state_keeps_all_ids_instead_of_truncating_history(self):
         with tempfile.TemporaryDirectory() as raw_dir:
             state_path = Path(raw_dir) / "state.json"
@@ -657,7 +905,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 return SimpleNamespace(stdout="")
 
             with patch.object(oracle_youtube_job, "_run_ytdlp", side_effect=fake_ytdlp):
-                captions_path = oracle_youtube_job._download_captions(
+                captions_result = oracle_youtube_job._download_captions(
                     "https://www.youtube.com/watch?v=WGTrmrSvZH0",
                     work_dir,
                     "/remote/yt-dlp",
@@ -665,10 +913,58 @@ class OracleYoutubeJobTests(unittest.TestCase):
                     "/remote/youtube-cookies.txt",
                 )
 
-            self.assertIsNotNone(captions_path)
-            payload = json.loads(Path(captions_path).read_text(encoding="utf-8"))
+            self.assertEqual(captions_result["reason_code"], None)
+            self.assertEqual(captions_result["source_outcomes"]["manual"], "available")
+            payload = json.loads(Path(captions_result["path"]).read_text(encoding="utf-8"))
             self.assertEqual(payload["source"], "youtube_manual_captions")
             self.assertEqual(payload["cues"][0]["text"], "テスト字幕")
+
+    def test_caption_download_error_is_distinguished_from_no_subtitle_track(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            result = None
+            with patch.object(
+                oracle_youtube_job,
+                "_run_ytdlp",
+                side_effect=oracle_youtube_job.OracleJobFailure("yt_dlp_failure", "private stderr"),
+            ):
+                result = oracle_youtube_job._download_captions(
+                    "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+                    Path(raw_dir),
+                    "/remote/yt-dlp",
+                    "/remote/deno",
+                    "/remote/youtube-cookies.txt",
+                )
+
+        self.assertEqual(
+            result,
+            {
+                "path": None,
+                "reason_code": "caption_download_error",
+                "source_outcomes": {"manual": "download_error", "automatic": "download_error"},
+            },
+        )
+
+    def test_caption_download_failure_logs_safe_category_without_raw_stderr(self):
+        output = StringIO()
+        with patch.object(
+            oracle_youtube_job,
+            "_run_captured",
+            return_value=SimpleNamespace(
+                returncode=1,
+                stdout="",
+                stderr="private subtitle failure detail",
+            ),
+        ), patch.object(oracle_youtube_job.time, "sleep", return_value=None):
+            with redirect_stdout(output):
+                with self.assertRaises(oracle_youtube_job.OracleJobFailure):
+                    oracle_youtube_job._run_ytdlp(
+                        ["yt-dlp"],
+                        attempts=1,
+                        safe_failure_context="youtube_caption_manual",
+                    )
+
+        self.assertIn("youtube_caption_manual failed: category=yt_dlp_failure", output.getvalue())
+        self.assertNotIn("private subtitle failure detail", output.getvalue())
 
     def test_ytdlp_transient_failure_is_retried_until_success(self):
         responses = [
@@ -904,7 +1200,14 @@ class OracleYoutubeJobTests(unittest.TestCase):
                     "/remote/deno",
                     "/remote/youtube-cookies.txt",
                 )
-        self.assertIsNone(captions_path)
+        self.assertEqual(
+            captions_path,
+            {
+                "path": None,
+                "reason_code": "caption_track_not_found",
+                "source_outcomes": {"manual": "track_not_found", "automatic": "track_not_found"},
+            },
+        )
 
 
 if __name__ == "__main__":
