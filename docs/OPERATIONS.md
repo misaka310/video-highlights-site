@@ -59,14 +59,14 @@ $env:YOUTUBE_ORACLE_REMOTE_TSV_TEMPLATE = '$HOME/ytprobe/{video_id}-comment-time
 python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGTrmrSvZH0'
 ```
 
-- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から直近60日以内の未公開アーカイブを新しい順に最大5件選ぶ。Oracle stateにも最近発見した配信のID・投稿日・timestampを保持し、毎回の`/streams`結果と統合する。公開済みIDと60日より古い配信を除外してから上限を適用し、選んだ配信を1つのbundleへまとめてActionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。stateの発見記録・引き渡し記録はいずれもGitHub公開完了の根拠にはせず、`data/vod_index.json`を公開済み判定に使う。GitHub ActionsのcronはYouTube取得経路に使わない。
+- Oracleの`ops/oracle/youtube-highlight.timer`は毎日**06:07 JST**に起動し、`YOUTUBE_ORACLE_STREAMS_URL`で指定したYouTubeチャンネルの`/streams`から直近60日以内の未公開アーカイブを新しい順に最大5件選ぶ。Oracle stateにも最近発見した配信のID・投稿日・timestampを保持し、毎回の`/streams`結果と統合する。投稿日が一覧から得られない場合は配信timestampから日付を補い、日付欠損だけを理由に新着を捨てない。公開済みIDと60日より古い配信を除外してから上限を適用し、選んだ配信を1つのbundleへまとめてActionsの`process-youtube-material.yml`へ`repository_dispatch`を1回送る。stateの発見記録・引き渡し記録はいずれもGitHub公開完了の根拠にはせず、`data/vod_index.json`を公開済み判定に使う。GitHub ActionsのcronはYouTube取得経路に使わない。
 - 60日内の未公開が5件を超える場合、新しいものから1日最大5件ずつ後続の定期実行へ進む。`/streams`の一時的な一覧抜けがあっても、stateに保存した発見済みIDを再試行対象に保つ。公開済みは再取得しない。GitHub処理や公開に失敗した配信は公開済み一覧に入らないため、60日以内ならより新しい未公開配信の処理後に再試行する。Oracleでの取得・素材準備に失敗した配信も未公開のまま残り、翌日の実行で再試行する。`/streams`確認時点でYouTubeにまだ公開されていない配信や06:07 JST後に公開された配信は、原則として翌日の確認まで待つ。stateは発見済みID・配信日時に加え、失敗した試行の動画ID・時刻・分類・処理段階・安全な理由コードを60日間、最大500件保持する。生のエラー出力、コメント本文、字幕本文はstateへ保存しない。
 - OracleのGitHubコード同期は、配信取得serviceの`ExecStartPre`で各起動の直前に行う。毎日06:07 JSTの定期起動では、その時点の公開GitHub `main`をcleanなcheckoutへfast-forwardしてから配信処理を開始する。手動起動でも同じpreflightが先に走る。別の5分間隔コード同期timerは設けない。同期は許可済みorigin、`main` branch、fast-forwardだけを受け入れ、dirty checkout・origin不一致・非fast-forward・通信失敗ではローカル変更を上書きせず、配信処理を開始せずに失敗する。
 - streams discoveryを使わない手動の`--video-url`指定も、取得前に公開済み一覧`data/vod_index.json`と照合する。すでに公開済みなら`already_published`として正常終了し、再取得やGitHub dispatchを行わない。
 - この同期対象はGitHubで`main`へ入ったcommitであり、未mergeのPRやbranchは対象外。Renderの公開反映とは別で、静的サイトの更新は既存のGitHub Actions / Render経路に従う。
 - yt-dlpがライブチャットJSONを生成した後に付随形式のHTTP 403で終了する場合は、生成済みJSONが非空であることを検証して処理を継続する。JSONがない、または空の場合は失敗として扱う。
 - 既存`.github/workflows/update-vods.yml`のschedule宣言は互換検査のため残すが、現在の`if: github.event_name == 'workflow_dispatch'`による停止を無条件に解除しない。
-- GitHub側の混雑により実際の開始・完了が遅れることはある。画面の「次回更新予定」は処理開始時刻ではなく、公開反映目標の09:00 JSTを表示する。
+- GitHub側の混雑により実際の開始・完了が遅れることはある。画面の「次回更新予定」は処理開始時刻ではなく、公開反映目標の09:00 JSTを表示する。公開データ生成が09:00より前に終わった場合は同日の09:00、以後なら翌日の09:00を次回予定とし、保存済み予定時刻を過ぎた後は画面表示を次の未来の09:00へ進める。
 - 手動更新は `workflow_dispatch` で `main` を指定する。
 - `data/vods.json` は公開トップ用のYouTube最新5件、`data/vod_index.json` は保持期間内のYouTube一覧を持つ。既存キャッシュにTwitchが残っていても、YouTubeのActions処理が公開出力前に除外する。
 - YouTube更新データは `automation/youtube-material-*` ブランチとPRを経由し、公開準備チェック成功後にmainへマージする。旧Twitch更新workflowは停止中であり、公開出力へTwitchを戻さない。

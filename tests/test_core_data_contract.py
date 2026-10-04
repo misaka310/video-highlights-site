@@ -74,6 +74,14 @@ class CoreDataContractTests(unittest.TestCase):
         payload = uv.build_public_payload(videos, now)
         self.assertEqual(len(payload["videos"]), 5)
 
+    def test_next_update_is_the_next_daily_target_after_generation(self):
+        updated_at = uv.datetime(2026, 10, 4, 7, 57, tzinfo=uv.JST_TIMEZONE)
+
+        self.assertEqual(
+            uv.next_scheduled_update_at(updated_at),
+            uv.datetime(2026, 10, 4, 0, 0, tzinfo=uv.timezone.utc),
+        )
+
     def test_storage_sanitizer_is_whitelist_based(self):
         source = {
             "vod_id": "1",
