@@ -326,6 +326,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
         ), patch.object(
             oracle_youtube_job, "_read_published_video_ids", return_value={video_id}
         ) as read_published_ids, patch.object(
+            oracle_youtube_job, "_read_caption_ids", return_value={video_id}
+        ), patch.object(
             oracle_youtube_job, "run"
         ) as run, patch.object(
             oracle_youtube_job, "_notify"
@@ -338,6 +340,31 @@ class OracleYoutubeJobTests(unittest.TestCase):
         notify.assert_called_once_with(None)
         self.assertIn(f"selected video_id={video_id}", output.getvalue())
         self.assertIn(f"skipped video_id={video_id} category=already_published", output.getvalue())
+
+    def test_main_refreshes_only_captions_for_published_direct_video_without_captions(self):
+        video_id = "ndKhBP5HXvc"
+        video_url = f"https://www.youtube.com/watch?v={video_id}"
+        output = StringIO()
+        with patch.dict(os.environ, {}, clear=True), patch.object(
+            sys, "argv", ["oracle_youtube_job", "--streams-url", "", "--video-url", video_url]
+        ), patch.object(
+            oracle_youtube_job, "_read_published_video_ids", return_value={video_id}
+        ), patch.object(
+            oracle_youtube_job, "_read_caption_ids", return_value=set()
+        ), patch.object(
+            oracle_youtube_job, "run"
+        ) as run, patch.object(
+            oracle_youtube_job, "run_batch", return_value=[]
+        ) as run_batch, patch.object(
+            oracle_youtube_job, "_notify"
+        ), redirect_stdout(output):
+            exit_code = oracle_youtube_job.main()
+
+        self.assertEqual(exit_code, 0)
+        run.assert_not_called()
+        run_batch.assert_called_once_with([], caption_retry_urls=[video_url])
+        self.assertIn(f"selected caption_retry video_id={video_id}", output.getvalue())
+        self.assertNotIn("already_published", output.getvalue())
 
     def test_main_dispatches_due_caption_retry_without_new_archives(self):
         video_id = "ndKhBP5HXvc"
