@@ -1666,9 +1666,15 @@ def main() -> int:
                 video_id = parse_youtube_video_id(video_urls[0])
                 print(f"selected video_id={video_id}", flush=True)
                 if video_id in _read_published_video_ids():
-                    _notify(None)
-                    print(f"skipped video_id={video_id} category=already_published", flush=True)
-                    return 0
+                    if video_id in _read_caption_ids():
+                        _notify(None)
+                        print(f"skipped video_id={video_id} category=already_published", flush=True)
+                        return 0
+                    # A published VOD without captions is not reprocessed, but
+                    # an explicit request refreshes only its captions now.
+                    caption_retry_urls = video_urls
+                    video_urls = []
+                    print(f"selected caption_retry video_id={video_id}", flush=True)
         if not video_urls and not caption_retry_urls:
             raise OracleJobFailure("handoff_configuration", "YOUTUBE_ORACLE_STREAMS_URL or video URL is required")
         if len(video_urls) == 1 and not caption_retry_urls:
