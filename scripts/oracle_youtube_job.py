@@ -321,6 +321,27 @@ def _resolve_stream_archive_records(
     return records
 
 
+def _stream_record_times(record: dict[str, Any]) -> tuple[dt.datetime | None, dt.datetime | None, str]:
+    """Return archive date, sort time, and a valid timestamp string if present."""
+    upload_date = str(record.get("upload_date") or "").strip()
+    published_at: dt.datetime | None = None
+    if re.fullmatch(r"\d{8}", upload_date):
+        try:
+            published_at = dt.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=dt.timezone.utc)
+        except ValueError:
+            pass
+
+    timestamp_at: dt.datetime | None = None
+    raw_timestamp = str(record.get("timestamp") or "").strip()
+    if raw_timestamp:
+        try:
+            timestamp_at = dt.datetime.fromtimestamp(float(raw_timestamp), tz=dt.timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            pass
+
+    return published_at or timestamp_at, timestamp_at or published_at, raw_timestamp if timestamp_at else ""
+
+
 def _select_unpublished_stream_urls(
     records: list[dict[str, str]],
     *,
@@ -338,28 +359,17 @@ def _select_unpublished_stream_urls(
     eligible: list[tuple[dt.datetime, str]] = []
     for record in records:
         video_id = str(record.get("id") or "").strip()
-        upload_date = str(record.get("upload_date") or "").strip()
         if not video_id or video_id in seen_ids:
             continue
         seen_ids.add(video_id)
         # Dispatch history does not prove that downstream GitHub publication succeeded.
         if video_id in published_ids:
             continue
-        if not re.fullmatch(r"\d{8}", upload_date):
-            continue
-        try:
-            published_at = dt.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=dt.timezone.utc)
-        except ValueError:
+        published_at, sort_at, _timestamp = _stream_record_times(record)
+        if published_at is None or sort_at is None:
             continue
         if published_at < cutoff or published_at > now_utc:
             continue
-        sort_at = published_at
-        raw_timestamp = str(record.get("timestamp") or "").strip()
-        if raw_timestamp:
-            try:
-                sort_at = dt.datetime.fromtimestamp(float(raw_timestamp), tz=dt.timezone.utc)
-            except (OverflowError, OSError, ValueError):
-                pass
         eligible.append((sort_at, video_id))
     eligible.sort(key=lambda item: item[0], reverse=True)
     return [
@@ -422,21 +432,13 @@ def _merge_discovered_stream_records(
             if video_id in published_ids:
                 continue
             upload_date = str(record.get("upload_date") or "").strip()
-            if not re.fullmatch(r"\d{8}", upload_date):
-                continue
-            try:
-                published_at = dt.datetime.strptime(upload_date, "%Y%m%d").replace(tzinfo=dt.timezone.utc)
-            except ValueError:
+            published_at, sort_at, timestamp = _stream_record_times(record)
+            if published_at is None or sort_at is None:
                 continue
             if published_at < cutoff or published_at > now_utc:
                 continue
-            timestamp = str(record.get("timestamp") or "").strip()
-            sort_at = published_at
-            if timestamp:
-                try:
-                    sort_at = dt.datetime.fromtimestamp(float(timestamp), tz=dt.timezone.utc)
-                except (OverflowError, OSError, ValueError):
-                    timestamp = ""
+            if not re.fullmatch(r"\d{8}", upload_date):
+                upload_date = published_at.strftime("%Y%m%d")
             existing = merged.get(video_id)
             if existing and not timestamp:
                 timestamp = existing[1]["timestamp"]

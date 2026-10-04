@@ -14,6 +14,8 @@ YouTube live_chatの実取得は、`YOUTUBE_ORACLE_HOST` / `YOUTUBE_ORACLE_USER`
 
 公開データには、コメントを集計して得た数値、見どころ区間、区間を説明する短い見出し、場面サムネイル、およびYouTube自身の公開字幕cueを保存できます。コメント本文、投稿者情報、内部Whisper文字起こし、Oracleの生レスポンスは保存しません。再生に必要な`vod_id`と`vod_url`はproviderごとの公開再生参照として保持します。
 
+公開フィードの`updated_at`はその内容を生成した公開更新時刻、`next_update_at`はその生成時刻より後に来る定期更新目標（毎日09:00 JST）です。生成時刻が09:00より前なら同日、以後なら翌日の目標を保存します。サイトは静的データを表示するため、保存済みの`next_update_at`を過ぎた場合は表示だけを次の未来の09:00 JSTへ日次で進めます。`updated_at`は実際の公開データ更新時刻のまま保持します。
+
 ## `data/processed_vods.json`
 
 日次更新の再利用キャッシュです。

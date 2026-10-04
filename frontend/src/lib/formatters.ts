@@ -24,6 +24,20 @@ export function formatUpdate(value: string): string {
   });
 }
 
+export function formatNextUpdate(value: string, now = new Date()): string {
+  const target = new Date(value);
+  if (Number.isNaN(target.getTime())) return "―";
+
+  const elapsed = now.getTime() - target.getTime();
+  if (elapsed >= 0) {
+    const dailyIntervalMs = 24 * 60 * 60 * 1000;
+    const intervals = Math.floor(elapsed / dailyIntervalMs) + 1;
+    target.setTime(target.getTime() + intervals * dailyIntervalMs);
+  }
+
+  return formatUpdate(target.toISOString());
+}
+
 export function localizeReason(reason = ""): string {
   const text = String(reason).trim();
   const match = text.match(/^Chat activity spike around (.+?) \(z-score=[^)]+\)\.?$/i);
