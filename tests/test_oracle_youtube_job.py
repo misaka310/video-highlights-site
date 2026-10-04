@@ -128,6 +128,56 @@ class OracleYoutubeJobTests(unittest.TestCase):
             ],
         )
 
+    def test_selects_recent_archives_when_upload_date_is_missing_but_timestamp_exists(self):
+        now = dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc)
+        records = [
+            {
+                "id": "aTCWAb8wRd8",
+                "upload_date": "",
+                "timestamp": str(dt.datetime(2026, 9, 29, 18, tzinfo=dt.timezone.utc).timestamp()),
+            },
+            {
+                "id": "2a_ATYeOiAQ",
+                "upload_date": "unknown",
+                "timestamp": str(dt.datetime(2026, 7, 1, 18, tzinfo=dt.timezone.utc).timestamp()),
+            },
+        ]
+
+        selected = oracle_youtube_job._select_unpublished_stream_urls(
+            records,
+            published_ids=set(),
+            limit=5,
+            now=now,
+        )
+
+        self.assertEqual(selected, ["https://www.youtube.com/watch?v=aTCWAb8wRd8"])
+
+    def test_merges_recent_archive_with_timestamp_when_upload_date_is_missing(self):
+        now = dt.datetime(2026, 9, 30, tzinfo=dt.timezone.utc)
+        merged = oracle_youtube_job._merge_discovered_stream_records(
+            current_records=[
+                {
+                    "id": "aTCWAb8wRd8",
+                    "upload_date": "",
+                    "timestamp": str(dt.datetime(2026, 9, 29, 18, tzinfo=dt.timezone.utc).timestamp()),
+                }
+            ],
+            cached_records=[],
+            published_ids=set(),
+            now=now,
+        )
+
+        self.assertEqual(
+            merged,
+            [
+                {
+                    "id": "aTCWAb8wRd8",
+                    "upload_date": "20260929",
+                    "timestamp": str(dt.datetime(2026, 9, 29, 18, tzinfo=dt.timezone.utc).timestamp()),
+                }
+            ],
+        )
+
     def test_merges_recent_cached_archives_when_streams_listing_omits_them(self):
         now = dt.datetime(2026, 10, 1, tzinfo=dt.timezone.utc)
         merged = oracle_youtube_job._merge_discovered_stream_records(

@@ -7,7 +7,7 @@ import {
   downsampleBuckets,
   smoothBuckets,
 } from "../../src/lib/activity-geometry.js";
-import { formatChatVolume, formatClock, localizeReason, resolveHighlightTitle } from "../../src/lib/formatters.js";
+import { formatChatVolume, formatClock, formatNextUpdate, formatUpdate, localizeReason, resolveHighlightTitle } from "../../src/lib/formatters.js";
 import { resolveCaptionWindow } from "../../src/lib/captions.js";
 import { loadVodPage } from "../../src/hooks/use-vod-page.js";
 import { VOD_PAGE_SIZE } from "../../src/domain/vod.js";
@@ -154,6 +154,17 @@ test("keeps display formatting and reason localization", () => {
   assert.equal(
     formatChatVolume({ vod_id: "1", title: "", published_at: "", chat_total: 1234, comments_per_hour: 56.7 }),
     "1,234件 / 時間あたり約57件",
+  );
+});
+
+test("advances an elapsed static update target to the next daily target", () => {
+  assert.equal(
+    formatNextUpdate("2026-10-04T00:00:00Z", new Date("2026-10-04T06:30:00Z")),
+    formatUpdate("2026-10-05T00:00:00Z"),
+  );
+  assert.equal(
+    formatNextUpdate("2026-10-04T00:00:00Z", new Date("2026-10-03T23:00:00Z")),
+    formatUpdate("2026-10-04T00:00:00Z"),
   );
 });
 
