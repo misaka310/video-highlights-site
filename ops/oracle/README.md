@@ -107,8 +107,11 @@ without reprocessing a published VOD. A fixed
 `YOUTUBE_ORACLE_VIDEO_URL` remains supported as a one-video manual fallback
 when streams discovery is unset.
 That direct-video path also checks the published `data/vod_index.json` IDs
-before acquisition. A published ID is logged as `already_published` and exits
-without downloading media or dispatching another GitHub run.
+before acquisition. A published ID that already has `data/captions/<id>.json`
+is logged as `already_published` and exits without downloading media or
+dispatching another GitHub run. A published ID without that file is not
+reprocessed; the run fetches only its captions immediately (the same caption-only
+path as the scheduled retry) and logs the manual/automatic outcome or the reason.
 
 Install and enable the timer:
 
