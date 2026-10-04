@@ -142,7 +142,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           diff_targets=(data/processed_vods.json data/vods.json data/vod_index.json data/vods data/segment-thumbnails data/captions)
-          if git diff --quiet -- "${diff_targets[@]}"; then
+          # `git diff` ignores untracked files, so a caption-only run (new data/captions/<id>.json) would be dropped.
+          if [ -z "$(git status --porcelain --untracked-files=all -- "${diff_targets[@]}")" ]; then
             echo "No YouTube data changes to publish."
             exit 0
           fi
