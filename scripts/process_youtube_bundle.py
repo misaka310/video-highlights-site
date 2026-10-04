@@ -174,6 +174,47 @@ def _process_manifest(manifest: dict[str, Any], root: Path, active_now: datetime
     return result
 
 
+def _process_caption_updates(
+    caption_updates: list[dict[str, Any]],
+    root: Path,
+) -> list[dict[str, str]]:
+    if not caption_updates:
+        return []
+    index_path = DATA_DIR / "vod_index.json"
+    try:
+        index_payload = json.loads(index_path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError("caption update requires the published YouTube VOD index") from exc
+    videos = index_payload.get("videos") if isinstance(index_payload, dict) else None
+    if not isinstance(videos, list):
+        raise RuntimeError("caption update found an invalid published VOD index")
+    published_ids = {
+        str(video.get("vod_id") or "").strip()
+        for video in videos
+        if isinstance(video, dict) and str(video.get("provider") or "").strip().lower() == "youtube"
+    }
+
+    results: list[dict[str, str]] = []
+    for update in caption_updates:
+        video_id = str(update["video_id"])
+        if video_id not in published_ids:
+            raise RuntimeError(f"caption update references an unpublished YouTube VOD: {video_id}")
+        destination = DATA_DIR / "captions" / f"{video_id}.json"
+        if destination.is_file():
+            results.append({"video_id": video_id, "status": "already_present"})
+            continue
+        captions_path = root / str(update["captions_path"])
+        payload = json.loads(captions_path.read_text(encoding="utf-8"))
+        write_captions_payload(
+            destination,
+            payload,
+            expected_video_id=video_id,
+        )
+        results.append({"video_id": video_id, "status": "written"})
+        print(f"youtube caption retry processed: video_id={video_id} status=written")
+    return results
+
+
 def process_bundle(bundle_path: Path, *, now: datetime | None = None) -> dict[str, Any]:
     """Validate, enrich, and publish one single- or multi-video bundle."""
 
@@ -183,7 +224,11 @@ def process_bundle(bundle_path: Path, *, now: datetime | None = None) -> dict[st
         manifest = extract_material_bundle(Path(bundle_path), root)
         if manifest.get("schema_version") == 2:
             results = [_process_manifest(entry, root, active_now) for entry in manifest["videos"]]
-            return {"videos": results, "output": str(OUT_PATH)}
+            caption_results = _process_caption_updates(
+                list(manifest.get("caption_updates") or []),
+                root,
+            )
+            return {"videos": results, "caption_updates": caption_results, "output": str(OUT_PATH)}
         return _process_manifest(manifest, root, active_now)
 
 

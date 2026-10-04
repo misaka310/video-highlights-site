@@ -21,7 +21,10 @@ MATERIAL_BUNDLE_VERSION = 1
 _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _CLIP_MEMBER_RE = re.compile(r"^clips/clip-(\d+)\.(wav|webp)$")
 _SAFE_MEMBER_RE = re.compile(r"^(manifest\.json|captions\.json|clips/clip-\d+\.(wav|webp))$")
-_BATCH_MEMBER_RE = re.compile(r"^(batch\.json|videos/[A-Za-z0-9_-]{11}/(?:captions\.json|clips/clip-\d+\.(?:wav|webp)))$")
+_BATCH_MEMBER_RE = re.compile(
+    r"^(batch\.json|videos/[A-Za-z0-9_-]{11}/(?:captions\.json|clips/clip-\d+\.(?:wav|webp))|"
+    r"caption-updates/[A-Za-z0-9_-]{11}\.json)$"
+)
 _FORBIDDEN_KEYS = {
     "author",
     "author_name",
@@ -223,8 +226,13 @@ def validate_material_batch_manifest(manifest: Mapping[str, Any]) -> dict[str, A
         raise ValueError("unsupported YouTube material batch schema")
     _assert_no_private_fields(manifest)
     raw_videos = manifest.get("videos")
-    if not isinstance(raw_videos, list) or not raw_videos or len(raw_videos) > 8:
-        raise ValueError("material batch must contain between one and eight videos")
+    raw_caption_updates = manifest.get("caption_updates", [])
+    if not isinstance(raw_videos, list) or len(raw_videos) > 8:
+        raise ValueError("material batch must contain no more than eight videos")
+    if not isinstance(raw_caption_updates, list) or len(raw_caption_updates) > 15:
+        raise ValueError("material batch caption updates have an invalid size")
+    if not raw_videos and not raw_caption_updates:
+        raise ValueError("material batch must contain video material or caption updates")
 
     normalized: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
@@ -279,7 +287,22 @@ def validate_material_batch_manifest(manifest: Mapping[str, Any]) -> dict[str, A
             safe_local["captions_path"] = expected_captions_path
         normalized.append(safe_local)
 
-    return {"schema_version": 2, "videos": normalized}
+    normalized_updates: list[dict[str, str]] = []
+    for raw_update in raw_caption_updates:
+        if not isinstance(raw_update, Mapping):
+            raise ValueError("material batch caption update must be an object")
+        video_id = str(raw_update.get("video_id") or "").strip()
+        if not _VIDEO_ID_RE.fullmatch(video_id):
+            raise ValueError("material batch caption update has an invalid video id")
+        if video_id in seen_ids:
+            raise ValueError("material batch contains a duplicate video")
+        seen_ids.add(video_id)
+        expected_path = f"caption-updates/{video_id}.json"
+        if str(raw_update.get("captions_path") or "").strip() != expected_path:
+            raise ValueError("material batch caption update path is not isolated")
+        normalized_updates.append({"video_id": video_id, "captions_path": expected_path})
+
+    return {"schema_version": 2, "videos": normalized, "caption_updates": normalized_updates}
 
 
 def _member_name(value: str) -> str:
@@ -348,13 +371,17 @@ def create_material_bundle(
 def create_material_batch_bundle(
     bundle_path: Path,
     entries: Iterable[tuple[Mapping[str, Any], Mapping[str, Path], Path | None]],
+    *,
+    caption_updates: Iterable[tuple[str, Path]] = (),
 ) -> Path:
     """Create one privacy-safe archive containing several independent videos."""
 
     raw_entries = list(entries)
-    if not raw_entries:
-        raise ValueError("material batch must contain at least one video")
+    raw_caption_updates = list(caption_updates)
+    if not raw_entries and not raw_caption_updates:
+        raise ValueError("material batch must contain video material or caption updates")
     normalized_entries: list[dict[str, Any]] = []
+    normalized_updates: list[dict[str, str]] = []
     files: dict[str, Path] = {}
     for manifest, media_files, captions_file in raw_entries:
         safe = validate_material_manifest(manifest)
@@ -392,7 +419,28 @@ def create_material_batch_bundle(
             files[f"{prefix}captions.json"] = captions_path
         normalized_entries.append(entry)
 
-    batch_manifest = validate_material_batch_manifest({"schema_version": 2, "videos": normalized_entries})
+    for video_id, captions_file in raw_caption_updates:
+        normalized_id = str(video_id or "").strip()
+        if not _VIDEO_ID_RE.fullmatch(normalized_id):
+            raise ValueError("material batch caption update has an invalid video id")
+        captions_path = Path(captions_file)
+        if not captions_path.is_file() or captions_path.stat().st_size <= 0:
+            raise ValueError("material batch caption update file is missing")
+        from youtube_captions import validate_captions_payload
+
+        payload = json.loads(captions_path.read_text(encoding="utf-8"))
+        validate_captions_payload(payload, expected_video_id=normalized_id)
+        update_path = f"caption-updates/{normalized_id}.json"
+        normalized_updates.append({"video_id": normalized_id, "captions_path": update_path})
+        files[update_path] = captions_path
+
+    batch_manifest = validate_material_batch_manifest(
+        {
+            "schema_version": 2,
+            "videos": normalized_entries,
+            "caption_updates": normalized_updates,
+        }
+    )
     payload = json.dumps(batch_manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
     bundle_path = Path(bundle_path)
     bundle_path.parent.mkdir(parents=True, exist_ok=True)
@@ -500,6 +548,14 @@ def extract_material_batch_bundle(bundle_path: Path, output_dir: Path) -> dict[s
                 path = output_dir / media[key]
                 if not path.is_file() or path.stat().st_size <= 0:
                     raise ValueError(f"material batch member is missing: {media[key]}")
+    for update in safe_batch["caption_updates"]:
+        from youtube_captions import validate_captions_payload
+
+        captions_path = output_dir / update["captions_path"]
+        if not captions_path.is_file() or captions_path.stat().st_size <= 0:
+            raise ValueError(f"material batch caption update is missing: {update['video_id']}")
+        captions_payload = json.loads(captions_path.read_text(encoding="utf-8"))
+        validate_captions_payload(captions_payload, expected_video_id=update["video_id"])
     return safe_batch
 
 

@@ -84,6 +84,31 @@ MAX_STREAM_ARCHIVES_PER_RUN = 5
 STREAM_DISCOVERY_DATE_BUFFER_DAYS = 2
 MAX_FAILURE_RECORDS = 500
 FAILURE_RECORD_RETENTION_DAYS = PUBLIC_VOD_RETENTION_DAYS
+CAPTION_RETRY_STATE_VERSION = 1
+MAX_CAPTION_RETRY_RECORDS = 500
+MAX_CAPTION_RETRY_HISTORY = 500
+MAX_CAPTION_RETRIES_PER_RUN = 15
+CAPTION_RETRY_DAY_OFFSETS = {1: 1, 2: 3}
+CAPTION_RETRY_REASON_CODES = {
+    "caption_track_not_found",
+    "caption_download_error",
+    "caption_download_incomplete",
+    "caption_payload_empty_or_invalid",
+    "caption_available",
+    "legacy_initial_state_unknown",
+    "caption_bundle_dispatched",
+    "captions_published",
+}
+CAPTION_SOURCE_OUTCOMES = {
+    "not_attempted",
+    "track_not_found",
+    "download_error",
+    "empty_payload",
+    "invalid_payload",
+    "available",
+    "unknown",
+}
+JST = dt.timezone(dt.timedelta(hours=9))
 
 # Transient YouTube extraction failures (for example "The page needs to be
 # reloaded.") come and go within minutes, so the same yt-dlp call is retried
@@ -216,6 +241,7 @@ def _run_ytdlp(
     *,
     timeout: int = 900,
     attempts: int = YTDLP_TRANSIENT_RETRY_ATTEMPTS,
+    safe_failure_context: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     bounded_attempts = max(1, int(attempts))
     for attempt in range(1, bounded_attempts + 1):
@@ -226,7 +252,14 @@ def _run_ytdlp(
         except subprocess.TimeoutExpired as exc:
             # A stalled transfer is transient: retry the same command within
             # the remaining attempts before the caller gives up.
-            print(f"yt-dlp timed out: timeout={timeout}s attempt={attempt}/{bounded_attempts}", flush=True)
+            if safe_failure_context:
+                print(
+                    f"{safe_failure_context} timed out: timeout={timeout}s"
+                    f" attempt={attempt}/{bounded_attempts}",
+                    flush=True,
+                )
+            else:
+                print(f"yt-dlp timed out: timeout={timeout}s attempt={attempt}/{bounded_attempts}", flush=True)
             if attempt == bounded_attempts:
                 raise OracleJobFailure("temporary_network_failure", "yt-dlp timed out") from exc
             time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
@@ -234,7 +267,14 @@ def _run_ytdlp(
         if completed.returncode == 0:
             return completed
         category = _classify_ytdlp_failure(completed)
-        _log_runtime_failure("yt-dlp", completed)
+        if safe_failure_context:
+            print(
+                f"{safe_failure_context} failed: category={category}"
+                f" attempt={attempt}/{bounded_attempts}",
+                flush=True,
+            )
+        else:
+            _log_runtime_failure("yt-dlp", completed)
         if category not in TRANSIENT_YTDLP_CATEGORIES or attempt == bounded_attempts:
             raise OracleJobFailure(category, "yt-dlp failed")
         time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
@@ -552,13 +592,377 @@ def _raise_batch_failure(video_urls: list[str], failure: OracleJobFailure) -> No
     raise failure
 
 
-def _mark_processed(video_id: str) -> None:
+def _safe_caption_source_outcomes(outcomes: Any) -> dict[str, str]:
+    raw = outcomes if isinstance(outcomes, dict) else {}
+    return {
+        source: (str(raw.get(source)) if str(raw.get(source)) in CAPTION_SOURCE_OUTCOMES else "unknown")
+        for source in ("manual", "automatic")
+    }
+
+
+def _caption_retry_record(
+    video_id: str,
+    reason_code: str,
+    *,
+    source_outcomes: Any = None,
+    now: dt.datetime | None = None,
+) -> dict[str, Any]:
+    timestamp = now or _utc_now()
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=dt.timezone.utc)
+    timestamp = timestamp.astimezone(dt.timezone.utc)
+    jst_date = timestamp.astimezone(JST).date().isoformat()
+    safe_reason = reason_code if reason_code in CAPTION_RETRY_REASON_CODES else "caption_download_error"
+    return {
+        "video_id": parse_youtube_video_id(video_id),
+        "first_attempt_at": timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "first_attempt_date": jst_date,
+        "last_attempt_at": timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "attempts": 1,
+        "last_reason_code": safe_reason,
+        "last_source_outcomes": _safe_caption_source_outcomes(source_outcomes),
+        "attempt_history": [
+            {
+                "attempt": 1,
+                "attempted_at": timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+                "outcome": "unknown" if safe_reason == "legacy_initial_state_unknown" else "missing",
+                "reason_code": safe_reason,
+                "source_outcomes": _safe_caption_source_outcomes(source_outcomes),
+            }
+        ],
+        "awaiting_publication": False,
+    }
+
+
+def _caption_retry_due(record: dict[str, Any], now: dt.datetime) -> bool:
+    if bool(record.get("awaiting_publication")):
+        return False
+    try:
+        attempts = int(record.get("attempts") or 0)
+        first_attempt = dt.datetime.fromisoformat(str(record.get("first_attempt_at") or "").replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return False
+    day_offset = CAPTION_RETRY_DAY_OFFSETS.get(attempts)
+    if day_offset is None:
+        return False
+    if first_attempt.tzinfo is None:
+        first_attempt = first_attempt.replace(tzinfo=dt.timezone.utc)
+    current = now if now.tzinfo is not None else now.replace(tzinfo=dt.timezone.utc)
+    return current.astimezone(dt.timezone.utc) >= first_attempt.astimezone(dt.timezone.utc) + dt.timedelta(days=day_offset)
+
+
+def _select_due_caption_retry_urls(
+    state: dict[str, Any],
+    *,
+    published_ids: set[str],
+    caption_ids: set[str],
+    now: dt.datetime,
+) -> list[str]:
+    records = state.get("caption_retry_records")
+    if not isinstance(records, list):
+        return []
+    due: list[tuple[str, str]] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        try:
+            video_id = parse_youtube_video_id(str(record.get("video_id") or ""))
+        except ValueError:
+            continue
+        if video_id not in published_ids or video_id in caption_ids or not _caption_retry_due(record, now):
+            continue
+        due.append((str(record.get("first_attempt_date") or "9999-12-31"), video_id))
+    due.sort()
+    return [
+        f"https://www.youtube.com/watch?v={video_id}"
+        for _attempt_date, video_id in due[:MAX_CAPTION_RETRIES_PER_RUN]
+    ]
+
+
+def _append_caption_retry_history(state: dict[str, Any], entry: dict[str, Any]) -> None:
+    old_history = state.get("caption_retry_history")
+    history = [item for item in old_history if isinstance(item, dict)] if isinstance(old_history, list) else []
+    history.append(entry)
+    state["caption_retry_history"] = history[-MAX_CAPTION_RETRY_HISTORY:]
+
+
+def _record_caption_retry_failure(
+    video_id: str,
+    reason_code: str,
+    *,
+    source_outcomes: Any = None,
+    now: dt.datetime | None = None,
+) -> str:
+    normalized_id = parse_youtube_video_id(video_id)
+    timestamp = now or _utc_now()
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=dt.timezone.utc)
+    timestamp = timestamp.astimezone(dt.timezone.utc)
+    timestamp_text = timestamp.isoformat(timespec="seconds").replace("+00:00", "Z")
+    safe_reason = reason_code if reason_code in CAPTION_RETRY_REASON_CODES else "caption_download_error"
+    state = _read_state()
+    records = state.get("caption_retry_records")
+    records = [item for item in records if isinstance(item, dict)] if isinstance(records, list) else []
+    record = next((item for item in records if item.get("video_id") == normalized_id), None)
+    if record is None:
+        return "missing_record"
+    if bool(record.get("awaiting_publication")):
+        record["last_attempt_at"] = timestamp_text
+        record["last_reason_code"] = safe_reason
+        record["last_source_outcomes"] = _safe_caption_source_outcomes(source_outcomes)
+        state["caption_retry_records"] = records
+        _write_state(state)
+        print(
+            f"caption retry video_id={normalized_id} attempt=pending_publication"
+            f" outcome=not_published reason={safe_reason}",
+            flush=True,
+        )
+        return "awaiting_publication"
+
+    try:
+        attempts = int(record.get("attempts") or 1) + 1
+    except (TypeError, ValueError):
+        attempts = 2
+    record["attempts"] = attempts
+    record["last_attempt_at"] = timestamp_text
+    record["last_reason_code"] = safe_reason
+    record["last_source_outcomes"] = _safe_caption_source_outcomes(source_outcomes)
+    attempt_history = record.get("attempt_history")
+    attempt_history = [item for item in attempt_history if isinstance(item, dict)] if isinstance(attempt_history, list) else []
+    attempt_history.append(
+        {
+            "attempt": attempts,
+            "attempted_at": timestamp_text,
+            "outcome": "missing",
+            "reason_code": safe_reason,
+            "source_outcomes": _safe_caption_source_outcomes(source_outcomes),
+        }
+    )
+    record["attempt_history"] = attempt_history[-3:]
+    if attempts >= 3:
+        state["caption_retry_records"] = [item for item in records if item is not record]
+        _append_caption_retry_history(
+            state,
+            {
+                "video_id": normalized_id,
+                "first_attempt_at": str(record.get("first_attempt_at") or timestamp_text),
+                "completed_at": timestamp_text,
+                "attempts": attempts,
+                "outcome": "abandoned",
+                "reason_code": safe_reason,
+                "source_outcomes": _safe_caption_source_outcomes(source_outcomes),
+                "attempt_history": record["attempt_history"],
+            },
+        )
+        outcome = "abandoned"
+    else:
+        state["caption_retry_records"] = records
+        outcome = "retry_scheduled"
+    _write_state(state)
+    print(
+        f"caption retry video_id={normalized_id} attempt={attempts}/3"
+        f" outcome={outcome} reason={safe_reason}",
+        flush=True,
+    )
+    return outcome
+
+
+def _mark_caption_retry_pending_publication(
+    video_id: str,
+    *,
+    source_outcomes: Any = None,
+    now: dt.datetime | None = None,
+) -> None:
+    normalized_id = parse_youtube_video_id(video_id)
+    timestamp = now or _utc_now()
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=dt.timezone.utc)
+    timestamp_text = timestamp.astimezone(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    state = _read_state()
+    records = state.get("caption_retry_records")
+    records = [item for item in records if isinstance(item, dict)] if isinstance(records, list) else []
+    record = next((item for item in records if item.get("video_id") == normalized_id), None)
+    if record is None:
+        return
+    try:
+        attempts = int(record.get("attempts") or 1) + 1
+    except (TypeError, ValueError):
+        attempts = 2
+    source_results = _safe_caption_source_outcomes(source_outcomes)
+    attempt_history = record.get("attempt_history")
+    attempt_history = [item for item in attempt_history if isinstance(item, dict)] if isinstance(attempt_history, list) else []
+    attempt_history.append(
+        {
+            "attempt": attempts,
+            "attempted_at": timestamp_text,
+            "outcome": "caption_available",
+            "reason_code": "caption_available",
+            "source_outcomes": source_results,
+        }
+    )
+    record["attempts"] = attempts
+    record["attempt_history"] = attempt_history[-3:]
+    record["awaiting_publication"] = True
+    record["last_attempt_at"] = timestamp_text
+    record["last_reason_code"] = "caption_bundle_dispatched"
+    record["last_source_outcomes"] = source_results
+    state["caption_retry_records"] = records
+    _write_state(state)
+    print(
+        f"caption retry video_id={normalized_id} attempt={attempts}/3"
+        f" outcome=awaiting_publication reason=caption_bundle_dispatched"
+        f" manual={source_results['manual']} automatic={source_results['automatic']}",
+        flush=True,
+    )
+
+
+def _read_caption_ids() -> set[str]:
+    captions_dir = REPOSITORY_ROOT / "data" / "captions"
+    if not captions_dir.is_dir():
+        return set()
+    return {
+        path.stem
+        for path in captions_dir.glob("*.json")
+        if re.fullmatch(r"[A-Za-z0-9_-]{11}", path.stem)
+    }
+
+
+def _seed_caption_retry_records(
+    state: dict[str, Any],
+    *,
+    published_ids: set[str],
+    caption_ids: set[str],
+    now: dt.datetime,
+) -> None:
+    if int(state.get("caption_retry_migration_version") or 0) >= CAPTION_RETRY_STATE_VERSION:
+        return
+    state["caption_retry_records"] = [
+        item for item in state.get("caption_retry_records", []) if isinstance(item, dict)
+    ] if isinstance(state.get("caption_retry_records"), list) else []
+    processed_path = REPOSITORY_ROOT / "data" / "processed_vods.json"
+    try:
+        payload = json.loads(processed_path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError):
+        return
+    videos = payload.get("videos") if isinstance(payload, dict) else None
+    if not isinstance(videos, list):
+        return
+    state["caption_retry_migration_version"] = CAPTION_RETRY_STATE_VERSION
+    current_date = now.astimezone(JST).date()
+    existing_ids = {str(item.get("video_id") or "") for item in state["caption_retry_records"]}
+    for video in videos:
+        if not isinstance(video, dict):
+            continue
+        try:
+            video_id = parse_youtube_video_id(str(video.get("vod_id") or ""))
+            analyzed_at = dt.datetime.fromisoformat(str(video.get("analyzed_at") or ""))
+        except (TypeError, ValueError):
+            continue
+        if video_id not in published_ids or video_id in caption_ids or video_id in existing_ids:
+            continue
+        if analyzed_at.tzinfo is None:
+            analyzed_at = analyzed_at.replace(tzinfo=dt.timezone.utc)
+        attempted_date = analyzed_at.astimezone(JST).date()
+        age_days = (current_date - attempted_date).days
+        if age_days < 0 or age_days > 3:
+            continue
+        record = _caption_retry_record(video_id, "legacy_initial_state_unknown", now=analyzed_at)
+        state["caption_retry_records"].append(record)
+        existing_ids.add(video_id)
+        print(
+            f"caption retry initialized video_id={video_id} attempt=1/3"
+            " reason=legacy_initial_state_unknown",
+            flush=True,
+        )
+    state["caption_retry_records"] = state["caption_retry_records"][-MAX_CAPTION_RETRY_RECORDS:]
+
+
+def _reconcile_caption_retry_records(
+    state: dict[str, Any],
+    *,
+    published_ids: set[str],
+    caption_ids: set[str],
+    now: dt.datetime,
+) -> None:
+    raw_records = state.get("caption_retry_records")
+    records = raw_records if isinstance(raw_records, list) else []
+    retained: list[dict[str, Any]] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        try:
+            video_id = parse_youtube_video_id(str(record.get("video_id") or ""))
+            first_attempt = dt.datetime.fromisoformat(str(record.get("first_attempt_at") or "").replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            continue
+        if first_attempt.tzinfo is None:
+            first_attempt = first_attempt.replace(tzinfo=dt.timezone.utc)
+        age_days = (now.astimezone(JST).date() - first_attempt.astimezone(JST).date()).days
+        if video_id not in published_ids or age_days > PUBLIC_VOD_RETENTION_DAYS:
+            continue
+        if video_id in caption_ids:
+            _append_caption_retry_history(
+                state,
+                {
+                    "video_id": video_id,
+                    "first_attempt_at": first_attempt.astimezone(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+                    "completed_at": now.astimezone(dt.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+                    "attempts": int(record.get("attempts") or 1),
+                    "outcome": "resolved",
+                    "reason_code": "captions_published",
+                    "attempt_history": record.get("attempt_history", []),
+                },
+            )
+            continue
+        retained.append(record)
+    state["caption_retry_records"] = retained[-MAX_CAPTION_RETRY_RECORDS:]
+
+
+def _mark_processed(
+    video_id: str,
+    *,
+    captions_found: bool | None = None,
+    caption_reason_code: str | None = None,
+    caption_source_outcomes: Any = None,
+    now: dt.datetime | None = None,
+) -> None:
     state = _read_state()
     processed = [str(item).strip() for item in state.get("processed_video_ids", []) if str(item).strip()]
     processed = [item for item in processed if item != video_id]
     processed.append(video_id)
     state["processed_video_ids"] = processed
     state["last_processed_video_id"] = video_id
+    if captions_found is False:
+        records = state.get("caption_retry_records")
+        records = [item for item in records if isinstance(item, dict)] if isinstance(records, list) else []
+        retry_record = _caption_retry_record(
+            video_id,
+            caption_reason_code or "caption_track_not_found",
+            source_outcomes=caption_source_outcomes,
+            now=now,
+        )
+        records = [item for item in records if item.get("video_id") != video_id]
+        records.append(retry_record)
+        state["caption_retry_records"] = records[-MAX_CAPTION_RETRY_RECORDS:]
+        print(
+            f"caption acquisition video_id={video_id} result=missing"
+            f" reason={retry_record['last_reason_code']} retry=next_day,day_3",
+            flush=True,
+        )
+    elif captions_found is True:
+        source_results = _safe_caption_source_outcomes(caption_source_outcomes)
+        records = state.get("caption_retry_records")
+        records = [item for item in records if isinstance(item, dict)] if isinstance(records, list) else []
+        state["caption_retry_records"] = [
+            item
+            for item in records
+            if isinstance(item, dict) and item.get("video_id") != video_id
+        ]
+        print(
+            f"caption acquisition video_id={video_id} result=available"
+            f" manual={source_results['manual']} automatic={source_results['automatic']}",
+            flush=True,
+        )
     _write_state(state)
 
 
@@ -713,14 +1117,18 @@ def _download_captions(
     ytdlp: str,
     deno: str,
     cookies: str,
-) -> Path | None:
+) -> dict[str, Any]:
     video_id = parse_youtube_video_id(video_url)
     output_template = str(work_dir / "captions.%(ext)s")
     attempts = (
         ("--write-subs", CAPTIONS_SOURCE_MANUAL),
         ("--write-auto-subs", CAPTIONS_SOURCE_AUTOMATIC),
     )
+    source_outcomes = {"manual": "not_attempted", "automatic": "not_attempted"}
+    download_errors = 0
+    empty_payloads = 0
     for write_flag, source in attempts:
+        source_key = "manual" if write_flag == "--write-subs" else "automatic"
         for stale in work_dir.glob("captions*.json3"):
             stale.unlink(missing_ok=True)
         try:
@@ -739,24 +1147,55 @@ def _download_captions(
                     video_url,
                 ],
                 timeout=180,
+                safe_failure_context=f"youtube_caption_{source_key}",
             )
         except OracleJobFailure:
+            source_outcomes[source_key] = "download_error"
+            download_errors += 1
             continue
         subtitle_file, language_source = pick_best_json3_file(sorted(work_dir.glob("captions*.json3")))
         if subtitle_file is None:
+            source_outcomes[source_key] = "track_not_found"
             continue
-        payload = convert_json3_file(
-            video_id=video_id,
-            json3_path=subtitle_file,
-            language_source=language_source,
-            source=source,
-        )
+        try:
+            payload = convert_json3_file(
+                video_id=video_id,
+                json3_path=subtitle_file,
+                language_source=language_source,
+                source=source,
+            )
+        except (OSError, ValueError, json.JSONDecodeError, TypeError):
+            source_outcomes[source_key] = "invalid_payload"
+            empty_payloads += 1
+            continue
         if not payload.get("cues"):
+            source_outcomes[source_key] = "empty_payload"
+            empty_payloads += 1
             continue
         destination = work_dir / "captions.json"
-        write_captions_payload(destination, payload, expected_video_id=video_id)
-        return destination
-    return None
+        try:
+            write_captions_payload(destination, payload, expected_video_id=video_id)
+        except (OSError, ValueError, TypeError):
+            source_outcomes[source_key] = "invalid_payload"
+            empty_payloads += 1
+            continue
+        source_outcomes[source_key] = "available"
+        return {"path": destination, "reason_code": None, "source_outcomes": source_outcomes}
+    if empty_payloads:
+        reason_code = "caption_payload_empty_or_invalid"
+    elif download_errors == len(attempts):
+        reason_code = "caption_download_error"
+    elif download_errors:
+        reason_code = "caption_download_incomplete"
+    else:
+        reason_code = "caption_track_not_found"
+    print(
+        f"caption acquisition video_id={video_id} result=missing"
+        f" manual={source_outcomes['manual']} automatic={source_outcomes['automatic']}"
+        f" reason={reason_code}",
+        flush=True,
+    )
+    return {"path": None, "reason_code": reason_code, "source_outcomes": source_outcomes}
 
 
 def _cut_media(video_url: str, item: dict[str, Any], index: int, work_dir: Path, ytdlp: str, deno: str, cookies: str) -> tuple[Path, Path]:
@@ -914,7 +1353,7 @@ def _prepare_material(
     video_id = parse_youtube_video_id(video_url)
     work_dir.mkdir(parents=True, exist_ok=True)
     video, comments = _download_chat_and_metadata(video_url, work_dir, ytdlp, deno, cookies)
-    captions_file = _download_captions(video_url, work_dir, ytdlp, deno, cookies)
+    caption_result = _download_captions(video_url, work_dir, ytdlp, deno, cookies)
     analyzed, status = analyze_video_entry(
         video,
         dt.datetime.now().astimezone(),
@@ -933,7 +1372,9 @@ def _prepare_material(
         "video_id": video_id,
         "manifest": build_material_manifest(video, comments, items),
         "media_files": media_files,
-        "captions_file": captions_file,
+        "captions_file": caption_result["path"],
+        "caption_reason_code": caption_result["reason_code"],
+        "caption_source_outcomes": caption_result["source_outcomes"],
         "chat_total": len(comments),
         "highlights": len(items),
         "media_bytes": sum(path.stat().st_size for path in media_files.values()),
@@ -973,6 +1414,8 @@ def _run_one(video_url: str) -> dict[str, Any]:
             "chat_total": prepared["chat_total"],
             "highlights": prepared["highlights"],
             "captions": bool(prepared["captions_file"]),
+            "caption_reason_code": prepared["caption_reason_code"],
+            "caption_source_outcomes": prepared["caption_source_outcomes"],
             "media_bytes": prepared["media_bytes"],
         }
 
@@ -996,10 +1439,11 @@ def run(video_url: str) -> dict[str, Any]:
         raise
 
 
-def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
-    """Acquire several archives and hand them to one checked Actions run."""
+def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = None) -> list[dict[str, Any]]:
+    """Acquire archives and caption-only retries for one checked Actions run."""
 
-    if not video_urls:
+    caption_retry_urls = caption_retry_urls or []
+    if not video_urls and not caption_retry_urls:
         raise OracleJobFailure("yt_dlp_failure", "no YouTube archives selected")
     ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
     deno = _path_env("YOUTUBE_ORACLE_DENO_PATH", DEFAULT_DENO)
@@ -1031,6 +1475,8 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
         )
     prepared_entries: list[tuple[dict[str, Any], dict[str, Path], Path | None]] = []
     results: list[dict[str, Any]] = []
+    caption_updates: list[tuple[str, Path]] = []
+    caption_retry_outcomes: dict[str, Any] = {}
     try:
         batch_directory = tempfile.TemporaryDirectory(prefix="batch-", dir=work_root)
     except OSError:
@@ -1077,16 +1523,51 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
                     "chat_total": prepared["chat_total"],
                     "highlights": prepared["highlights"],
                     "captions": bool(prepared["captions_file"]),
+                    "caption_reason_code": prepared.get("caption_reason_code"),
+                    "caption_source_outcomes": prepared.get("caption_source_outcomes"),
                     "media_bytes": prepared["media_bytes"],
                 }
             )
-        if not results:
-            raise OracleJobFailure("yt_dlp_failure", "no YouTube archives could be prepared")
+        for video_url in caption_retry_urls:
+            video_id = parse_youtube_video_id(video_url)
+            caption_dir = root / "caption-retries" / video_id
+            caption_dir.mkdir(parents=True, exist_ok=True)
+            try:
+                caption_result = _download_captions(video_url, caption_dir, ytdlp, deno, cookies)
+            except OracleJobFailure:
+                caption_result = {
+                    "path": None,
+                    "reason_code": "caption_download_error",
+                    "source_outcomes": {"manual": "download_error", "automatic": "download_error"},
+                }
+            if caption_result.get("path") is None:
+                _record_caption_retry_failure(
+                    video_id,
+                    str(caption_result.get("reason_code") or "caption_download_error"),
+                    source_outcomes=caption_result.get("source_outcomes"),
+                )
+                continue
+            caption_updates.append((video_id, caption_result["path"]))
+            caption_retry_outcomes[video_id] = caption_result.get("source_outcomes")
+
+        if not results and not caption_updates:
+            if video_urls:
+                raise OracleJobFailure("yt_dlp_failure", "no YouTube archives could be prepared")
+            return []
         try:
             bundle_path = root / "youtube-material-batch.tar.gz"
-            create_material_batch_bundle(bundle_path, prepared_entries)
+            create_material_batch_bundle(bundle_path, prepared_entries, caption_updates=caption_updates)
             upload_bundle_to_url(bundle_path, upload_url)
-            _dispatch_github([item["video_id"] for item in results])
+            dispatched_ids = list(dict.fromkeys(
+                [item["video_id"] for item in results]
+                + [video_id for video_id, _caption_path in caption_updates]
+            ))
+            _dispatch_github(dispatched_ids)
+            for video_id, _caption_path in caption_updates:
+                _mark_caption_retry_pending_publication(
+                    video_id,
+                    source_outcomes=caption_retry_outcomes.get(video_id),
+                )
         except OracleJobFailure as exc:
             for result in results:
                 _record_failure(result["video_id"], exc)
@@ -1106,6 +1587,8 @@ def run_batch(video_urls: list[str]) -> list[dict[str, Any]]:
             for result in results:
                 _record_failure(result["video_id"], failure)
             raise failure from exc
+        if video_urls and not results:
+            raise OracleJobFailure("yt_dlp_failure", "no YouTube archives could be prepared")
     return results
 
 
@@ -1119,6 +1602,7 @@ def main() -> int:
         ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
         deno = _path_env("YOUTUBE_ORACLE_DENO_PATH", DEFAULT_DENO)
         cookies = _path_env("YOUTUBE_ORACLE_COOKIES_PATH", DEFAULT_COOKIES)
+        caption_retry_urls: list[str] = []
         if args.streams_url:
             if not Path(cookies).is_file():
                 raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
@@ -1127,6 +1611,20 @@ def main() -> int:
             cached_records = state.get("discovered_stream_records")
             if not isinstance(cached_records, list):
                 cached_records = []
+            published_ids = _read_published_video_ids()
+            caption_ids = _read_caption_ids()
+            _seed_caption_retry_records(
+                state,
+                published_ids=published_ids,
+                caption_ids=caption_ids,
+                now=run_started_at,
+            )
+            _reconcile_caption_retry_records(
+                state,
+                published_ids=published_ids,
+                caption_ids=caption_ids,
+                now=run_started_at,
+            )
             current_records = _resolve_stream_archive_records(
                 args.streams_url,
                 ytdlp,
@@ -1134,7 +1632,6 @@ def main() -> int:
                 cookies,
                 now=run_started_at,
             )
-            published_ids = _read_published_video_ids()
             records = _merge_discovered_stream_records(
                 current_records,
                 cached_records,
@@ -1142,19 +1639,27 @@ def main() -> int:
                 now=run_started_at,
             )
             state["discovered_stream_records"] = records
-            _write_state(state)
             video_urls = _select_unpublished_stream_urls(
                 records,
                 published_ids=published_ids,
                 limit=args.max_videos,
                 now=run_started_at,
             )
-            if not video_urls:
+            caption_retry_urls = _select_due_caption_retry_urls(
+                state,
+                published_ids=published_ids,
+                caption_ids=caption_ids,
+                now=run_started_at,
+            )
+            _write_state(state)
+            if not video_urls and not caption_retry_urls:
                 _notify(None)
                 print("oracle YouTube job skipped: reason=no_recent_unprocessed_archives")
                 return 0
             for video_url in video_urls:
                 print(f"selected video_id={parse_youtube_video_id(video_url)}", flush=True)
+            for video_url in caption_retry_urls:
+                print(f"selected caption_retry video_id={parse_youtube_video_id(video_url)}", flush=True)
         else:
             video_urls = [args.video_url] if args.video_url else []
             if video_urls:
@@ -1164,11 +1669,24 @@ def main() -> int:
                     _notify(None)
                     print(f"skipped video_id={video_id} category=already_published", flush=True)
                     return 0
-        if not video_urls:
+        if not video_urls and not caption_retry_urls:
             raise OracleJobFailure("handoff_configuration", "YOUTUBE_ORACLE_STREAMS_URL or video URL is required")
-        results = [run(video_urls[0])] if len(video_urls) == 1 else run_batch(video_urls)
+        if len(video_urls) == 1 and not caption_retry_urls:
+            results = [run(video_urls[0])]
+        elif caption_retry_urls:
+            results = run_batch(video_urls, caption_retry_urls=caption_retry_urls)
+        else:
+            results = run_batch(video_urls)
         for result in results:
-            _mark_processed(result["video_id"])
+            if "caption_reason_code" in result or "caption_source_outcomes" in result:
+                _mark_processed(
+                    result["video_id"],
+                    captions_found=bool(result.get("captions")),
+                    caption_reason_code=result.get("caption_reason_code"),
+                    caption_source_outcomes=result.get("caption_source_outcomes"),
+                )
+            else:
+                _mark_processed(result["video_id"])
         _notify(None)
         print(f"oracle YouTube job complete: videos={len(results)}")
         for result in results:
