@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-05T08:20:09+09:00",
+  "updated_at": "2026-10-06T07:44:27+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -10584,7 +10584,7 @@
           "start_time": "06:05:00",
           "end_time": "06:10:20",
           "reason": "Chat activity spike around 6h5m0s (z-score=7.099).",
-          "headline": "ふくちゃん近くで回復のおこぼれ",
+          "headline": "回復のおこぼれを狙うも死の危機",
           "tags": [
             "好プレー",
             "ww",
@@ -10602,7 +10602,7 @@
           "start_time": "01:32:50",
           "end_time": "01:37:20",
           "reason": "Chat activity spike around 1h32m50s (z-score=4.859).",
-          "headline": "未だに朝を待って笑う",
+          "headline": "朝の待ち時間に笑い",
           "tags": [
             "ww"
           ],
@@ -10618,7 +10618,7 @@
           "start_time": "00:22:40",
           "end_time": "00:27:30",
           "reason": "Chat activity spike around 0h22m40s (z-score=3.739).",
-          "headline": "本気の恋とセクハへの軽蔑",
+          "headline": "本気で恋してるのに見下し",
           "tags": [
             "ww",
             "えっ",
@@ -10714,7 +10714,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-05T08:20:09+09:00"
+      "analyzed_at": "2026-10-06T07:44:27+09:00"
     },
     {
       "vod_id": "2833526837",

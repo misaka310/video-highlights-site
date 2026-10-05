@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-05T08:20:09+09:00",
-  "next_update_at": "2026-10-05T00:00:00+00:00",
+  "updated_at": "2026-10-06T07:44:27+09:00",
+  "next_update_at": "2026-10-06T00:00:00+00:00",
   "videos": [
     {
       "vod_id": "Y8YpU6kQ6io",
@@ -689,19 +689,6 @@
       "chat_total": 10033,
       "comments_per_hour": 2001.596,
       "detail_path": "/data/vods/HtZo7fqNV0A.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "PnQANAXovDA",
-      "vod_url": "https://www.youtube.com/watch?v=PnQANAXovDA",
-      "title": "2000時間プレイヤー魂の深度5到達※明日ダスブラ当落のためホルモンが乱れております【ナイトレイン/ELDEN RING NIGHTREIGN】",
-      "published_at": "2026-08-06T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/PnQANAXovDA/maxresdefault.jpg",
-      "duration_sec": 20584,
-      "count": 3,
-      "chat_total": 1463,
-      "comments_per_hour": 255.869,
-      "detail_path": "/data/vods/PnQANAXovDA.json",
       "provider": "youtube"
     }
   ]
