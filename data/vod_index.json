@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-06T07:44:27+09:00",
-  "next_update_at": "2026-10-06T00:00:00+00:00",
+  "updated_at": "2026-10-07T06:58:25+09:00",
+  "next_update_at": "2026-10-07T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "DFJ6L1ESayE",
+      "vod_url": "https://www.youtube.com/watch?v=DFJ6L1ESayE",
+      "title": "【初見】メチャ気持ちよくなれると評判の鬼武者新作【鬼武者 Way of the Sword】",
+      "published_at": "2026-10-06T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/DFJ6L1ESayE/maxresdefault.jpg",
+      "duration_sec": 16338,
+      "count": 3,
+      "chat_total": 1063,
+      "comments_per_hour": 234.227,
+      "detail_path": "/data/vods/DFJ6L1ESayE.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "Y8YpU6kQ6io",
       "vod_url": "https://www.youtube.com/watch?v=Y8YpU6kQ6io",
@@ -676,19 +689,6 @@
       "chat_total": 333,
       "comments_per_hour": 2031.864,
       "detail_path": "/data/vods/zOIP5DucN1M.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "HtZo7fqNV0A",
-      "vod_url": "https://www.youtube.com/watch?v=HtZo7fqNV0A",
-      "title": "【閲覧注意】ネットワークテスト当落確認配信【T】",
-      "published_at": "2026-08-07T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/HtZo7fqNV0A/maxresdefault.jpg",
-      "duration_sec": 18045,
-      "count": 3,
-      "chat_total": 10033,
-      "comments_per_hour": 2001.596,
-      "detail_path": "/data/vods/HtZo7fqNV0A.json",
       "provider": "youtube"
     }
   ]
