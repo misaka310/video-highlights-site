@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-07T06:58:25+09:00",
-  "next_update_at": "2026-10-07T00:00:00+00:00",
+  "updated_at": "2026-10-08T07:03:11+09:00",
+  "next_update_at": "2026-10-08T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "ZGI0fBZHlts",
+      "vod_url": "https://www.youtube.com/watch?v=ZGI0fBZHlts",
+      "title": "【検証】一番使用数の低い夜渡りでカンストに行けるのか？【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-07T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/ZGI0fBZHlts/maxresdefault.jpg",
+      "duration_sec": 12988,
+      "count": 3,
+      "chat_total": 1209,
+      "comments_per_hour": 335.109,
+      "detail_path": "/data/vods/ZGI0fBZHlts.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "DFJ6L1ESayE",
       "vod_url": "https://www.youtube.com/watch?v=DFJ6L1ESayE",
@@ -663,32 +676,6 @@
       "chat_total": 833,
       "comments_per_hour": 196.18,
       "detail_path": "/data/vods/6CKXN4R_ejk.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "hzjvbPZzELE",
-      "vod_url": "https://www.youtube.com/watch?v=hzjvbPZzELE",
-      "title": "今日のフロムオタ活レポ【SEKIROお祭りとブラボポップアップ】",
-      "published_at": "2026-08-08T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/hzjvbPZzELE/maxresdefault.jpg",
-      "duration_sec": 7154,
-      "count": 3,
-      "chat_total": 647,
-      "comments_per_hour": 325.58,
-      "detail_path": "/data/vods/hzjvbPZzELE.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "zOIP5DucN1M",
-      "vod_url": "https://www.youtube.com/watch?v=zOIP5DucN1M",
-      "title": "【謝罪】先日の配信について、お話させていただきます。【閲覧注意】",
-      "published_at": "2026-08-08T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/zOIP5DucN1M/maxresdefault.jpg",
-      "duration_sec": 590,
-      "count": 1,
-      "chat_total": 333,
-      "comments_per_hour": 2031.864,
-      "detail_path": "/data/vods/zOIP5DucN1M.json",
       "provider": "youtube"
     }
   ]
