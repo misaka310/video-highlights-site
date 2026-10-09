@@ -11,6 +11,7 @@ on:
     paths:
       - ".github/workflows/update-vods.yml"
       - "requirements-transcribe.txt"
+      - "requirements-transcribe.lock.txt"
       - "scripts/headline_*.py"
       - "scripts/transcribe_segments.py"
       - "scripts/transcript_*.py"
@@ -32,12 +33,14 @@ on:
         default: "false"
 
 permissions:
-  actions: write
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   update-vods:
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
     # Temporary subscriber-only maintenance: automatic push/schedule events remain
     # declared for compatibility checks, but only manual dispatch may run the job.
     if: ${{ github.event_name == 'workflow_dispatch' }}
@@ -92,9 +95,7 @@ jobs:
 
       - name: Install transcription dependencies
         if: ${{ github.event.inputs.skip_segment_transcription != 'true' }}
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements-transcribe.txt
+        run: python -m pip install --require-hashes -r requirements-transcribe.lock.txt
 
       - name: Verify faster_whisper import
         if: ${{ github.event.inputs.skip_segment_transcription != 'true' }}

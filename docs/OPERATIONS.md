@@ -36,7 +36,7 @@ npm run verify:live
 4. `public-readiness`、`Frontend CI`、`Repository hygiene`、`Repo Launch Doctor` を対象SHAで確認する。
 5. `action_required` のrunは、差分とworkflow変更を確認したうえでActions write権限により承認する。
 6. 必須runがすべて成功してからsquash mergeし、releaseブランチを削除する。
-7. Render上のHTML、公開データ、PC・スマホ表示を確認し、必要な変更では `npm run verify:live` を通す。
+7. Render上のHTML、公開データ、PC・スマホ表示を確認し、必要な変更では `npm run verify:live` を通す。成功時の `production-verification.json` はActions artifactとして14日保持し、検証記録のためだけの書込用branchは作らない。
 
 PR番号、run ID、コミットSHAをworkflowへ固定値として残さない。実行時に対象ブランチとhead SHAから解決し、マージ直前にもPR headが変わっていないことを確認する。
 PR作成、対象SHAの検証、head SHA確認、squash mergeは`.github/scripts/checked_pr_merge.py`を共通経路とする。通常のrelease PRは`pull_request` runを待ち、Actionsが作成する自動更新PR（`automation/update-vods`、`automation/youtube-material-*`）は承認待ちrunで停止しないよう、3つの必須workflowを`workflow_dispatch`で対象SHAへ明示実行する。
