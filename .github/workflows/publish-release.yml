@@ -10,12 +10,14 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  actions: write
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
   publish:
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:

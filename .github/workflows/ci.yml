@@ -78,8 +78,6 @@ jobs:
     needs: verification
     runs-on: ubuntu-24.04
     timeout-minutes: 30
-    permissions:
-      contents: write
     env:
       LIVE_BASE_URL: https://dotitao-moments.onrender.com
 
@@ -113,26 +111,13 @@ jobs:
       - name: Verify real YouTube and deployed production
         run: npm run verify:live
 
-      - name: Record successful production verification
-        shell: bash
-        run: |
-          set -euo pipefail
-          verification_branch="automation/production-verification"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          blob_sha="$(git hash-object -w production-verification.json)"
-          tree_sha="$(printf '100644 blob %s\tproduction-verification.json\n' "$blob_sha" | git mktree)"
-          parent_sha="$(git ls-remote origin "refs/heads/$verification_branch" | awk '{print $1}')"
-
-          if [[ -n "$parent_sha" ]]; then
-            git fetch --no-tags --depth=1 origin "refs/heads/$verification_branch"
-            marker_commit="$(printf 'Record successful production verification for %s\n' "$GITHUB_SHA" | git commit-tree "$tree_sha" -p "$parent_sha")"
-          else
-            marker_commit="$(printf 'Record successful production verification for %s\n' "$GITHUB_SHA" | git commit-tree "$tree_sha")"
-          fi
-
-          git push --force origin "$marker_commit:refs/heads/$verification_branch"
+      - name: Retain successful production verification evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: production-verification-${{ github.run_id }}
+          path: production-verification.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Upload failure evidence
         if: failure()
