@@ -69,6 +69,11 @@ YOUTUBE_ORACLE_GITHUB_REPOSITORY=owner/repository
 DISCORD_WEBHOOK_URL=...
 ```
 
+The Oracle job posts fatal and per-archive failure notifications to this Discord
+webhook. Alerts include the public Render URL from `config/site.json`; delivery
+success or a safe failure reason is written to the systemd journal. A failed
+webhook post remains eligible for retry on the next run.
+
 The PAR used for upload must be scoped to the single temporary object and
 permit the Oracle `PUT` and overwrite of that object; the read PAR is stored
 separately in GitHub. Each PAR can be reused until its expiration, so they do
