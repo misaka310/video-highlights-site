@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-08T07:03:11+09:00",
-  "next_update_at": "2026-10-08T00:00:00+00:00",
+  "updated_at": "2026-10-09T06:56:00+09:00",
+  "next_update_at": "2026-10-09T00:00:00+00:00",
   "videos": [
     {
       "vod_id": "ZGI0fBZHlts",
@@ -663,19 +663,6 @@
       "chat_total": 896,
       "comments_per_hour": 258.939,
       "detail_path": "/data/vods/VlxPPkteaoM.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "6CKXN4R_ejk",
-      "vod_url": "https://www.youtube.com/watch?v=6CKXN4R_ejk",
-      "title": "癒しのグッドランチタイムナイトレイン【ナイトレイン/ELDEN RING NIGHTREIGN】",
-      "published_at": "2026-08-09T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/6CKXN4R_ejk/maxresdefault.jpg",
-      "duration_sec": 15286,
-      "count": 3,
-      "chat_total": 833,
-      "comments_per_hour": 196.18,
-      "detail_path": "/data/vods/6CKXN4R_ejk.json",
       "provider": "youtube"
     }
   ]
