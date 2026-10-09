@@ -49,12 +49,14 @@ class OracleJobFailure(RuntimeError):
         message: str,
         *,
         stage: str | None = None,
-        reason_code: str | None = None,
+        reason_code: str,
     ):
+        if not re.fullmatch(r"[a-z0-9_]{1,64}", reason_code):
+            raise ValueError("reason_code must be a safe identifier")
         super().__init__(message)
         self.category = category
         self.stage = stage or _default_failure_stage(category)
-        self.reason_code = reason_code or f"{category}_failed"
+        self.reason_code = reason_code
 
 
 def _default_failure_stage(category: str) -> str:
@@ -202,15 +204,27 @@ def _run_captured(command: list[str], *, timeout: int) -> subprocess.CompletedPr
 
 
 def _run(command: list[str], *, category: str, timeout: int = 900) -> subprocess.CompletedProcess[str]:
+    stage = "media_processing"
     try:
         completed = _run_captured(command, timeout=timeout)
     except FileNotFoundError as exc:
-        raise OracleJobFailure(category, "required runtime was not found") from exc
+        raise OracleJobFailure(
+            category, "required runtime was not found", stage=stage,
+            reason_code="runtime_not_found",
+        ) from exc
     except subprocess.TimeoutExpired as exc:
-        raise OracleJobFailure(category, "runtime timed out") from exc
+        raise OracleJobFailure(
+            category, "runtime timed out", stage=stage, reason_code="runtime_timeout",
+        ) from exc
     if completed.returncode != 0:
-        _log_runtime_failure("runtime", completed)
-        raise OracleJobFailure(category, "runtime returned a non-zero exit status")
+        _log_runtime_failure(
+            "runtime", completed, category=category, stage=stage,
+            reason_code="runtime_nonzero_exit",
+        )
+        raise OracleJobFailure(
+            category, "runtime returned a non-zero exit status", stage=stage,
+            reason_code="runtime_nonzero_exit",
+        )
     return completed
 
 
@@ -224,16 +238,38 @@ def _classify_ytdlp_failure(completed: subprocess.CompletedProcess[str]) -> str:
         return "youtube_bot_challenge_failure"
     if "deno" in text or "javascript runtime" in text or "remote-components" in text:
         return "yt_dlp_deno_failure"
-    if any(marker in text for marker in ("timed out", "timeout", "connection", "network", "reset by peer")):
+    if any(
+        marker in text
+        for marker in (
+            "timed out",
+            "timeout",
+            "connection",
+            "network",
+            "reset by peer",
+            "needs to be reloaded",
+            "reload the page",
+        )
+    ):
         return "temporary_network_failure"
     return "yt_dlp_failure"
 
 
-def _log_runtime_failure(label: str, completed: subprocess.CompletedProcess[str]) -> None:
+def _log_runtime_failure(
+    label: str,
+    completed: subprocess.CompletedProcess[str],
+    *,
+    category: str,
+    stage: str,
+    reason_code: str,
+) -> None:
     output = str(completed.stderr or "").strip() or str(completed.stdout or "").strip()
     lines = [line.strip() for line in output.splitlines() if line.strip()]
     detail = " | ".join(lines[-3:])
-    print(f"{label} failed: exit={completed.returncode} detail={detail[:600]}", flush=True)
+    print(
+        f"{label} failed: category={category} stage={stage} reason={reason_code}"
+        f" exit={completed.returncode} detail={detail[:600]}",
+        flush=True,
+    )
 
 
 def _run_ytdlp(
@@ -248,37 +284,44 @@ def _run_ytdlp(
         try:
             completed = _run_captured(command, timeout=timeout)
         except FileNotFoundError as exc:
-            raise OracleJobFailure("yt_dlp_deno_failure", "yt-dlp or its runtime was not found") from exc
+            raise OracleJobFailure("yt_dlp_deno_failure", "yt-dlp or its runtime was not found", reason_code="yt_dlp_runtime_not_found") from exc
         except subprocess.TimeoutExpired as exc:
             # A stalled transfer is transient: retry the same command within
             # the remaining attempts before the caller gives up.
             if safe_failure_context:
                 print(
-                    f"{safe_failure_context} timed out: timeout={timeout}s"
+                    f"{safe_failure_context} timed out: category=temporary_network_failure"
+                    f" stage=youtube_download reason=yt_dlp_timeout timeout={timeout}s"
                     f" attempt={attempt}/{bounded_attempts}",
                     flush=True,
                 )
             else:
-                print(f"yt-dlp timed out: timeout={timeout}s attempt={attempt}/{bounded_attempts}", flush=True)
+                print(f"yt-dlp timed out: category=temporary_network_failure stage=youtube_download reason=yt_dlp_timeout timeout={timeout}s attempt={attempt}/{bounded_attempts}", flush=True)
             if attempt == bounded_attempts:
-                raise OracleJobFailure("temporary_network_failure", "yt-dlp timed out") from exc
+                raise OracleJobFailure("temporary_network_failure", "yt-dlp timed out", reason_code="yt_dlp_timeout") from exc
             time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
             continue
         if completed.returncode == 0:
             return completed
         category = _classify_ytdlp_failure(completed)
+        if category == "yt_dlp_failure":
+            reason_code = "yt_dlp_unclassified_error"
+        elif category.startswith("yt_dlp_"):
+            reason_code = category
+        else:
+            reason_code = f"yt_dlp_{category}"
         if safe_failure_context:
             print(
-                f"{safe_failure_context} failed: category={category}"
-                f" attempt={attempt}/{bounded_attempts}",
+                f"{safe_failure_context} failed: category={category} stage=youtube_download"
+                f" reason={reason_code} attempt={attempt}/{bounded_attempts}",
                 flush=True,
             )
         else:
-            _log_runtime_failure("yt-dlp", completed)
+            _log_runtime_failure("yt-dlp", completed, category=category, stage="youtube_download", reason_code=reason_code)
         if category not in TRANSIENT_YTDLP_CATEGORIES or attempt == bounded_attempts:
-            raise OracleJobFailure(category, "yt-dlp failed")
+            raise OracleJobFailure(category, "yt-dlp failed", reason_code=reason_code)
         time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
-    raise OracleJobFailure("yt_dlp_failure", "yt-dlp failed after retries")
+    raise OracleJobFailure("yt_dlp_failure", "yt-dlp failed after retries", reason_code="yt_dlp_retries_exhausted")
 
 
 def _yt_dlp_base(ytdlp: str, deno: str, cookies: str) -> list[str]:
@@ -357,7 +400,7 @@ def _resolve_stream_archive_records(
             }
         )
     if completed.stdout.strip() and not records:
-        raise OracleJobFailure("yt_dlp_failure", "YouTube streams page returned unreadable archive metadata")
+        raise OracleJobFailure("yt_dlp_failure", "YouTube streams page returned unreadable archive metadata", stage="archive_selection", reason_code="streams_metadata_unreadable")
     return records
 
 
@@ -423,10 +466,10 @@ def _read_published_video_ids() -> set[str]:
     try:
         payload = json.loads(index_path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise OracleJobFailure("public_vod_index_failure", "public VOD index is unavailable") from exc
+        raise OracleJobFailure("public_vod_index_failure", "public VOD index is unavailable", reason_code="public_index_unavailable") from exc
     videos = payload.get("videos") if isinstance(payload, dict) else None
     if not isinstance(videos, list):
-        raise OracleJobFailure("public_vod_index_failure", "public VOD index has invalid structure")
+        raise OracleJobFailure("public_vod_index_failure", "public VOD index has invalid structure", reason_code="public_index_invalid_structure")
     return {
         str(video.get("vod_id") or "").strip()
         for video in videos
@@ -442,9 +485,28 @@ def _read_state() -> dict[str, Any]:
     path = _state_path()
     try:
         value = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
-    except (OSError, json.JSONDecodeError):
+    except OSError as exc:
+        print(
+            f"state read failed: category=state_persistence_failure stage=state_read"
+            f" reason=state_file_unreadable error_type={type(exc).__name__}",
+            flush=True,
+        )
         return {}
-    return value if isinstance(value, dict) else {}
+    except json.JSONDecodeError:
+        print(
+            "state read failed: category=state_persistence_failure stage=state_read"
+            " reason=state_file_invalid_json error_type=JSONDecodeError",
+            flush=True,
+        )
+        return {}
+    if not isinstance(value, dict):
+        print(
+            "state read failed: category=state_persistence_failure stage=state_read"
+            " reason=state_root_invalid_type",
+            flush=True,
+        )
+        return {}
+    return value
 
 
 def _merge_discovered_stream_records(
@@ -570,7 +632,8 @@ def _record_failure(video_id: str, failure: OracleJobFailure, *, now: dt.datetim
         _write_state(state)
     except OSError as exc:
         print(
-            f"failure diagnostic persistence failed: video_id={normalized_id} category={failure.category}",
+            f"failure diagnostic persistence failed: video_id={normalized_id}"
+            f" category=state_persistence_failure stage=state_write reason=failure_record_write_failed",
             flush=True,
         )
         raise OracleJobFailure(
@@ -1016,14 +1079,22 @@ def _renderer_text(renderer: dict[str, Any] | None) -> str:
     return "".join(str(run.get("text") or "") for run in runs if isinstance(run, dict)).strip()
 
 
-def _read_live_chat(path: Path) -> list[dict[str, Any]]:
+def _read_live_chat_with_diagnostics(
+    path: Path,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
     comments: list[dict[str, Any]] = []
+    line_count = 0
+    json_record_count = 0
+    invalid_json_line_count = 0
     with path.open(encoding="utf-8") as source:
         for raw_line in source:
+            line_count += 1
             try:
                 record = json.loads(raw_line)
             except json.JSONDecodeError:
+                invalid_json_line_count += 1
                 continue
+            json_record_count += 1
             offset_ms = _find_offset(record)
             if offset_ms is None:
                 continue
@@ -1033,6 +1104,16 @@ def _read_live_chat(path: Path) -> list[dict[str, Any]]:
                 # This text exists in memory only for the detector/tag rules.
                 comment["message"] = text
             comments.append(comment)
+    return comments, {
+        "lines": line_count,
+        "json_records": json_record_count,
+        "invalid_json_lines": invalid_json_line_count,
+        "offset_records": len(comments),
+    }
+
+
+def _read_live_chat(path: Path) -> list[dict[str, Any]]:
+    comments, _diagnostics = _read_live_chat_with_diagnostics(path)
     return comments
 
 
@@ -1097,12 +1178,60 @@ def _download_chat_and_metadata(video_url: str, work_dir: Path, ytdlp: str, deno
             time.sleep(YTDLP_TRANSIENT_RETRY_BACKOFF_SECONDS * attempt)
     chat_files = list(work_dir.glob("*.live_chat.json"))
     if not chat_files:
-        raise OracleJobFailure("live_chat_zero", "yt-dlp returned no live chat file")
-    comments = _read_live_chat(chat_files[0])
+        print(
+            f"live_chat parse video_id={video_id} result=missing"
+            " reason=live_chat_artifact_missing",
+            flush=True,
+        )
+        raise OracleJobFailure(
+            "live_chat_zero",
+            "yt-dlp returned no live chat file",
+            stage="live_chat",
+            reason_code="live_chat_artifact_missing",
+        )
+    try:
+        comments, diagnostics = _read_live_chat_with_diagnostics(chat_files[0])
+    except (OSError, UnicodeError) as exc:
+        print(
+            f"live_chat parse video_id={video_id} result=unreadable"
+            f" reason=live_chat_artifact_unreadable error_type={type(exc).__name__}",
+            flush=True,
+        )
+        raise OracleJobFailure(
+            "live_chat_zero",
+            "live chat artifact could not be read",
+            stage="live_chat",
+            reason_code="live_chat_artifact_unreadable",
+        ) from exc
     for path in chat_files:
         path.unlink(missing_ok=True)
     if not comments:
-        raise OracleJobFailure("live_chat_zero", "live chat contained no usable offsets")
+        if diagnostics["lines"] == 0:
+            reason_code = "live_chat_artifact_empty"
+        elif diagnostics["json_records"] == 0:
+            reason_code = "live_chat_jsonl_invalid"
+        else:
+            reason_code = "live_chat_no_offsets"
+        print(
+            f"live_chat parse video_id={video_id} result=unusable reason={reason_code}"
+            f" lines={diagnostics['lines']} json_records={diagnostics['json_records']}"
+            f" invalid_json_lines={diagnostics['invalid_json_lines']}"
+            f" offset_records={diagnostics['offset_records']}",
+            flush=True,
+        )
+        raise OracleJobFailure(
+            "live_chat_zero",
+            "live chat contained no usable offsets",
+            stage="live_chat",
+            reason_code=reason_code,
+        )
+    print(
+        f"live_chat parse video_id={video_id} result=available"
+        f" lines={diagnostics['lines']} json_records={diagnostics['json_records']}"
+        f" invalid_json_lines={diagnostics['invalid_json_lines']}"
+        f" offset_records={diagnostics['offset_records']}",
+        flush=True,
+    )
 
     metadata_result = _run_ytdlp(
         _yt_dlp_base(ytdlp, deno, cookies)
@@ -1149,7 +1278,12 @@ def _download_captions(
                 timeout=180,
                 safe_failure_context=f"youtube_caption_{source_key}",
             )
-        except OracleJobFailure:
+        except OracleJobFailure as exc:
+            print(
+                f"caption attempt video_id={video_id} source={source_key} result=download_error"
+                f" category={exc.category} stage={exc.stage} reason={exc.reason_code}",
+                flush=True,
+            )
             source_outcomes[source_key] = "download_error"
             download_errors += 1
             continue
@@ -1275,7 +1409,7 @@ def _cut_media(video_url: str, item: dict[str, Any], index: int, work_dir: Path,
         category="oracle_runtime_failure",
     )
     if audio.stat().st_size <= 0 or screenshot.stat().st_size <= 0:
-        raise OracleJobFailure("oracle_runtime_failure", "selected media output was empty")
+        raise OracleJobFailure("oracle_runtime_failure", "selected media output was empty", stage="media_processing", reason_code="media_output_empty")
     source.unlink(missing_ok=True)
     return audio, screenshot
 
@@ -1284,7 +1418,7 @@ def _dispatch_github(video_ids: list[str]) -> None:
     token = _env("YOUTUBE_ORACLE_GITHUB_TOKEN")
     repository = _env("YOUTUBE_ORACLE_GITHUB_REPOSITORY")
     if not token or not repository:
-        raise OracleJobFailure("github_dispatch_configuration", "GitHub dispatch configuration is missing")
+        raise OracleJobFailure("github_dispatch_configuration", "GitHub dispatch configuration is missing", reason_code="github_dispatch_config_missing")
     url = f"https://api.github.com/repos/{repository}/dispatches"
     payload = json.dumps(
         {
@@ -1305,10 +1439,40 @@ def _dispatch_github(video_ids: list[str]) -> None:
     )
     try:
         with request.urlopen(req, timeout=60) as response:
-            if int(getattr(response, "status", 200)) >= 300:
-                raise OracleJobFailure("github_dispatch_failure", "GitHub dispatch failed")
+            status = int(getattr(response, "status", 200))
+            if status >= 300:
+                print(
+                    f"github dispatch failed: stage=github_dispatch reason=github_dispatch_http_error"
+                    f" status={status} items={len(video_ids)}",
+                    flush=True,
+                )
+                raise OracleJobFailure(
+                    "github_dispatch_failure",
+                    "GitHub dispatch returned an HTTP error",
+                    reason_code="github_dispatch_http_error",
+                )
+    except error.HTTPError as exc:
+        print(
+            f"github dispatch failed: stage=github_dispatch reason=github_dispatch_http_error"
+            f" status={exc.code} items={len(video_ids)}",
+            flush=True,
+        )
+        raise OracleJobFailure(
+            "github_dispatch_failure",
+            "GitHub dispatch returned an HTTP error",
+            reason_code="github_dispatch_http_error",
+        ) from exc
     except (error.URLError, TimeoutError) as exc:
-        raise OracleJobFailure("github_dispatch_failure", "GitHub dispatch failed") from exc
+        print(
+            f"github dispatch failed: stage=github_dispatch reason=github_dispatch_network_error"
+            f" error_type={type(exc).__name__} items={len(video_ids)}",
+            flush=True,
+        )
+        raise OracleJobFailure(
+            "github_dispatch_failure",
+            "GitHub dispatch could not reach GitHub",
+            reason_code="github_dispatch_network_error",
+        ) from exc
 
 
 def _notify(category: str | None) -> None:
@@ -1361,7 +1525,7 @@ def _prepare_material(
         metadata_override=video,
     )
     if not analyzed or status != "analyzed":
-        raise OracleJobFailure("highlight_detection_failure", "chat offsets produced no highlights")
+        raise OracleJobFailure("highlight_detection_failure", "chat offsets produced no highlights", reason_code="no_highlights_detected")
     items = list(analyzed.get("items") or [])
     media_files: dict[str, Path] = {}
     for index, item in enumerate(items):
@@ -1387,9 +1551,9 @@ def _run_one(video_url: str) -> dict[str, Any]:
     cookies = _path_env("YOUTUBE_ORACLE_COOKIES_PATH", DEFAULT_COOKIES)
     upload_url = _env("YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL")
     if not upload_url:
-        raise OracleJobFailure("handoff_configuration", "bundle upload PAR is not configured")
+        raise OracleJobFailure("handoff_configuration", "bundle upload PAR is not configured", reason_code="bundle_upload_par_missing")
     if not Path(cookies).is_file():
-        raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
+        raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing", reason_code="youtube_cookies_missing")
 
     work_root = Path(_path_env("YOUTUBE_ORACLE_WORK_ROOT", DEFAULT_WORK_ROOT))
     work_root.mkdir(parents=True, exist_ok=True)
@@ -1407,7 +1571,7 @@ def _run_one(video_url: str) -> dict[str, Any]:
         try:
             upload_bundle_to_url(bundle_path, upload_url)
         except (OSError, error.URLError, TimeoutError, RuntimeError) as exc:
-            raise OracleJobFailure("handoff_upload_failure", "temporary material upload failed") from exc
+            raise OracleJobFailure("handoff_upload_failure", "temporary material upload failed", reason_code="material_upload_failed") from exc
         _dispatch_github([video_id])
         return {
             "video_id": video_id,
@@ -1427,13 +1591,19 @@ def run(video_url: str) -> dict[str, Any]:
     except OracleJobFailure as exc:
         _record_failure(video_id, exc)
         raise
-    except Exception:
-        # Preserve the traceback while storing only a non-sensitive reason code.
+    except Exception as exc:
+        # Store only a safe marker; keep the exception message out of state and logs.
         failure = OracleJobFailure(
             "oracle_runtime_failure",
             "unexpected processing failure",
             stage="archive_processing",
             reason_code="unexpected_exception",
+        )
+        print(
+            f"unexpected processing failure: video_id={video_id}"
+            f" category={failure.category} stage={failure.stage} reason={failure.reason_code}"
+            f" error_type={type(exc).__name__}",
+            flush=True,
         )
         _record_failure(video_id, failure)
         raise
@@ -1444,7 +1614,7 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
 
     caption_retry_urls = caption_retry_urls or []
     if not video_urls and not caption_retry_urls:
-        raise OracleJobFailure("yt_dlp_failure", "no YouTube archives selected")
+        raise OracleJobFailure("yt_dlp_failure", "no YouTube archives selected", stage="archive_selection", reason_code="no_archives_selected")
     ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
     deno = _path_env("YOUTUBE_ORACLE_DENO_PATH", DEFAULT_DENO)
     cookies = _path_env("YOUTUBE_ORACLE_COOKIES_PATH", DEFAULT_COOKIES)
@@ -1452,12 +1622,12 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
     if not upload_url:
         _raise_batch_failure(
             video_urls,
-            OracleJobFailure("handoff_configuration", "bundle upload PAR is not configured"),
+            OracleJobFailure("handoff_configuration", "bundle upload PAR is not configured", reason_code="bundle_upload_par_missing"),
         )
     if not Path(cookies).is_file():
         _raise_batch_failure(
             video_urls,
-            OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing"),
+            OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing", reason_code="youtube_cookies_missing"),
         )
 
     work_root = Path(_path_env("YOUTUBE_ORACLE_WORK_ROOT", DEFAULT_WORK_ROOT))
@@ -1477,6 +1647,7 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
     results: list[dict[str, Any]] = []
     caption_updates: list[tuple[str, Path]] = []
     caption_retry_outcomes: dict[str, Any] = {}
+    caption_retry_failures = 0
     try:
         batch_directory = tempfile.TemporaryDirectory(prefix="batch-", dir=work_root)
     except OSError:
@@ -1506,13 +1677,19 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
                     flush=True,
                 )
                 continue
-            except Exception:
+            except Exception as exc:
                 # Keep unexpected exceptions fatal after persisting a safe marker.
                 failure = OracleJobFailure(
                     "oracle_runtime_failure",
                     "unexpected processing failure",
                     stage="archive_processing",
-                    reason_code="unexpected_exception",
+                    reason_code="unexpected_archive_processing_exception",
+                )
+                print(
+                    f"unexpected archive processing failure: video_id={video_id}"
+                    f" category={failure.category} stage={failure.stage} reason={failure.reason_code}"
+                    f" error_type={type(exc).__name__}",
+                    flush=True,
                 )
                 _record_failure(video_id, failure)
                 raise
@@ -1534,13 +1711,19 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
             caption_dir.mkdir(parents=True, exist_ok=True)
             try:
                 caption_result = _download_captions(video_url, caption_dir, ytdlp, deno, cookies)
-            except OracleJobFailure:
+            except OracleJobFailure as exc:
+                print(
+                    f"caption retry failed video_id={video_id} category={exc.category}"
+                    f" stage={exc.stage} reason={exc.reason_code}",
+                    flush=True,
+                )
                 caption_result = {
                     "path": None,
                     "reason_code": "caption_download_error",
                     "source_outcomes": {"manual": "download_error", "automatic": "download_error"},
                 }
             if caption_result.get("path") is None:
+                caption_retry_failures += 1
                 _record_caption_retry_failure(
                     video_id,
                     str(caption_result.get("reason_code") or "caption_download_error"),
@@ -1550,9 +1733,21 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
             caption_updates.append((video_id, caption_result["path"]))
             caption_retry_outcomes[video_id] = caption_result.get("source_outcomes")
 
+        print(
+            f"batch preparation summary: selected={len(video_urls)} prepared={len(results)}"
+            f" skipped={len(video_urls) - len(results)} caption_retries={len(caption_retry_urls)}"
+            f" caption_retries_prepared={len(caption_updates)}"
+            f" caption_retry_failures={caption_retry_failures}",
+            flush=True,
+        )
         if not results and not caption_updates:
             if video_urls:
-                raise OracleJobFailure("yt_dlp_failure", "no YouTube archives could be prepared")
+                raise OracleJobFailure(
+                    "yt_dlp_failure",
+                    "no YouTube archives could be prepared",
+                    stage="archive_processing",
+                    reason_code="no_archives_prepared",
+                )
             return []
         try:
             bundle_path = root / "youtube-material-batch.tar.gz"
@@ -1573,7 +1768,7 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
                 _record_failure(result["video_id"], exc)
             raise
         except (OSError, error.URLError, TimeoutError, RuntimeError) as exc:
-            failure = OracleJobFailure("handoff_upload_failure", "temporary material upload failed")
+            failure = OracleJobFailure("handoff_upload_failure", "temporary material upload failed", reason_code="material_upload_failed")
             for result in results:
                 _record_failure(result["video_id"], failure)
             raise failure from exc
@@ -1584,11 +1779,21 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
                 stage="batch_handoff",
                 reason_code="unexpected_batch_handoff_failure",
             )
+            print(
+                f"batch handoff failed: category={failure.category} stage={failure.stage}"
+                f" reason={failure.reason_code} error_type={type(exc).__name__}",
+                flush=True,
+            )
             for result in results:
                 _record_failure(result["video_id"], failure)
             raise failure from exc
         if video_urls and not results:
-            raise OracleJobFailure("yt_dlp_failure", "no YouTube archives could be prepared")
+            raise OracleJobFailure(
+                "yt_dlp_failure",
+                "no YouTube archives could be prepared",
+                stage="archive_processing",
+                reason_code="no_archives_prepared",
+            )
     return results
 
 
@@ -1605,7 +1810,7 @@ def main() -> int:
         caption_retry_urls: list[str] = []
         if args.streams_url:
             if not Path(cookies).is_file():
-                raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing")
+                raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing", reason_code="youtube_cookies_missing")
             run_started_at = _utc_now()
             state = _read_state()
             cached_records = state.get("discovered_stream_records")
@@ -1676,7 +1881,7 @@ def main() -> int:
                     video_urls = []
                     print(f"selected caption_retry video_id={video_id}", flush=True)
         if not video_urls and not caption_retry_urls:
-            raise OracleJobFailure("handoff_configuration", "YOUTUBE_ORACLE_STREAMS_URL or video URL is required")
+            raise OracleJobFailure("handoff_configuration", "YOUTUBE_ORACLE_STREAMS_URL or video URL is required", stage="archive_selection", reason_code="streams_or_video_url_missing")
         if len(video_urls) == 1 and not caption_retry_urls:
             results = [run(video_urls[0])]
         elif caption_retry_urls:
@@ -1694,7 +1899,13 @@ def main() -> int:
             else:
                 _mark_processed(result["video_id"])
         _notify(None)
-        print(f"oracle YouTube job complete: videos={len(results)}")
+        print(
+            f"oracle YouTube job complete: videos={len(results)}"
+            f" selected={len(video_urls)} prepared={len(results)}"
+            f" skipped={max(0, len(video_urls) - len(results))}"
+            f" caption_retries={len(caption_retry_urls)}",
+            flush=True,
+        )
         for result in results:
             print(
                 f" video_id={result['video_id']}"
@@ -1706,11 +1917,20 @@ def main() -> int:
         return 0
     except OracleJobFailure as exc:
         _notify(exc.category)
-        print(f"oracle YouTube job failed: category={exc.category}")
+        print(
+            f"oracle YouTube job failed: category={exc.category}"
+            f" stage={exc.stage} reason={exc.reason_code}",
+            flush=True,
+        )
         return 1
-    except Exception:
+    except Exception as exc:
         _notify("oracle_runtime_failure")
-        print("oracle YouTube job failed: category=oracle_runtime_failure")
+        print(
+            "oracle YouTube job failed: category=oracle_runtime_failure"
+            f" stage=job_execution reason=unexpected_main_exception"
+            f" error_type={type(exc).__name__}",
+            flush=True,
+        )
         return 1
 
 
