@@ -628,6 +628,16 @@ class OracleYoutubeJobTests(unittest.TestCase):
 
         self.assertEqual(state["processed_video_ids"], initial_ids + ["new-video"])
 
+    def test_failure_reason_code_is_required_and_validated(self):
+        with self.assertRaises(TypeError):
+            oracle_youtube_job.OracleJobFailure("live_chat_zero", "missing reason")
+        with self.assertRaises(ValueError):
+            oracle_youtube_job.OracleJobFailure(
+                "live_chat_zero",
+                "unsafe reason",
+                reason_code="not a safe reason",
+            )
+
     def test_failure_state_retains_only_bounded_safe_diagnostics(self):
         video_id = "ndKhBP5HXvc"
         now = dt.datetime(2026, 10, 2, 6, 59, tzinfo=dt.timezone.utc)
@@ -884,7 +894,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
                         json.dumps({"videoOffsetTimeMsec": 1234}) + "\n",
                         encoding="utf-8",
                     )
-                    raise oracle_youtube_job.OracleJobFailure("yt_dlp_failure", "format probe returned 403")
+                    raise oracle_youtube_job.OracleJobFailure("yt_dlp_failure", "format probe returned 403", reason_code="yt_dlp_unclassified_error")
                 return SimpleNamespace(
                     stdout=json.dumps(
                         {
@@ -909,6 +919,90 @@ class OracleYoutubeJobTests(unittest.TestCase):
         self.assertEqual(video["vod_id"], "WGTrmrSvZH0")
         self.assertEqual(comments, [{"content_offset_seconds": 1.234}])
 
+
+    def test_live_chat_failures_have_distinct_safe_reason_codes(self):
+        cases = (
+            (None, "live_chat_artifact_missing"),
+            ('{"event": true}\n', "live_chat_no_offsets"),
+            ("not-json\n", "live_chat_jsonl_invalid"),
+        )
+        for contents, expected_reason in cases:
+            with self.subTest(expected_reason=expected_reason), tempfile.TemporaryDirectory() as raw_dir:
+                work_dir = Path(raw_dir)
+
+                def fake_ytdlp(command, **_kwargs):
+                    if contents is not None:
+                        output_path = Path(command[command.index("-o") + 1])
+                        output_path.with_name("archive.live_chat.json").write_text(contents, encoding="utf-8")
+                    return SimpleNamespace(stdout="")
+
+                output = StringIO()
+                with patch.object(oracle_youtube_job, "_run_ytdlp", side_effect=fake_ytdlp):
+                    with redirect_stdout(output):
+                        with self.assertRaises(oracle_youtube_job.OracleJobFailure) as caught:
+                            oracle_youtube_job._download_chat_and_metadata(
+                                "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+                                work_dir,
+                                "/remote/yt-dlp",
+                                "/remote/deno",
+                                "/remote/youtube-cookies.txt",
+                            )
+
+                self.assertEqual(caught.exception.stage, "live_chat")
+                self.assertEqual(caught.exception.reason_code, expected_reason)
+                self.assertIn(f"reason={expected_reason}", output.getvalue())
+                if expected_reason == "live_chat_no_offsets":
+                    self.assertIn("json_records=1", output.getvalue())
+                    self.assertIn("offset_records=0", output.getvalue())
+                if expected_reason == "live_chat_jsonl_invalid":
+                    self.assertIn("invalid_json_lines=1", output.getvalue())
+
+    def test_live_chat_diagnostics_never_log_chat_content(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            work_dir = Path(raw_dir)
+            private_text = "private chat content"
+
+            def fake_ytdlp(command, **_kwargs):
+                if "--write-subs" in command:
+                    output_path = Path(command[command.index("-o") + 1])
+                    output_path.with_name("archive.live_chat.json").write_text(
+                        json.dumps(
+                            {
+                                "videoOffsetTimeMsec": 1234,
+                                "liveChatTextMessageRenderer": {
+                                    "message": {"simpleText": private_text}
+                                },
+                            }
+                        )
+                        + "\n",
+                        encoding="utf-8",
+                    )
+                    return SimpleNamespace(stdout="")
+                return SimpleNamespace(
+                    stdout=json.dumps(
+                        {
+                            "id": "WGTrmrSvZH0",
+                            "title": "Oracle archive",
+                            "upload_date": "20260917",
+                            "duration": 120,
+                        }
+                    )
+                )
+
+            output = StringIO()
+            with patch.object(oracle_youtube_job, "_run_ytdlp", side_effect=fake_ytdlp):
+                with redirect_stdout(output):
+                    _video, comments = oracle_youtube_job._download_chat_and_metadata(
+                        "https://www.youtube.com/watch?v=WGTrmrSvZH0",
+                        work_dir,
+                        "/remote/yt-dlp",
+                        "/remote/deno",
+                        "/remote/youtube-cookies.txt",
+                    )
+
+        self.assertEqual(comments[0]["message"], private_text)
+        self.assertIn("offset_records=1", output.getvalue())
+        self.assertNotIn(private_text, output.getvalue())
 
     def test_downloads_public_youtube_captions_as_optional_json(self):
         with tempfile.TemporaryDirectory() as raw_dir:
@@ -954,7 +1048,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
             with patch.object(
                 oracle_youtube_job,
                 "_run_ytdlp",
-                side_effect=oracle_youtube_job.OracleJobFailure("yt_dlp_failure", "private stderr"),
+                side_effect=oracle_youtube_job.OracleJobFailure("yt_dlp_failure", "private stderr", reason_code="yt_dlp_unclassified_error"),
             ):
                 result = oracle_youtube_job._download_captions(
                     "https://www.youtube.com/watch?v=WGTrmrSvZH0",
@@ -994,6 +1088,13 @@ class OracleYoutubeJobTests(unittest.TestCase):
 
         self.assertIn("youtube_caption_manual failed: category=yt_dlp_failure", output.getvalue())
         self.assertNotIn("private subtitle failure detail", output.getvalue())
+
+    def test_ytdlp_page_reload_is_classified_as_transient_network_failure(self):
+        completed = SimpleNamespace(stdout="", stderr="ERROR: The page needs to be reloaded.")
+        self.assertEqual(
+            oracle_youtube_job._classify_ytdlp_failure(completed),
+            "temporary_network_failure",
+        )
 
     def test_ytdlp_transient_failure_is_retried_until_success(self):
         responses = [
@@ -1035,7 +1136,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
             with self.assertRaises(oracle_youtube_job.OracleJobFailure) as caught:
                 oracle_youtube_job._run_ytdlp(["yt-dlp"], timeout=10)
 
-        self.assertEqual(caught.exception.category, "yt_dlp_failure")
+        self.assertEqual(caught.exception.category, "temporary_network_failure")
+        self.assertEqual(caught.exception.reason_code, "yt_dlp_temporary_network_failure")
         self.assertEqual(sleep.call_count, oracle_youtube_job.YTDLP_TRANSIENT_RETRY_ATTEMPTS - 1)
 
     def test_ytdlp_timeout_is_retried_then_succeeds(self):
@@ -1079,7 +1181,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
             if "--write-subs" in command:
                 calls["chat"] += 1
                 if calls["chat"] == 1:
-                    raise oracle_youtube_job.OracleJobFailure("temporary_network_failure", "page reload required")
+                    raise oracle_youtube_job.OracleJobFailure("temporary_network_failure", "page reload required", reason_code="yt_dlp_temporary_network_failure")
                 output_path = Path(command[command.index("-o") + 1])
                 output_path.with_name("archive.live_chat.json").write_text(
                     json.dumps({"videoOffsetTimeMsec": 1234}) + "\n",
@@ -1117,7 +1219,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
         def fake_prepare(video_url, _work_dir, *_args, **_kwargs):
             video_id = oracle_youtube_job.parse_youtube_video_id(video_url)
             if video_id == "2a_ATYeOiAQ":
-                raise oracle_youtube_job.OracleJobFailure("live_chat_zero", "no chat")
+                raise oracle_youtube_job.OracleJobFailure("live_chat_zero", "no chat", reason_code="live_chat_no_offsets")
             return {
                 "video_id": video_id,
                 "manifest": {"vod_id": video_id},
@@ -1137,6 +1239,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 "YOUTUBE_ORACLE_WORK_ROOT": str(raw_dir),
                 "YOUTUBE_ORACLE_STATE_PATH": str(Path(raw_dir) / "state.json"),
             }
+            output = StringIO()
             with patch.dict(os.environ, env), patch.object(
                 oracle_youtube_job, "_prepare_material", side_effect=fake_prepare
             ), patch.object(
@@ -1145,7 +1248,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 oracle_youtube_job, "upload_bundle_to_url"
             ), patch.object(
                 oracle_youtube_job, "_dispatch_github"
-            ) as dispatch:
+            ) as dispatch, redirect_stdout(output):
                 results = oracle_youtube_job.run_batch(
                     [
                         "https://www.youtube.com/watch?v=aTCWAb8wRd8",
@@ -1160,6 +1263,8 @@ class OracleYoutubeJobTests(unittest.TestCase):
         bundle.assert_called_once()
         self.assertEqual(state["failure_records"][0]["video_id"], "2a_ATYeOiAQ")
         self.assertEqual(state["failure_records"][0]["category"], "live_chat_zero")
+        self.assertEqual(state["failure_records"][0]["reason_code"], "live_chat_no_offsets")
+        self.assertIn("batch preparation summary: selected=3 prepared=2 skipped=1", output.getvalue())
 
     def test_batch_preflight_failure_is_retained_for_every_selected_video(self):
         video_urls = [
@@ -1186,11 +1291,11 @@ class OracleYoutubeJobTests(unittest.TestCase):
             [record["video_id"] for record in state["failure_records"]],
             ["aTCWAb8wRd8", "2a_ATYeOiAQ"],
         )
-        self.assertTrue(all(record["reason_code"] == "handoff_configuration_failed" for record in state["failure_records"]))
+        self.assertTrue(all(record["reason_code"] == "bundle_upload_par_missing" for record in state["failure_records"]))
 
     def test_batch_raises_when_every_archive_fails(self):
         def fake_prepare(_video_url, _work_dir, *_args, **_kwargs):
-            raise oracle_youtube_job.OracleJobFailure("live_chat_zero", "no chat")
+            raise oracle_youtube_job.OracleJobFailure("live_chat_zero", "no chat", reason_code="live_chat_no_offsets")
 
         with tempfile.TemporaryDirectory() as raw_dir:
             cookies_path = Path(raw_dir) / "youtube-cookies.txt"
@@ -1236,6 +1341,36 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 "reason_code": "caption_track_not_found",
                 "source_outcomes": {"manual": "track_not_found", "automatic": "track_not_found"},
             },
+        )
+
+
+    def test_main_failure_log_includes_stage_and_reason(self):
+        output = StringIO()
+        failure = oracle_youtube_job.OracleJobFailure(
+            "live_chat_zero",
+            "missing chat artifact",
+            stage="live_chat",
+            reason_code="live_chat_artifact_missing",
+        )
+        with patch.dict(os.environ, {"YOUTUBE_ORACLE_STREAMS_URL": ""}, clear=True), patch.object(
+            sys,
+            "argv",
+            ["oracle_youtube_job", "--video-url", "https://www.youtube.com/watch?v=WGTrmrSvZH0"],
+        ), patch.object(
+            oracle_youtube_job,
+            "_read_published_video_ids",
+            return_value=set(),
+        ), patch.object(oracle_youtube_job, "_notify"), patch.object(
+            oracle_youtube_job,
+            "run",
+            side_effect=failure,
+        ), redirect_stdout(output):
+            result = oracle_youtube_job.main()
+
+        self.assertEqual(result, 1)
+        self.assertIn(
+            "oracle YouTube job failed: category=live_chat_zero stage=live_chat reason=live_chat_artifact_missing",
+            output.getvalue(),
         )
 
 
