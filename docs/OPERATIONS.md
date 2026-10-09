@@ -82,6 +82,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 - YouTubeの内部音声解析は、スクリーンショット不要時はHTTPS音声のみ、必要時はHTTPSの軽量映像・音声を選ぶ。Twitchの区間取得フォーマットは変更しない。
 - 公開準備チェックは、生成済み `headline` の品質と見どころサムネイルの存在を検証する。見出しが欠損する場合や、生成済み見出しが品質基準を満たさない場合は従来どおり失敗させる。
 - Oracleジョブの一時的な取得失敗（`temporary_network_failure`、`yt_dlp_failure`）は、同一コマンドを20秒間隔のバックオフで最大3回再試行する。Cookie認証・bot判定・Deno起動など恒久区分の失敗は再試行せず、yt-dlp失敗時はstderr末尾をjournalへ出力する。対象配信の失敗理由はstateにも安全な理由コードで保存し、journalのローテーション後もProbeから確認できる。生のstderrはstateやProbe応答へ含めない。
+- OracleのDiscord失敗通知は、ジョブ全体の失敗と、複数配信の一部だけが失敗した場合の両方を扱う。通知にはcategory・stage・reason code・対象video IDと、`config/site.json`の`site.base_url`から得たRender公開URLを含める。Webhook自体の送信結果もjournalへ`discord_webhook`の成功・HTTP status・安全なerror typeとして記録し、Webhook URLや本文はログへ出さない。HTTP送信が成功した場合だけstateを通知済みにし、送信失敗は次回実行で再試行する。同じ未解消エラーの重複通知は抑え、新しい失敗や復旧は通知する。
 - Oracleジョブはyt-dlpとffmpegを専用のprocess groupで起動し、主プロセス終了後に残った同groupの子プロセスを停止してから次の処理へ進む。コマンドがtimeoutした場合も同groupを停止してから失敗・再試行を扱う。
 - 複数件のバッチ処理では、1件の失敗を隔離して残りを1つのbundleへ渡す。全件失敗のときだけ失敗終了する。失敗した配信は未処理のまま残り、翌日のtimer実行で再試行される。
 

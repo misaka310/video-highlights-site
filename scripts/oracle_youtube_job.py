@@ -1475,36 +1475,254 @@ def _dispatch_github(video_ids: list[str]) -> None:
         ) from exc
 
 
-def _notify(category: str | None) -> None:
+FAILURE_NOTIFICATION_VERSION = 1
+
+
+def _normalized_failure_records(state: dict[str, Any]) -> list[dict[str, str]]:
+    records = state.get("failure_records")
+    if not isinstance(records, list):
+        return []
+    normalized: list[dict[str, str]] = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        try:
+            video_id = parse_youtube_video_id(str(record.get("video_id") or ""))
+        except ValueError:
+            continue
+        values = {
+            "category": str(record.get("category") or ""),
+            "stage": str(record.get("stage") or ""),
+            "reason_code": str(record.get("reason_code") or ""),
+        }
+        if not all(re.fullmatch(r"[a-z0-9_]{1,64}", value) for value in values.values()):
+            continue
+        failed_at = str(record.get("failed_at") or "")
+        if not failed_at:
+            continue
+        normalized.append({"video_id": video_id, "failed_at": failed_at, **values})
+    return normalized
+
+
+def _failure_record_identities(state: dict[str, Any]) -> set[tuple[str, str, str, str, str]]:
+    return {
+        (
+            record["video_id"],
+            record["failed_at"],
+            record["category"],
+            record["stage"],
+            record["reason_code"],
+        )
+        for record in _normalized_failure_records(state)
+    }
+
+
+def _failure_records_since(
+    previous: set[tuple[str, str, str, str, str]],
+) -> list[dict[str, str]]:
+    current = _normalized_failure_records(_read_state())
+    new_records = [
+        record
+        for record in current
+        if (
+            record["video_id"],
+            record["failed_at"],
+            record["category"],
+            record["stage"],
+            record["reason_code"],
+        ) not in previous
+    ]
+    return sorted(new_records, key=lambda record: (record["failed_at"], record["video_id"]))
+
+
+def _render_site_url() -> str | None:
+    config_path = REPOSITORY_ROOT / "config" / "site.json"
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        print(
+            "notification context unavailable: stage=render_link"
+            f" reason=site_config_unreadable error_type={type(exc).__name__}",
+            flush=True,
+        )
+        return None
+    site = config.get("site") if isinstance(config, dict) else None
+    url = str(site.get("base_url") or "").strip() if isinstance(site, dict) else ""
+    if not url.startswith(("https://", "http://")) or any(character.isspace() for character in url):
+        print(
+            "notification context unavailable: stage=render_link reason=site_url_invalid",
+            flush=True,
+        )
+        return None
+    return url.rstrip("/")
+
+
+def _persist_notification_state(state: dict[str, Any]) -> None:
+    try:
+        _write_state(state)
+    except (OSError, TypeError, ValueError) as exc:
+        print(
+            "notification state persistence failed: category=state_persistence_failure"
+            f" stage=notification_state_write reason=state_write_failed error_type={type(exc).__name__}",
+            flush=True,
+        )
+
+
+def _notify(
+    category: str | None,
+    *,
+    stage: str | None = None,
+    reason_code: str | None = None,
+    failures: list[dict[str, str]] | None = None,
+) -> None:
     webhook = _env("DISCORD_WEBHOOK_URL")
     state = _read_state()
     previous = str(state.get("failure_category") or "")
-    if category:
-        should_send = bool(webhook) and (previous != category or not bool(state.get("failure_notified")))
-        if should_send:
-            _send_discord(webhook, f"YouTube取得に失敗しました\ncategory: {category}\nprovider: youtube")
-        state["failure_category"] = category
-        state["failure_notified"] = bool(webhook)
+    normalized_failures = failures or []
+    if category or normalized_failures:
+        effective_category = category or "partial_archive_failure"
+        safe_category = effective_category if re.fullmatch(r"[a-z0-9_]{1,64}", effective_category) else "oracle_runtime_failure"
+        safe_stage = stage if stage and re.fullmatch(r"[a-z0-9_]{1,64}", stage) else None
+        safe_reason = reason_code if reason_code and re.fullmatch(r"[a-z0-9_]{1,64}", reason_code) else None
+        if normalized_failures:
+            stages = sorted({record["stage"] for record in normalized_failures if record.get("stage")})
+            reasons = sorted({record["reason_code"] for record in normalized_failures if record.get("reason_code")})
+            safe_stage = safe_stage or (stages[0] if len(stages) == 1 else "multiple_stages")
+            safe_reason = safe_reason or (reasons[0] if len(reasons) == 1 else "per_video_failure")
+        safe_stage = safe_stage or _default_failure_stage(safe_category)
+        safe_reason = safe_reason or "unknown_reason"
+        signature_failures = sorted(
+            {
+                (
+                    record["video_id"],
+                    record["category"],
+                    record["stage"],
+                    record["reason_code"],
+                )
+                for record in normalized_failures
+            }
+        )
+        signature = json.dumps(
+            {
+                "category": safe_category,
+                "stage": safe_stage,
+                "reason_code": safe_reason,
+                "failures": signature_failures,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        already_notified = (
+            previous == safe_category
+            and bool(state.get("failure_notified"))
+            and state.get("failure_notification_version") == FAILURE_NOTIFICATION_VERSION
+            and state.get("failure_notification_signature") == signature
+        )
+        if not webhook:
+            print(
+                "discord notification skipped: event=failure"
+                f" category={safe_category} reason=webhook_not_configured",
+                flush=True,
+            )
+            delivered = False
+        elif already_notified:
+            print(
+                "discord notification suppressed: event=failure"
+                f" category={safe_category} reason=already_notified",
+                flush=True,
+            )
+            delivered = True
+        else:
+            title = "YouTube配信の一部取得に失敗しました" if category is None else "YouTube取得に失敗しました"
+            message = [
+                title,
+                f"category: {safe_category}",
+                f"stage: {safe_stage}",
+                f"reason: {safe_reason}",
+                "provider: youtube",
+            ]
+            for record in normalized_failures[:5]:
+                message.append(
+                    f"video_id={record['video_id']} category={record['category']}"
+                    f" stage={record['stage']} reason={record['reason_code']}"
+                )
+            if len(normalized_failures) > 5:
+                message.append(f"additional_failed_videos: {len(normalized_failures) - 5}")
+            render_url = _render_site_url()
+            message.append(
+                f"Render（公開サイト）: <{render_url}>"
+                if render_url
+                else "Render（公開サイト）: URLを取得できません。config/site.jsonを確認してください。"
+            )
+            delivered = _send_discord(webhook, "\n".join(message), event="failure")
+        state["failure_category"] = safe_category
+        state["failure_notified"] = delivered
+        state["failure_notification_version"] = FAILURE_NOTIFICATION_VERSION if delivered else None
+        state["failure_notification_signature"] = signature
     elif previous:
-        if webhook:
-            _send_discord(webhook, "YouTube取得が復旧しました\nprovider: youtube")
-        state["failure_category"] = ""
-        state["failure_notified"] = False
-    _write_state(state)
+        if not webhook:
+            print(
+                "discord notification skipped: event=recovery reason=webhook_not_configured",
+                flush=True,
+            )
+            delivered = False
+        else:
+            delivered = _send_discord(
+                webhook,
+                "YouTube取得が復旧しました\nprovider: youtube",
+                event="recovery",
+            )
+        if delivered or not webhook:
+            state["failure_category"] = ""
+            state["failure_notified"] = False
+            state["failure_notification_version"] = None
+            state["failure_notification_signature"] = ""
+    _persist_notification_state(state)
 
 
-def _send_discord(webhook: str, content: str) -> None:
-    req = request.Request(
-        webhook,
-        data=json.dumps({"content": content}, ensure_ascii=False).encode("utf-8"),
-        method="POST",
-        headers={"Content-Type": "application/json"},
-    )
+def _send_discord(webhook: str, content: str, *, event: str) -> bool:
     try:
-        with request.urlopen(req, timeout=30):
-            pass
-    except (error.URLError, TimeoutError):
-        pass
+        req = request.Request(
+            webhook,
+            data=json.dumps({"content": content}, ensure_ascii=False).encode("utf-8"),
+            method="POST",
+            headers={"Content-Type": "application/json"},
+        )
+        with request.urlopen(req, timeout=30) as response:
+            status = int(getattr(response, "status", None) or response.getcode() or 200)
+        if not 200 <= status < 300:
+            print(
+                "discord notification failed: category=notification_failure"
+                f" stage=discord_webhook reason=discord_http_error status={status} event={event}",
+                flush=True,
+            )
+            return False
+    except error.HTTPError as exc:
+        print(
+            "discord notification failed: category=notification_failure"
+            f" stage=discord_webhook reason=discord_http_error status={exc.code} event={event}",
+            flush=True,
+        )
+        return False
+    except (error.URLError, TimeoutError) as exc:
+        print(
+            "discord notification failed: category=notification_failure"
+            f" stage=discord_webhook reason=discord_network_error"
+            f" error_type={type(exc).__name__} event={event}",
+            flush=True,
+        )
+        return False
+    except Exception as exc:
+        print(
+            "discord notification failed: category=notification_failure"
+            f" stage=discord_webhook reason=discord_unexpected_error"
+            f" error_type={type(exc).__name__} event={event}",
+            flush=True,
+        )
+        return False
+    print(f"discord notification delivered: event={event} status={status}", flush=True)
+    return True
 
 
 def _prepare_material(
@@ -1803,6 +2021,8 @@ def main() -> int:
     parser.add_argument("--video-url", default=_env("YOUTUBE_ORACLE_VIDEO_URL"))
     parser.add_argument("--max-videos", type=int, default=int(_env("YOUTUBE_ORACLE_MAX_VIDEOS", "5")))
     args = parser.parse_args()
+    state_at_start = _read_state()
+    failure_record_baseline = _failure_record_identities(state_at_start)
     try:
         ytdlp = _path_env("YOUTUBE_ORACLE_YTDLP_PATH", DEFAULT_YTDLP)
         deno = _path_env("YOUTUBE_ORACLE_DENO_PATH", DEFAULT_DENO)
@@ -1812,7 +2032,7 @@ def main() -> int:
             if not Path(cookies).is_file():
                 raise OracleJobFailure("cookie_authentication_failure", "YouTube cookies file is missing", reason_code="youtube_cookies_missing")
             run_started_at = _utc_now()
-            state = _read_state()
+            state = state_at_start
             cached_records = state.get("discovered_stream_records")
             if not isinstance(cached_records, list):
                 cached_records = []
@@ -1898,7 +2118,7 @@ def main() -> int:
                 )
             else:
                 _mark_processed(result["video_id"])
-        _notify(None)
+        _notify(None, failures=_failure_records_since(failure_record_baseline))
         print(
             f"oracle YouTube job complete: videos={len(results)}"
             f" selected={len(video_urls)} prepared={len(results)}"
@@ -1916,7 +2136,12 @@ def main() -> int:
             )
         return 0
     except OracleJobFailure as exc:
-        _notify(exc.category)
+        _notify(
+            exc.category,
+            stage=exc.stage,
+            reason_code=exc.reason_code,
+            failures=_failure_records_since(failure_record_baseline),
+        )
         print(
             f"oracle YouTube job failed: category={exc.category}"
             f" stage={exc.stage} reason={exc.reason_code}",
@@ -1924,7 +2149,12 @@ def main() -> int:
         )
         return 1
     except Exception as exc:
-        _notify("oracle_runtime_failure")
+        _notify(
+            "oracle_runtime_failure",
+            stage="job_execution",
+            reason_code="unexpected_main_exception",
+            failures=_failure_records_since(failure_record_baseline),
+        )
         print(
             "oracle YouTube job failed: category=oracle_runtime_failure"
             f" stage=job_execution reason=unexpected_main_exception"

@@ -782,7 +782,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         mark_processed.assert_called_once_with("AI5K5VH3BhY")
-        notify.assert_called_once_with(None)
+        notify.assert_called_once_with(None, failures=[])
         self.assertIn("oracle YouTube job complete: videos=1", output.getvalue())
 
     def test_resolves_first_archive_from_streams_page(self):
@@ -1372,6 +1372,75 @@ class OracleYoutubeJobTests(unittest.TestCase):
             "oracle YouTube job failed: category=live_chat_zero stage=live_chat reason=live_chat_artifact_missing",
             output.getvalue(),
         )
+
+
+class OracleNotificationTests(unittest.TestCase):
+    def test_failed_discord_delivery_retries_and_suppresses_duplicate(self):
+        webhook = "https://example.invalid/webhook/test-value"
+        render_url = "https://video-highlights-site.onrender.com"
+        failure = {
+            "video_id": "DFJ6L1ESayE",
+            "failed_at": "2026-10-09T00:00:00Z",
+            "category": "live_chat_zero",
+            "stage": "live_chat",
+            "reason_code": "live_chat_artifact_missing",
+        }
+        state = {}
+        deliveries = []
+        output = StringIO()
+
+        def send(_webhook, content, *, event):
+            deliveries.append((content, event))
+            return len(deliveries) == 2
+
+        with patch.dict(os.environ, {"DISCORD_WEBHOOK_URL": webhook}, clear=True), patch.object(
+            oracle_youtube_job, "_read_state", return_value=state
+        ), patch.object(oracle_youtube_job, "_persist_notification_state") as persist, patch.object(
+            oracle_youtube_job, "_render_site_url", return_value=render_url
+        ), patch.object(oracle_youtube_job, "_send_discord", side_effect=send), redirect_stdout(output):
+            oracle_youtube_job._notify(None, failures=[failure])
+            self.assertFalse(state["failure_notified"])
+            self.assertIsNone(state["failure_notification_version"])
+
+            oracle_youtube_job._notify(None, failures=[failure])
+            self.assertTrue(state["failure_notified"])
+            self.assertEqual(
+                state["failure_notification_version"],
+                oracle_youtube_job.FAILURE_NOTIFICATION_VERSION,
+            )
+
+            oracle_youtube_job._notify(None, failures=[failure])
+
+        self.assertEqual(len(deliveries), 2)
+        self.assertEqual([event for _content, event in deliveries], ["failure", "failure"])
+        self.assertEqual(persist.call_count, 3)
+        self.assertIn("stage: live_chat", deliveries[0][0])
+        self.assertIn("reason: live_chat_artifact_missing", deliveries[0][0])
+        self.assertIn("video_id=DFJ6L1ESayE", deliveries[0][0])
+        self.assertIn(render_url, deliveries[0][0])
+        self.assertIn("reason=already_notified", output.getvalue())
+
+    def test_discord_http_error_logs_status_without_webhook_or_message(self):
+        webhook = "https://example.invalid/webhook/test-value"
+        private_message = "private notification content"
+        http_error = oracle_youtube_job.error.HTTPError(
+            webhook, 429, "Too Many Requests", hdrs=None, fp=None
+        )
+        output = StringIO()
+
+        with patch.object(oracle_youtube_job.request, "urlopen", side_effect=http_error), redirect_stdout(
+            output
+        ):
+            delivered = oracle_youtube_job._send_discord(
+                webhook, private_message, event="failure"
+            )
+
+        self.assertFalse(delivered)
+        log = output.getvalue()
+        self.assertIn("stage=discord_webhook", log)
+        self.assertIn("status=429", log)
+        self.assertNotIn(webhook, log)
+        self.assertNotIn(private_message, log)
 
 
 if __name__ == "__main__":
