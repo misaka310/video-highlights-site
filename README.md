@@ -38,6 +38,13 @@ npm start
 
 `http://localhost:4174/` を開きます。
 
+## 入手・フィードバック・コントリビューション
+
+- ソースコードはこのGitHubリポジトリから取得できます。公開例を試すだけなら [dotitao moments](https://dotitao-moments.onrender.com/) を利用できます。
+- バグ報告や改善提案は [GitHub Issues](https://github.com/misaka310/video-highlights-site/issues) へ送ってください。
+- 変更を提案する場合は [`CONTRIBUTING.md`](CONTRIBUTING.md) の手順に従ってPull Requestを作成してください。
+- セキュリティ上の問題は公開Issueに書かず、[`SECURITY.md`](SECURITY.md) の非公開報告手順を使用してください。
+
 ## 検証
 
 ```powershell
@@ -53,6 +60,7 @@ npm run verify
 - [`docs/OPERATIONS.md`](docs/OPERATIONS.md) — 更新・公開・GitHub Actionsの運用
 - [`PRIVACY.md`](PRIVACY.md) — プライバシー方針
 - [`SECURITY.md`](SECURITY.md) — 脆弱性の報告方法
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — バグ報告、改善提案、変更の提出手順
 
 READMEには入口と概要だけを記載し、設定値・運用手順・内部処理の詳細は各ドキュメントで管理します。
 
