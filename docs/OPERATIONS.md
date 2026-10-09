@@ -36,7 +36,7 @@ npm run verify:live
 4. `public-readiness`、`Frontend CI`、`Repository hygiene`、`Repo Launch Doctor` を対象SHAで確認する。
 5. `action_required` のrunは、差分とworkflow変更を確認したうえでActions write権限により承認する。
 6. 必須runがすべて成功してからsquash mergeし、releaseブランチを削除する。
-7. Render上のHTML、公開データ、PC・スマホ表示を確認し、必要な変更では `npm run verify:live` を通す。
+7. Render上のHTML、公開データ、PC・スマホ表示を確認し、必要な変更では `npm run verify:live` を通す。成功時の `production-verification.json` はActions artifactとして14日保持し、検証記録のためだけの書込用branchは作らない。
 
 PR番号、run ID、コミットSHAをworkflowへ固定値として残さない。実行時に対象ブランチとhead SHAから解決し、マージ直前にもPR headが変わっていないことを確認する。
 PR作成、対象SHAの検証、head SHA確認、squash mergeは`.github/scripts/checked_pr_merge.py`を共通経路とする。通常のrelease PRは`pull_request` runを待ち、Actionsが作成する自動更新PR（`automation/update-vods`、`automation/youtube-material-*`）は承認待ちrunで停止しないよう、3つの必須workflowを`workflow_dispatch`で対象SHAへ明示実行する。
@@ -125,6 +125,14 @@ workflow badgeやブランチ更新だけで成功判定しない。対象runを
 5. main、公開URLの `data/vods.json`、`updated_at`、最新VOD IDを確認する。
 
 一時的なPR番号・run ID専用workflowをmainへ残さない。障害対応で一時ブランチを使った場合は、完了後にリモート・ローカル双方を削除する。
+
+## Oracle失敗ログの読み方
+
+Oracleの失敗はcategoryに加えてstageとreasonをjournalへ出し、動画単位のfailure_recordsにも同じ理由コードを保存する。理由コードは失敗箇所ごとに必須で、例外メッセージ、チャット本文、投稿者名、Cookie、PAR URLはfailure_recordsへ保存しない。
+
+live_chatでは、artifact_missing（ファイル未生成）、artifact_empty（0行）、jsonl_invalid（JSONとして読めない）、no_offsets（JSONは読めたが対応する時刻情報がない）、artifact_unreadable（文字コードまたはファイル読込エラー）を区別する。journalには行数・JSON行数・不正JSON行数・時刻情報のある行数だけを出す。
+
+バッチのsummaryにはselected / prepared / skippedと字幕リトライ数を出す。job全体が成功扱いでも、一部動画がskipされた件数と各動画の理由を確認できる。
 
 ## 完了条件
 

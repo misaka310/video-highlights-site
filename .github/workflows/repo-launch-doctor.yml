@@ -11,10 +11,12 @@ concurrency:
 
 permissions:
   contents: read
-  statuses: write
 
 jobs:
   doctor:
+    permissions:
+      contents: read
+      statuses: write
     name: public-readiness
     if: github.event_name == 'workflow_dispatch' || github.event.repository.private == false
     runs-on: ubuntu-24.04

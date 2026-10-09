@@ -140,6 +140,11 @@ status and counts; it does not print cookies, keys, chat text, or PAR URLs.
 If yt-dlp returns `yt_dlp_failure` after creating a non-empty live-chat JSON,
 the job keeps that artifact and validates it before continuing; an absent or
 empty artifact remains a hard failure.
+
+## Reading Oracle acquisition diagnostics
+
+Each video failure reports category, stage, and a specific reason code in the journal and bounded state record. The live-chat parser distinguishes a missing artifact, an empty file, invalid JSONL, valid JSON without supported offsets, and an unreadable artifact. Its journal summary contains counts only; it never prints chat text or usernames. Batch preparation reports selected, prepared, and skipped archive counts plus caption-retry outcomes, so a successful partial batch does not hide skipped videos.
+
 ## Refreshing YouTube authentication
 
 The production cookie file configured by `YOUTUBE_ORACLE_COOKIES_PATH` on Oracle
