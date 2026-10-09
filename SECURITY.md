@@ -34,3 +34,24 @@ Runtime credentials, SSH keys, machine-specific paths, private IP addresses,
 and deployment secrets must remain outside the repository. Use local
 environment variables or the deployment provider's secret store. Public
 documentation must use placeholders and sanitized examples.
+
+<!-- managed-by: repo-launch-doctor-security-baseline-v1 -->
+
+## Reporting a vulnerability
+
+Please do **not** publish suspected vulnerabilities in a public issue. Report them privately through GitHub's security-advisory flow for this repository:
+
+https://github.com/misaka310/video-highlights-site/security/advisories/new
+
+Include the affected version or commit, reproduction steps, impact, and any suggested mitigation. Reports that include a minimal proof of concept are especially useful.
+
+## Response timeline
+
+- Initial acknowledgement target: within 7 days.
+- Triage and severity assessment target: within 14 days.
+- Fix timing depends on impact and complexity; critical issues are prioritized before routine feature work.
+- Coordinated public disclosure should wait until a fix or mitigation is available whenever practical.
+
+## Supported versions
+
+The current default branch and the latest published release, when releases exist, receive security fixes. Older snapshots may not receive backports.
