@@ -1737,8 +1737,21 @@ def _prepare_material(
 ) -> dict[str, Any]:
     video_id = parse_youtube_video_id(video_url)
     work_dir.mkdir(parents=True, exist_ok=True)
+    print(f"progress event=chat_metadata_started video_id={video_id}", flush=True)
     video, comments = _download_chat_and_metadata(video_url, work_dir, ytdlp, deno, cookies)
+    print(
+        f"progress event=chat_metadata_complete video_id={video_id} chat_offsets={len(comments)}",
+        flush=True,
+    )
+    print(f"progress event=captions_started video_id={video_id}", flush=True)
     caption_result = _download_captions(video_url, work_dir, ytdlp, deno, cookies)
+    print(
+        f"progress event=captions_complete video_id={video_id}"
+        f" result={'available' if caption_result.get('path') else 'unavailable'}"
+        f" reason={caption_result.get('reason_code') or 'none'}",
+        flush=True,
+    )
+    print(f"progress event=highlight_detection_started video_id={video_id}", flush=True)
     analyzed, status = analyze_video_entry(
         video,
         dt.datetime.now().astimezone(),
@@ -1748,11 +1761,24 @@ def _prepare_material(
     if not analyzed or status != "analyzed":
         raise OracleJobFailure("highlight_detection_failure", "chat offsets produced no highlights", reason_code="no_highlights_detected")
     items = list(analyzed.get("items") or [])
+    print(
+        f"progress event=highlight_detection_complete video_id={video_id} highlights={len(items)}",
+        flush=True,
+    )
     media_files: dict[str, Path] = {}
+    print(
+        f"progress event=media_cut_started video_id={video_id} clips={len(items)}",
+        flush=True,
+    )
     for index, item in enumerate(items):
         audio, screenshot = _cut_media(video_url, item, index, work_dir, ytdlp, deno, cookies)
         media_files[f"clips/clip-{index}.wav"] = audio
         media_files[f"clips/clip-{index}.webp"] = screenshot
+        print(
+            f"progress event=media_cut_complete video_id={video_id}"
+            f" clip={index + 1} clips={len(items)}",
+            flush=True,
+        )
     return {
         "video_id": video_id,
         "manifest": build_material_manifest(video, comments, items),
@@ -1783,17 +1809,32 @@ def _run_one(video_url: str) -> dict[str, Any]:
         work_dir = Path(temp_dir)
         prepared = _prepare_material(video_url, work_dir, ytdlp, deno, cookies)
         bundle_path = work_dir / f"youtube-material-{video_id}.tar.gz"
+        print(f"progress event=bundle_creation_started video_id={video_id}", flush=True)
         create_material_bundle(
             bundle_path,
             prepared["manifest"],
             prepared["media_files"],
             captions_file=prepared["captions_file"],
         )
+        print(
+            f"progress event=bundle_creation_complete video_id={video_id}"
+            f" files={len(prepared['media_files'])}"
+            f" captions={'yes' if prepared['captions_file'] else 'no'}",
+            flush=True,
+        )
         try:
+            print(
+                f"progress event=bundle_upload_started video_id={video_id}"
+                f" files={len(prepared['media_files'])}",
+                flush=True,
+            )
             upload_bundle_to_url(bundle_path, upload_url)
+            print(f"progress event=bundle_upload_complete video_id={video_id}", flush=True)
         except (OSError, error.URLError, TimeoutError, RuntimeError) as exc:
             raise OracleJobFailure("handoff_upload_failure", "temporary material upload failed", reason_code="material_upload_failed") from exc
+        print(f"progress event=github_dispatch_started video_id={video_id}", flush=True)
         _dispatch_github([video_id])
+        print(f"progress event=github_dispatch_complete videos=1", flush=True)
         return {
             "video_id": video_id,
             "chat_total": prepared["chat_total"],
@@ -1926,10 +1967,18 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
                     "media_bytes": prepared["media_bytes"],
                 }
             )
+            print(
+                f"progress event=archive_prepared video_id={video_id}"
+                f" chat_offsets={prepared['chat_total']} highlights={prepared['highlights']}"
+                f" captions={'yes' if prepared['captions_file'] else 'no'}"
+                f" media_bytes={prepared['media_bytes']}",
+                flush=True,
+            )
         for video_url in caption_retry_urls:
             video_id = parse_youtube_video_id(video_url)
             caption_dir = root / "caption-retries" / video_id
             caption_dir.mkdir(parents=True, exist_ok=True)
+            print(f"progress event=caption_retry_started video_id={video_id}", flush=True)
             try:
                 caption_result = _download_captions(video_url, caption_dir, ytdlp, deno, cookies)
             except OracleJobFailure as exc:
@@ -1945,6 +1994,11 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
                 }
             if caption_result.get("path") is None:
                 caption_retry_failures += 1
+                print(
+                    f"progress event=caption_retry_complete video_id={video_id}"
+                    f" result=unavailable reason={caption_result.get('reason_code') or 'none'}",
+                    flush=True,
+                )
                 _record_caption_retry_failure(
                     video_id,
                     str(caption_result.get("reason_code") or "caption_download_error"),
@@ -1953,6 +2007,10 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
                 continue
             caption_updates.append((video_id, caption_result["path"]))
             caption_retry_outcomes[video_id] = caption_result.get("source_outcomes")
+            print(
+                f"progress event=caption_retry_complete video_id={video_id} result=available",
+                flush=True,
+            )
 
         print(
             f"batch preparation summary: selected={len(video_urls)} prepared={len(results)}"
@@ -1972,13 +2030,36 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
             return []
         try:
             bundle_path = root / "youtube-material-batch.tar.gz"
+            print(
+                f"progress event=bundle_creation_started videos={len(results)} caption_updates={len(caption_updates)}",
+                flush=True,
+            )
             create_material_batch_bundle(bundle_path, prepared_entries, caption_updates=caption_updates)
+            print(
+                f"progress event=bundle_creation_complete archives={len(prepared_entries)}"
+                f" caption_updates={len(caption_updates)}",
+                flush=True,
+            )
+            print(
+                f"progress event=bundle_upload_started archives={len(prepared_entries)}"
+                f" caption_updates={len(caption_updates)}",
+                flush=True,
+            )
             upload_bundle_to_url(bundle_path, upload_url)
+            print("progress event=bundle_upload_complete", flush=True)
             dispatched_ids = list(dict.fromkeys(
                 [item["video_id"] for item in results]
                 + [video_id for video_id, _caption_path in caption_updates]
             ))
+            print(
+                f"progress event=github_dispatch_started videos={len(dispatched_ids)}",
+                flush=True,
+            )
             _dispatch_github(dispatched_ids)
+            print(
+                f"progress event=github_dispatch_complete videos={len(dispatched_ids)}",
+                flush=True,
+            )
             for video_id, _caption_path in caption_updates:
                 _mark_caption_retry_pending_publication(
                     video_id,
@@ -2024,6 +2105,11 @@ def main() -> int:
     parser.add_argument("--video-url", default=_env("YOUTUBE_ORACLE_VIDEO_URL"))
     parser.add_argument("--max-videos", type=int, default=int(_env("YOUTUBE_ORACLE_MAX_VIDEOS", "5")))
     args = parser.parse_args()
+    mode = "streams" if args.streams_url else "video" if args.video_url else "unconfigured"
+    print(
+        f"progress event=job_started mode={mode} max_videos={args.max_videos}",
+        flush=True,
+    )
     state_at_start = _read_state()
     failure_record_baseline = _failure_record_identities(state_at_start)
     try:
@@ -2053,6 +2139,7 @@ def main() -> int:
                 caption_ids=caption_ids,
                 now=run_started_at,
             )
+            print("progress event=archive_discovery_started source=streams", flush=True)
             current_records = _resolve_stream_archive_records(
                 args.streams_url,
                 ytdlp,
@@ -2078,6 +2165,12 @@ def main() -> int:
                 published_ids=published_ids,
                 caption_ids=caption_ids,
                 now=run_started_at,
+            )
+            print(
+                f"progress event=archive_discovery_complete records={len(current_records)}"
+                f" cached={len(cached_records)} published={len(published_ids)}"
+                f" selected={len(video_urls)} caption_retries={len(caption_retry_urls)}",
+                flush=True,
             )
             _write_state(state)
             if not video_urls and not caption_retry_urls:
