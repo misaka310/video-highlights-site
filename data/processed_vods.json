@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-10T07:43:17+09:00",
+  "updated_at": "2026-10-10T13:05:58+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -10754,7 +10754,7 @@
           "start_time": "00:04:20",
           "end_time": "00:08:00",
           "reason": "Chat activity spike around 0h4m20s (z-score=3.814).",
-          "headline": "割とむずい超ゲームがハード決定",
+          "headline": "割とむずいゲーム展開",
           "tags": [
             "えっど"
           ],
@@ -10770,6 +10770,7 @@
           "start_time": "01:38:50",
           "end_time": "01:39:50",
           "reason": "Chat activity spike around 1h38m50s (z-score=7.554).",
+          "headline": "自分が死んでいたと悟る",
           "tags": [
             "ww"
           ],
@@ -10785,7 +10786,7 @@
           "start_time": "00:49:10",
           "end_time": "00:50:00",
           "reason": "Chat activity spike around 0h49m10s (z-score=5.684).",
-          "headline": "そこら辺とデフォ地図が登場",
+          "headline": "そこら辺もデフォの地図",
           "tags": [
             "ww"
           ],
@@ -10840,7 +10841,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-10T07:43:17+09:00"
+      "analyzed_at": "2026-10-10T13:05:58+09:00"
     },
     {
       "vod_id": "2834998317",
@@ -11014,7 +11015,7 @@
           "start_time": "06:05:00",
           "end_time": "06:10:20",
           "reason": "Chat activity spike around 6h5m0s (z-score=7.099).",
-          "headline": "ふくちゃん近くで回復のおこぼれ取得",
+          "headline": "回復のおこぼれを狙う",
           "tags": [
             "好プレー",
             "ww",
@@ -11032,7 +11033,7 @@
           "start_time": "01:32:50",
           "end_time": "01:37:20",
           "reason": "Chat activity spike around 1h32m50s (z-score=4.859).",
-          "headline": "未だに朝待ちで笑い",
+          "headline": "平日朝に待ち続く笑い",
           "tags": [
             "ww"
           ],
@@ -11048,7 +11049,7 @@
           "start_time": "00:22:40",
           "end_time": "00:27:30",
           "reason": "Chat activity spike around 0h22m40s (z-score=3.739).",
-          "headline": "本気恋愛とセクハ相手の見下し",
+          "headline": "本気で恋している様子",
           "tags": [
             "ww",
             "えっ",
@@ -11144,7 +11145,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-10T07:43:17+09:00"
+      "analyzed_at": "2026-10-10T13:05:58+09:00"
     },
     {
       "vod_id": "2833526837",
