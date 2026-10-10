@@ -1687,7 +1687,10 @@ def _send_discord(webhook: str, content: str, *, event: str) -> bool:
             webhook,
             data=json.dumps({"content": content}, ensure_ascii=False).encode("utf-8"),
             method="POST",
-            headers={"Content-Type": "application/json"},
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "video-highlights-site/1.0 (+https://github.com/misaka310/video-highlights-site)",
+            },
         )
         with request.urlopen(req, timeout=30) as response:
             status = int(getattr(response, "status", None) or response.getcode() or 200)
