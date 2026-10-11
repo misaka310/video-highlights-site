@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-10T13:05:58+09:00",
-  "next_update_at": "2026-10-11T00:00:00+00:00",
+  "updated_at": "2026-10-11T19:48:58+09:00",
+  "next_update_at": "2026-10-12T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "r1XlMlruf8s",
+      "vod_url": "https://www.youtube.com/watch?v=r1XlMlruf8s",
+      "title": "下手くそは苦手キャラで深度5へ行けるのか？【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-10T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/r1XlMlruf8s/maxresdefault.jpg",
+      "duration_sec": 25874,
+      "count": 3,
+      "chat_total": 2499,
+      "comments_per_hour": 347.7,
+      "detail_path": "/data/vods/r1XlMlruf8s.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "Og6vxkGZDKg",
       "vod_url": "https://www.youtube.com/watch?v=Og6vxkGZDKg",
@@ -676,19 +689,6 @@
       "chat_total": 499,
       "comments_per_hour": 218.01,
       "detail_path": "/data/vods/e3Y_F3kFS-4.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "VlxPPkteaoM",
-      "vod_url": "https://www.youtube.com/watch?v=VlxPPkteaoM",
-      "title": "【条件付き参加型】果たしてあなたはこの深き夜に参加できるのか【ナイトレイン/ELDEN RING NIGHTREIGN】",
-      "published_at": "2026-08-12T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/VlxPPkteaoM/maxresdefault.jpg",
-      "duration_sec": 12457,
-      "count": 3,
-      "chat_total": 896,
-      "comments_per_hour": 258.939,
-      "detail_path": "/data/vods/VlxPPkteaoM.json",
       "provider": "youtube"
     }
   ]
