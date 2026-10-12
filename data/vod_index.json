@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-12T08:03:00+09:00",
-  "next_update_at": "2026-10-12T00:00:00+00:00",
+  "updated_at": "2026-10-13T07:03:44+09:00",
+  "next_update_at": "2026-10-13T00:00:00+00:00",
   "videos": [
     {
       "vod_id": "Qpo6FsOMLJs",
@@ -689,19 +689,6 @@
       "chat_total": 326,
       "comments_per_hour": 224.957,
       "detail_path": "/data/vods/trqPz9vVh14.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "e3Y_F3kFS-4",
-      "vod_url": "https://www.youtube.com/watch?v=e3Y_F3kFS-4",
-      "title": "【条件付参加型】果たしてあなたはこの深き夜に参加できるのか【ナイトレイン/ELDEN RING NIGHTREIGN】",
-      "published_at": "2026-08-13T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/e3Y_F3kFS-4/maxresdefault.jpg",
-      "duration_sec": 8240,
-      "count": 3,
-      "chat_total": 499,
-      "comments_per_hour": 218.01,
-      "detail_path": "/data/vods/e3Y_F3kFS-4.json",
       "provider": "youtube"
     }
   ]
