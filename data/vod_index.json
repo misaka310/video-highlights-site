@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-13T07:03:44+09:00",
-  "next_update_at": "2026-10-13T00:00:00+00:00",
+  "updated_at": "2026-10-13T21:59:12+09:00",
+  "next_update_at": "2026-10-14T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "fdPbMNaGSNo",
+      "vod_url": "https://www.youtube.com/watch?v=fdPbMNaGSNo",
+      "title": "【現在4～】苦手キャラでも深度5へ行けるのか？【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-12T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/fdPbMNaGSNo/maxresdefault.jpg",
+      "duration_sec": 16469,
+      "count": 3,
+      "chat_total": 1797,
+      "comments_per_hour": 392.811,
+      "detail_path": "/data/vods/fdPbMNaGSNo.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "Qpo6FsOMLJs",
       "vod_url": "https://www.youtube.com/watch?v=Qpo6FsOMLJs",
@@ -676,19 +689,6 @@
       "chat_total": 2047,
       "comments_per_hour": 364.649,
       "detail_path": "/data/vods/5VzXYJdQwMY.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "trqPz9vVh14",
-      "vod_url": "https://www.youtube.com/watch?v=trqPz9vVh14",
-      "title": "【新情報】試写会現地レポ有！SEKIRO周りの新情報を全部追う！【SEKIRO: NO DEFEAT】",
-      "published_at": "2026-08-14T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/trqPz9vVh14/maxresdefault.jpg",
-      "duration_sec": 5217,
-      "count": 3,
-      "chat_total": 326,
-      "comments_per_hour": 224.957,
-      "detail_path": "/data/vods/trqPz9vVh14.json",
       "provider": "youtube"
     }
   ]
