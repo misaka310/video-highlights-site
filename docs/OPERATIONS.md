@@ -130,7 +130,7 @@ workflow badgeやブランチ更新だけで成功判定しない。対象runを
 
 ## Oracle失敗ログの読み方
 
-Oracleの失敗はcategoryに加えてstageとreasonをjournalへ出し、動画単位のfailure_recordsにも同じ理由コードを保存する。理由コードは失敗箇所ごとに必須で、例外メッセージ、チャット本文、投稿者名、Cookie、PAR URLはfailure_recordsへ保存しない。
+Oracleの失敗はcategoryに加えてstageとreasonをjournalへ出し、動画単位のfailure_recordsにも同じ理由コードを保存する。理由コードは失敗箇所ごとに必須で、例外メッセージ、チャット本文、投稿者名、Cookie、PAR URLはfailure_recordsへ保存しない。yt-dlpがメンバー限定の制限を返した場合は `category=youtube_access_failure` と `reason=youtube_membership_required` を記録する。この理由は対象動画に必要なチャンネルメンバー権限がOracleの認証アカウントにないことを示し、公開サイトへの掲載対象ではない。
 
 live_chatでは、artifact_missing（ファイル未生成）、artifact_empty（0行）、jsonl_invalid（JSONとして読めない）、no_offsets（JSONは読めたが対応する時刻情報がない）、artifact_unreadable（文字コードまたはファイル読込エラー）を区別する。journalには行数・JSON行数・不正JSON行数・時刻情報のある行数だけを出す。
 
