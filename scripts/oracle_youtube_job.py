@@ -306,6 +306,8 @@ def _run_ytdlp(
         category = _classify_ytdlp_failure(completed)
         if category == "yt_dlp_failure":
             reason_code = "yt_dlp_unclassified_error"
+        elif category == "youtube_access_failure":
+            reason_code = "youtube_membership_required"
         elif category.startswith("yt_dlp_"):
             reason_code = category
         else:
