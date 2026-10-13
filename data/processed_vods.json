@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-13T21:59:12+09:00",
+  "updated_at": "2026-10-14T07:30:12+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -9201,7 +9201,7 @@
           "start_time": "00:29:20",
           "end_time": "00:31:20",
           "reason": "Chat activity spike around 0h29m20s (z-score=3.99).",
-          "headline": "ラウンジが使う高そうなソファ",
+          "headline": "ラウンジの高そうなソファーを紹介",
           "tags": [
             "ww",
             "ホラー",
@@ -9219,7 +9219,7 @@
           "start_time": "01:01:20",
           "end_time": "01:02:10",
           "reason": "Chat activity spike around 1h1m20s (z-score=3.99).",
-          "headline": "エンディング話し合いは大したことなし",
+          "headline": "エンディング議論は軽い",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=3680s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_3680_3730.webp"
@@ -9233,7 +9233,7 @@
           "start_time": "00:10:50",
           "end_time": "00:11:40",
           "reason": "Chat activity spike around 0h10m50s (z-score=3.99).",
-          "headline": "最近、おにぎりは300円程度",
+          "headline": "おにぎりが300円前後に上昇",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=650s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_650_700.webp"
@@ -9262,7 +9262,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-02T00:12:16+09:00"
+      "analyzed_at": "2026-10-14T07:30:12+09:00"
     },
     {
       "vod_id": "2845027398",
@@ -9706,7 +9706,7 @@
           "start_time": "02:44:30",
           "end_time": "02:46:10",
           "reason": "Chat activity spike around 2h44m30s (z-score=6.501).",
-          "headline": "ゲージが2個になる謎",
+          "headline": "行ける瞬間とゲージ2個の謎",
           "tags": [
             "ww"
           ],
@@ -9722,7 +9722,7 @@
           "start_time": "03:22:40",
           "end_time": "03:23:30",
           "reason": "Chat activity spike around 3h22m40s (z-score=5.466).",
-          "headline": "叫び声と壁の笑いが炸裂",
+          "headline": "モニアと作さんのダンタラン",
           "tags": [
             "好プレー"
           ],
@@ -9738,7 +9738,7 @@
           "start_time": "00:51:20",
           "end_time": "00:52:40",
           "reason": "Chat activity spike around 0h51m20s (z-score=3.396).",
-          "headline": "削り続けても誰も倒れず",
+          "headline": "誰も死なずに削り続行",
           "tags": [
             "ww"
           ],
@@ -9787,7 +9787,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-13T07:03:44+09:00"
+      "analyzed_at": "2026-10-14T07:30:12+09:00"
     },
     {
       "vod_id": "2842954346",
@@ -11119,7 +11119,7 @@
           "start_time": "00:04:20",
           "end_time": "00:08:00",
           "reason": "Chat activity spike around 0h4m20s (z-score=3.814).",
-          "headline": "割とむずいんだ超ゲームうまくハード決定",
+          "headline": "割とむずいゲームがハード化",
           "tags": [
             "えっど"
           ],
@@ -11135,7 +11135,7 @@
           "start_time": "01:38:50",
           "end_time": "01:39:50",
           "reason": "Chat activity spike around 1h38m50s (z-score=7.554).",
-          "headline": "死んでた私、溺れ陣で帰還",
+          "headline": "死んだ自分が溺れ陣で帰還",
           "tags": [
             "ww"
           ],
@@ -11151,7 +11151,7 @@
           "start_time": "00:49:10",
           "end_time": "00:50:00",
           "reason": "Chat activity spike around 0h49m10s (z-score=5.684).",
-          "headline": "デフォ状態の地図が登場",
+          "headline": "デフォである地図が出る",
           "tags": [
             "ww"
           ],
@@ -11206,7 +11206,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-13T07:03:44+09:00"
+      "analyzed_at": "2026-10-14T07:30:12+09:00"
     },
     {
       "vod_id": "2834998317",
@@ -11380,7 +11380,7 @@
           "start_time": "06:05:00",
           "end_time": "06:10:20",
           "reason": "Chat activity spike around 6h5m0s (z-score=7.099).",
-          "headline": "回復のおこぼれを求めて死に近づく",
+          "headline": "回復のおこぼれを狙う",
           "tags": [
             "好プレー",
             "ww",
@@ -11398,7 +11398,7 @@
           "start_time": "01:32:50",
           "end_time": "01:37:20",
           "reason": "Chat activity spike around 1h32m50s (z-score=4.859).",
-          "headline": "朝の待ち時間、未だに笑い",
+          "headline": "朝待ちは未だに笑い",
           "tags": [
             "ww"
           ],
@@ -11414,7 +11414,7 @@
           "start_time": "00:22:40",
           "end_time": "00:27:30",
           "reason": "Chat activity spike around 0h22m40s (z-score=3.739).",
-          "headline": "本気で恋してるとセクハ相手",
+          "headline": "相手をセクハ対象と見下す",
           "tags": [
             "ww",
             "えっ",
@@ -11510,7 +11510,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-13T07:03:44+09:00"
+      "analyzed_at": "2026-10-14T07:30:12+09:00"
     },
     {
       "vod_id": "2833526837",
