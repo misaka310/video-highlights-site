@@ -1172,6 +1172,7 @@ class OracleYoutubeJobTests(unittest.TestCase):
                 oracle_youtube_job._run_ytdlp(["yt-dlp"], timeout=10)
 
         self.assertEqual(caught.exception.category, "youtube_access_failure")
+        self.assertEqual(caught.exception.reason_code, "youtube_membership_required")
         self.assertEqual(sleep.call_count, 0)
 
     def test_chat_download_retries_when_no_artifact_was_written(self):
