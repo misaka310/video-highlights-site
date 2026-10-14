@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-14T07:30:12+09:00",
-  "next_update_at": "2026-10-14T00:00:00+00:00",
+  "updated_at": "2026-10-15T07:24:58+09:00",
+  "next_update_at": "2026-10-15T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "3qJvTukzhSQ",
+      "vod_url": "https://www.youtube.com/watch?v=3qJvTukzhSQ",
+      "title": "今日こそ！苦手キャラでも深度5へ行けるのか？【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-14T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/3qJvTukzhSQ/maxresdefault.jpg",
+      "duration_sec": 13501,
+      "count": 3,
+      "chat_total": 1792,
+      "comments_per_hour": 477.831,
+      "detail_path": "/data/vods/3qJvTukzhSQ.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "fdPbMNaGSNo",
       "vod_url": "https://www.youtube.com/watch?v=fdPbMNaGSNo",
