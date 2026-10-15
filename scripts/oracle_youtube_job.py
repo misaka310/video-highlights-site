@@ -86,6 +86,8 @@ MAX_STREAM_ARCHIVES_PER_RUN = 5
 STREAM_DISCOVERY_DATE_BUFFER_DAYS = 2
 MAX_FAILURE_RECORDS = 500
 FAILURE_RECORD_RETENTION_DAYS = PUBLIC_VOD_RETENTION_DAYS
+MEMBERSHIP_ONLY_REASON_CODE = "youtube_membership_required"
+MAX_EXCLUDED_RECORDS = 500
 CAPTION_RETRY_STATE_VERSION = 1
 MAX_CAPTION_RETRY_RECORDS = 500
 MAX_CAPTION_RETRY_HISTORY = 500
@@ -433,6 +435,7 @@ def _select_unpublished_stream_urls(
     published_ids: set[str],
     limit: int,
     now: dt.datetime | None = None,
+    excluded_ids: set[str] | None = None,
 ) -> list[str]:
     bounded_limit = max(1, min(int(limit), MAX_STREAM_ARCHIVES_PER_RUN))
     now_utc = now or _utc_now()
@@ -449,6 +452,9 @@ def _select_unpublished_stream_urls(
         seen_ids.add(video_id)
         # Dispatch history does not prove that downstream GitHub publication succeeded.
         if video_id in published_ids:
+            continue
+        # Members-only archives are excluded permanently once detected.
+        if video_id in (excluded_ids or set()):
             continue
         published_at, sort_at, _timestamp = _stream_record_times(record)
         if published_at is None or sort_at is None:
@@ -647,6 +653,103 @@ def _record_failure(video_id: str, failure: OracleJobFailure, *, now: dt.datetim
     print(
         f"failure video_id={normalized_id} category={failure.category}"
         f" stage={failure.stage} reason={failure.reason_code}",
+        flush=True,
+    )
+
+
+def _excluded_video_ids(state: dict[str, Any]) -> set[str]:
+    """Video IDs that can never be published with the production account.
+
+    A members-only archive needs channel membership the Oracle account does
+    not have, so retrying it on every timer run can never succeed.  The
+    bounded exclusion list keeps such IDs out of future selection.
+    """
+
+    records = state.get("excluded_video_ids")
+    if not isinstance(records, list):
+        return set()
+    excluded: set[str] = set()
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        try:
+            excluded.add(parse_youtube_video_id(str(record.get("video_id") or "")))
+        except ValueError:
+            continue
+    return excluded
+
+
+def _mark_video_excluded(video_id: str, reason_code: str, *, now: dt.datetime | None = None) -> None:
+    """Permanently exclude an archive that cannot be published."""
+
+    normalized_id = parse_youtube_video_id(video_id)
+    timestamp = now or _utc_now()
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.replace(tzinfo=dt.timezone.utc)
+    timestamp = timestamp.astimezone(dt.timezone.utc)
+    cutoff = timestamp - dt.timedelta(days=FAILURE_RECORD_RETENTION_DAYS)
+    record = {
+        "video_id": normalized_id,
+        "excluded_at": timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "reason_code": reason_code,
+    }
+
+    state = _read_state()
+    retained: list[tuple[dt.datetime, dict[str, str]]] = []
+    old_records = state.get("excluded_video_ids")
+    if isinstance(old_records, list):
+        for old_record in old_records:
+            if not isinstance(old_record, dict):
+                continue
+            try:
+                old_id = parse_youtube_video_id(str(old_record.get("video_id") or ""))
+                old_timestamp = dt.datetime.fromisoformat(
+                    str(old_record.get("excluded_at") or "").replace("Z", "+00:00")
+                )
+            except (TypeError, ValueError):
+                continue
+            if old_timestamp.tzinfo is None:
+                old_timestamp = old_timestamp.replace(tzinfo=dt.timezone.utc)
+            old_timestamp = old_timestamp.astimezone(dt.timezone.utc)
+            if old_timestamp < cutoff or old_timestamp > timestamp + dt.timedelta(minutes=5):
+                continue
+            old_reason_code = str(old_record.get("reason_code") or "")
+            if not re.fullmatch(r"[a-z0-9_]{1,64}", old_reason_code):
+                continue
+            if old_id == normalized_id:
+                continue
+            retained.append(
+                (
+                    old_timestamp,
+                    {
+                        "video_id": old_id,
+                        "excluded_at": old_timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+                        "reason_code": old_reason_code,
+                    },
+                )
+            )
+
+    retained.append((timestamp, record))
+    retained.sort(key=lambda item: item[0])
+    state["excluded_video_ids"] = [item[1] for item in retained[-MAX_EXCLUDED_RECORDS:]]
+    try:
+        _write_state(state)
+    except OSError as exc:
+        print(
+            f"exclusion persistence failed: video_id={normalized_id}"
+            f" category=state_persistence_failure stage=state_write"
+            f" reason=exclusion_record_write_failed",
+            flush=True,
+        )
+        raise OracleJobFailure(
+            "state_persistence_failure",
+            "exclusion record could not be retained",
+            stage="state_write",
+            reason_code="exclusion_record_write_failed",
+        ) from exc
+    print(
+        f"exclusion video_id={normalized_id} reason={reason_code}"
+        f" result=excluded_from_future_runs",
         flush=True,
     )
 
@@ -1853,6 +1956,10 @@ def run(video_url: str) -> dict[str, Any]:
     try:
         return _run_one(video_url)
     except OracleJobFailure as exc:
+        if exc.reason_code == MEMBERSHIP_ONLY_REASON_CODE:
+            # Never select this archive again; the run still reports the
+            # membership requirement to the caller.
+            _mark_video_excluded(video_id, exc.reason_code)
         _record_failure(video_id, exc)
         raise
     except Exception as exc:
@@ -1912,6 +2019,7 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
     caption_updates: list[tuple[str, Path]] = []
     caption_retry_outcomes: dict[str, Any] = {}
     caption_retry_failures = 0
+    excluded_count = 0
     try:
         batch_directory = tempfile.TemporaryDirectory(prefix="batch-", dir=work_root)
     except OSError:
@@ -1932,6 +2040,18 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
                 prepared = _prepare_material(video_url, root / video_id, ytdlp, deno, cookies)
             except OracleJobFailure as exc:
                 # One bad archive must not block the rest of the daily batch.
+                if exc.reason_code == MEMBERSHIP_ONLY_REASON_CODE:
+                    # A members-only archive can never be published with the
+                    # production account, so it is excluded permanently
+                    # instead of being retried on every timer run.
+                    _mark_video_excluded(video_id, exc.reason_code)
+                    excluded_count += 1
+                    print(
+                        f"excluded video_id={video_id} category={exc.category}"
+                        f" stage={exc.stage} reason={exc.reason_code}",
+                        flush=True,
+                    )
+                    continue
                 # The skipped video stays unprocessed and the next timer run
                 # retries it.
                 _record_failure(video_id, exc)
@@ -2016,13 +2136,14 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
 
         print(
             f"batch preparation summary: selected={len(video_urls)} prepared={len(results)}"
-            f" skipped={len(video_urls) - len(results)} caption_retries={len(caption_retry_urls)}"
+            f" skipped={max(0, len(video_urls) - len(results) - excluded_count)}"
+            f" excluded={excluded_count} caption_retries={len(caption_retry_urls)}"
             f" caption_retries_prepared={len(caption_updates)}"
             f" caption_retry_failures={caption_retry_failures}",
             flush=True,
         )
         if not results and not caption_updates:
-            if video_urls:
+            if video_urls and excluded_count < len(video_urls):
                 raise OracleJobFailure(
                     "yt_dlp_failure",
                     "no YouTube archives could be prepared",
@@ -2091,7 +2212,7 @@ def run_batch(video_urls: list[str], *, caption_retry_urls: list[str] | None = N
             for result in results:
                 _record_failure(result["video_id"], failure)
             raise failure from exc
-        if video_urls and not results:
+        if video_urls and not results and excluded_count < len(video_urls):
             raise OracleJobFailure(
                 "yt_dlp_failure",
                 "no YouTube archives could be prepared",
@@ -2156,11 +2277,13 @@ def main() -> int:
                 now=run_started_at,
             )
             state["discovered_stream_records"] = records
+            excluded_ids = _excluded_video_ids(state)
             video_urls = _select_unpublished_stream_urls(
                 records,
                 published_ids=published_ids,
                 limit=args.max_videos,
                 now=run_started_at,
+                excluded_ids=excluded_ids,
             )
             caption_retry_urls = _select_due_caption_retry_urls(
                 state,
@@ -2171,7 +2294,8 @@ def main() -> int:
             print(
                 f"progress event=archive_discovery_complete records={len(current_records)}"
                 f" cached={len(cached_records)} published={len(published_ids)}"
-                f" selected={len(video_urls)} caption_retries={len(caption_retry_urls)}",
+                f" excluded={len(excluded_ids)} selected={len(video_urls)}"
+                f" caption_retries={len(caption_retry_urls)}",
                 flush=True,
             )
             _write_state(state)
@@ -2217,10 +2341,16 @@ def main() -> int:
             else:
                 _mark_processed(result["video_id"])
         _notify(None, failures=_failure_records_since(failure_record_baseline))
+        excluded_ids_now = _excluded_video_ids(_read_state())
+        excluded_runs = [
+            video_url for video_url in video_urls
+            if parse_youtube_video_id(video_url) in excluded_ids_now
+        ]
         print(
             f"oracle YouTube job complete: videos={len(results)}"
             f" selected={len(video_urls)} prepared={len(results)}"
-            f" skipped={max(0, len(video_urls) - len(results))}"
+            f" skipped={max(0, len(video_urls) - len(results) - len(excluded_runs))}"
+            f" excluded={len(excluded_runs)}"
             f" caption_retries={len(caption_retry_urls)}",
             flush=True,
         )
