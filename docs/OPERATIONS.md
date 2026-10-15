@@ -68,7 +68,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 - 既存`.github/workflows/update-vods.yml`のschedule宣言は互換検査のため残すが、現在の`if: github.event_name == 'workflow_dispatch'`による停止を無条件に解除しない。
 - GitHub側の混雑により実際の開始・完了が遅れることはある。画面の「次回更新予定」は処理開始時刻ではなく、公開反映目標の09:00 JSTを表示する。公開データ生成が09:00より前に終わった場合は同日の09:00、以後なら翌日の09:00を次回予定とし、保存済み予定時刻を過ぎた後は画面表示を次の未来の09:00へ進める。
 - 手動更新は `workflow_dispatch` で `main` を指定する。
-- `data/vods.json` は公開トップ用のYouTube最新5件、`data/vod_index.json` は保持期間内のYouTube一覧を持つ。既存キャッシュにTwitchが残っていても、YouTubeのActions処理が公開出力前に除外する。
+- `data/vods.json` は公開トップ用のYouTube最新5件、`data/vod_index.json` は保持期間内のYouTube一覧を持つ。既存キャッシュにTwitchが残っていても、YouTubeのActions処理が公開出力前に除外する。プライバシー上の恒久除外IDは共有公開シリアライザーでキャッシュ読込時と全公開出力時に除外する。
 - YouTube更新データは `automation/youtube-material-*` ブランチとPRを経由し、公開準備チェック成功後にmainへマージする。旧Twitch更新workflowは停止中であり、公開出力へTwitchを戻さない。
 - YouTube更新PRの検証はActions botが作成したPRでも停止しないよう、`Frontend CI`、`Repository hygiene`、`Repo Launch Doctor`を`workflow_dispatch`で対象ブランチへ実行してから自動マージする。PRの`pull_request`イベント待ちは使わない（GitHub側の承認待ち`action_required`になり得るため）。
 - YouTubeでWhisperの内容を確定できない区間は `headline` 欠損のまま項目を残し、公開UIでは「コメントが集中した場面」と表示する。統計的な `reason` やチャット本文そのものは見出しとして表示しない。

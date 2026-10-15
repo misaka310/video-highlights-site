@@ -58,6 +58,61 @@ def iter_keys(value):
 
 
 class CoreDataContractTests(unittest.TestCase):
+    def test_permanently_excluded_vod_is_blocked_from_cache_backfill_and_public_outputs(self):
+        now = uv.datetime(2026, 10, 15, tzinfo=uv.JST_TIMEZONE)
+        excluded = {
+            "provider": "youtube",
+            "vod_id": "5VzXYJdQwMY",
+            "vod_url": "https://www.youtube.com/watch?v=5VzXYJdQwMY",
+            "title": "excluded",
+            "published_at": "2026-10-01T00:00:00+00:00",
+            "items": [],
+        }
+        allowed = {**excluded, "vod_id": "allowed-id", "title": "allowed"}
+        self.assertEqual([], uv.select_backfill_videos([excluded], now, 120))
+        self.assertEqual(["allowed-id"], [video["vod_id"] for video in vs.filter_youtube_videos([excluded, allowed])])
+        backfill_candidates = [
+            {**excluded, "vod_id": "5VzXYJdQwMY"},
+            {**excluded, "vod_id": "next-allowed", "published_at": "2026-09-30T00:00:00+00:00"},
+        ]
+        self.assertEqual(
+            ["next-allowed"],
+            [video["vod_id"] for video in uv.select_backfill_videos(backfill_candidates, now, 120)],
+        )
+
+        cache_path = uv.CACHE_PATH
+        output_path = uv.OUT_PATH
+        index_path = uv.VOD_INDEX_PATH
+        details_dir = uv.VOD_DETAILS_DIR
+        data_dir = uv.DATA_DIR
+        thumbnails_dir = vs.SEGMENT_THUMBNAILS_DIR
+        try:
+            with tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                uv.CACHE_PATH = root / "processed_vods.json"
+                uv.OUT_PATH = root / "vods.json"
+                uv.VOD_INDEX_PATH = root / "vod_index.json"
+                uv.VOD_DETAILS_DIR = root / "vods"
+                uv.DATA_DIR = root
+                vs.SEGMENT_THUMBNAILS_DIR = root / "segment-thumbnails"
+                uv.write_processed_cache([excluded, allowed], now)
+                cached = json.loads(uv.CACHE_PATH.read_text(encoding="utf-8"))
+                self.assertEqual(["allowed-id"], [video["vod_id"] for video in cached["videos"]])
+
+                uv.write_public_data([excluded, allowed], now)
+                public = json.loads(uv.OUT_PATH.read_text(encoding="utf-8"))
+                index = json.loads(uv.VOD_INDEX_PATH.read_text(encoding="utf-8"))
+                self.assertEqual(["allowed-id"], [video["vod_id"] for video in public["videos"]])
+                self.assertEqual(["allowed-id"], [video["vod_id"] for video in index["videos"]])
+                self.assertFalse((uv.VOD_DETAILS_DIR / "5VzXYJdQwMY.json").exists())
+        finally:
+            uv.CACHE_PATH = cache_path
+            uv.OUT_PATH = output_path
+            uv.VOD_INDEX_PATH = index_path
+            uv.VOD_DETAILS_DIR = details_dir
+            uv.DATA_DIR = data_dir
+            vs.SEGMENT_THUMBNAILS_DIR = thumbnails_dir
+
     def test_public_feed_keeps_five_latest_videos(self):
         now = uv.datetime(2026, 9, 20, tzinfo=uv.JST_TIMEZONE)
         videos = [
@@ -113,6 +168,14 @@ class CoreDataContractTests(unittest.TestCase):
         public = json.loads((ROOT / "data" / "vods.json").read_text(encoding="utf-8-sig"))
         index = json.loads((ROOT / "data" / "vod_index.json").read_text(encoding="utf-8-sig"))
 
+        all_ids = [
+            video["vod_id"]
+            for payload in (processed, public, index)
+            for video in payload.get("videos", [])
+        ]
+        self.assertNotIn("5VzXYJdQwMY", all_ids)
+        self.assertFalse((ROOT / "data" / "captions" / "5VzXYJdQwMY.json").exists())
+        self.assertFalse((ROOT / "data" / "vods" / "5VzXYJdQwMY.json").exists())
         for video in processed.get("videos", []):
             self.assertTrue(set(video) <= VIDEO_FIELDS | {"provider", "analysis_version", "analyzed_at"})
             for item in video.get("items", []):
