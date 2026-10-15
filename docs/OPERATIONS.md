@@ -86,6 +86,7 @@ python scripts/update_vods.py --youtube-url 'https://www.youtube.com/watch?v=WGT
 - Oracleのjournalには、ジョブ開始、配信一覧取得の開始・件数、配信ごとのチャット・字幕・見どころ・素材切り出し、bundle送信、GitHub dispatchの進捗を`progress event=...`形式で記録する。動画IDと件数、字幕の有無、安全なreason codeだけを出し、タイトル、チャット本文、字幕本文、URLは出さない。失敗時は従来どおりcategory・stage・reason codeを記録し、`-ProbeOnly`の診断では許可した進捗・失敗・通知結果だけを表示する。
 - Oracleジョブはyt-dlpとffmpegを専用のprocess groupで起動し、主プロセス終了後に残った同groupの子プロセスを停止してから次の処理へ進む。コマンドがtimeoutした場合も同groupを停止してから失敗・再試行を扱う。
 - 複数件のバッチ処理では、1件の失敗を隔離して残りを1つのbundleへ渡す。全件失敗のときだけ失敗終了する。失敗した配信は未処理のまま残り、翌日のtimer実行で再試行される。
+- yt-dlpがメンバー限定コンテンツを返した配信（`reason=youtube_membership_required`）は、productionアカウントに必要なチャンネルメンバー権限がなく何度再試行しても取得できないため、失敗として扱わずstateの`excluded_video_ids`へ永続除外する。除外した配信は以降の定期選択候補に入らず、failure_recordsにも残さない。除外recordはvideo ID・理由コード・時刻だけを保存し、60日保持・最大500件で切り詰める。手動の`--video-url`指定でメンバー限定配信を取得した場合も、その試行の失敗通知を出したうえで以後の自動選択から除外する。選択候補がすべて除外だった日は、bundle送出もGitHub dispatchも行わず正常終了する。
 
 ### Oracle → Actions 一時素材
 
@@ -130,7 +131,7 @@ workflow badgeやブランチ更新だけで成功判定しない。対象runを
 
 ## Oracle失敗ログの読み方
 
-Oracleの失敗はcategoryに加えてstageとreasonをjournalへ出し、動画単位のfailure_recordsにも同じ理由コードを保存する。理由コードは失敗箇所ごとに必須で、例外メッセージ、チャット本文、投稿者名、Cookie、PAR URLはfailure_recordsへ保存しない。yt-dlpがメンバー限定の制限を返した場合は `category=youtube_access_failure` と `reason=youtube_membership_required` を記録する。この理由は対象動画に必要なチャンネルメンバー権限がOracleの認証アカウントにないことを示し、公開サイトへの掲載対象ではない。
+Oracleの失敗はcategoryに加えてstageとreasonをjournalへ出し、動画単位のfailure_recordsにも同じ理由コードを保存する。理由コードは失敗箇所ごとに必須で、例外メッセージ、チャット本文、投稿者名、Cookie、PAR URLはfailure_recordsへ保存しない。yt-dlpがメンバー限定の制限を返した場合は `category=youtube_access_failure` と `reason=youtube_membership_required` を記録する。この理由は対象動画に必要なチャンネルメンバー権限がOracleの認証アカウントにないことを示し、公開サイトへの掲載対象ではない。この理由の配信は`excluded_video_ids`へ永続除外され、以降の選択にも失敗通知の対象にもならない。除外された配信が後日公開可能になった場合は、stateの除外recordを削除すれば次の実行で再選択される。
 
 live_chatでは、artifact_missing（ファイル未生成）、artifact_empty（0行）、jsonl_invalid（JSONとして読めない）、no_offsets（JSONは読めたが対応する時刻情報がない）、artifact_unreadable（文字コードまたはファイル読込エラー）を区別する。journalには行数・JSON行数・不正JSON行数・時刻情報のある行数だけを出す。
 

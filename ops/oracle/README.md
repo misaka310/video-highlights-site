@@ -108,7 +108,13 @@ eligible as newer archives are published. An archive whose Oracle acquisition
 or material preparation fails is not marked processed and is retried on a later
 run. Published IDs are excluded from full chat/highlight processing, while the
 separate caption-only retry path may update a missing `data/captions/<id>.json`
-without reprocessing a published VOD. A fixed
+without reprocessing a published VOD. Members-only archives are the one
+permanent exception: once yt-dlp reports `youtube_membership_required`, the ID
+is recorded in a bounded `excluded_video_ids` state list (video ID, reason code,
+and timestamp only) and is never selected again, because the production account
+can never obtain the required channel membership. An excluded archive produces
+no failure record and no daily failure notification; deleting its exclusion
+record makes it eligible again on the next run. A fixed
 `YOUTUBE_ORACLE_VIDEO_URL` remains supported as a one-video manual fallback
 when streams discovery is unset.
 That direct-video path also checks the published `data/vod_index.json` IDs
@@ -148,7 +154,7 @@ empty artifact remains a hard failure.
 
 ## Reading Oracle acquisition diagnostics
 
-Each video failure reports category, stage, and a specific reason code in the journal and bounded state record. The live-chat parser distinguishes a missing artifact, an empty file, invalid JSONL, valid JSON without supported offsets, and an unreadable artifact. Its journal summary contains counts only; it never prints chat text or usernames. Batch preparation reports selected, prepared, and skipped archive counts plus caption-retry outcomes, so a successful partial batch does not hide skipped videos.
+Each video failure reports category, stage, and a specific reason code in the journal and bounded state record. The live-chat parser distinguishes a missing artifact, an empty file, invalid JSONL, valid JSON without supported offsets, and an unreadable artifact. Its journal summary contains counts only; it never prints chat text or usernames. Batch preparation reports selected, prepared, skipped, and excluded archive counts plus caption-retry outcomes, so a successful partial batch does not hide skipped videos. A members-only archive is logged as `exclusion video_id=... reason=youtube_membership_required result=excluded_from_future_runs` and is counted under `excluded=` in the batch summary instead of `skipped=`.
 
 ## Refreshing YouTube authentication
 
