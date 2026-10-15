@@ -1265,7 +1265,244 @@ class OracleYoutubeJobTests(unittest.TestCase):
         self.assertEqual(state["failure_records"][0]["video_id"], "2a_ATYeOiAQ")
         self.assertEqual(state["failure_records"][0]["category"], "live_chat_zero")
         self.assertEqual(state["failure_records"][0]["reason_code"], "live_chat_no_offsets")
-        self.assertIn("batch preparation summary: selected=3 prepared=2 skipped=1", output.getvalue())
+        self.assertIn("batch preparation summary: selected=3 prepared=2 skipped=1 excluded=0", output.getvalue())
+
+    def test_batch_excludes_members_only_archive_instead_of_retrying_it(self):
+        def fake_prepare(video_url, _work_dir, *_args, **_kwargs):
+            video_id = oracle_youtube_job.parse_youtube_video_id(video_url)
+            if video_id == "0QhUIjofS3s":
+                raise oracle_youtube_job.OracleJobFailure(
+                    "youtube_access_failure",
+                    "members-only content",
+                    reason_code="youtube_membership_required",
+                )
+            return {
+                "video_id": video_id,
+                "manifest": {"vod_id": video_id},
+                "media_files": {},
+                "captions_file": None,
+                "chat_total": 1,
+                "highlights": 1,
+                "media_bytes": 0,
+            }
+
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookies_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookies_path.write_text("", encoding="utf-8")
+            env = {
+                "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
+                "YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL": "https://par.example/upload",
+                "YOUTUBE_ORACLE_WORK_ROOT": str(raw_dir),
+                "YOUTUBE_ORACLE_STATE_PATH": str(Path(raw_dir) / "state.json"),
+            }
+            output = StringIO()
+            with patch.dict(os.environ, env), patch.object(
+                oracle_youtube_job, "_prepare_material", side_effect=fake_prepare
+            ), patch.object(
+                oracle_youtube_job, "create_material_batch_bundle"
+            ) as bundle, patch.object(
+                oracle_youtube_job, "upload_bundle_to_url"
+            ), patch.object(
+                oracle_youtube_job, "_dispatch_github"
+            ) as dispatch, redirect_stdout(output):
+                results = oracle_youtube_job.run_batch(
+                    [
+                        "https://www.youtube.com/watch?v=0QhUIjofS3s",
+                        "https://www.youtube.com/watch?v=aTCWAb8wRd8",
+                    ]
+                )
+            state = json.loads(Path(env["YOUTUBE_ORACLE_STATE_PATH"]).read_text(encoding="utf-8"))
+
+        self.assertEqual([item["video_id"] for item in results], ["aTCWAb8wRd8"])
+        self.assertEqual(dispatch.call_args.args[0], ["aTCWAb8wRd8"])
+        bundle.assert_called_once()
+        self.assertEqual(state.get("failure_records"), None)
+        self.assertEqual(len(state["excluded_video_ids"]), 1)
+        excluded_record = state["excluded_video_ids"][0]
+        self.assertEqual(excluded_record["video_id"], "0QhUIjofS3s")
+        self.assertEqual(excluded_record["reason_code"], "youtube_membership_required")
+        self.assertTrue(excluded_record["excluded_at"].endswith("Z"))
+        self.assertIn("batch preparation summary: selected=2 prepared=1 skipped=0 excluded=1", output.getvalue())
+        self.assertIn("excluded video_id=0QhUIjofS3s category=youtube_access_failure", output.getvalue())
+
+    def test_excluded_archive_is_not_selected_on_the_next_run(self):
+        now = dt.datetime(2026, 10, 15, tzinfo=dt.timezone.utc)
+        records = [
+            {"id": "0QhUIjofS3s", "upload_date": "20261014"},
+            {"id": "aTCWAb8wRd8", "upload_date": "20261013"},
+        ]
+        state = {
+            "processed_video_ids": [],
+            "excluded_video_ids": [
+                {
+                    "video_id": "0QhUIjofS3s",
+                    "excluded_at": "2026-10-14T21:07:00Z",
+                    "reason_code": "youtube_membership_required",
+                }
+            ],
+        }
+
+        selected = oracle_youtube_job._select_unpublished_stream_urls(
+            records,
+            published_ids=set(),
+            excluded_ids=oracle_youtube_job._excluded_video_ids(state),
+            limit=5,
+            now=now,
+        )
+
+        self.assertEqual(selected, ["https://www.youtube.com/watch?v=aTCWAb8wRd8"])
+
+    def test_batch_succeeds_when_every_selected_archive_is_members_only(self):
+        def fake_prepare(video_url, _work_dir, *_args, **_kwargs):
+            raise oracle_youtube_job.OracleJobFailure(
+                "youtube_access_failure",
+                "members-only content",
+                reason_code="youtube_membership_required",
+            )
+
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookies_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookies_path.write_text("", encoding="utf-8")
+            env = {
+                "YOUTUBE_ORACLE_COOKIES_PATH": str(cookies_path),
+                "YOUTUBE_ORACLE_BUNDLE_UPLOAD_URL": "https://par.example/upload",
+                "YOUTUBE_ORACLE_WORK_ROOT": str(raw_dir),
+                "YOUTUBE_ORACLE_STATE_PATH": str(Path(raw_dir) / "state.json"),
+            }
+            with patch.dict(os.environ, env), patch.object(
+                oracle_youtube_job, "_prepare_material", side_effect=fake_prepare
+            ), patch.object(
+                oracle_youtube_job, "create_material_batch_bundle"
+            ) as bundle, patch.object(
+                oracle_youtube_job, "upload_bundle_to_url"
+            ) as upload, patch.object(
+                oracle_youtube_job, "_dispatch_github"
+            ) as dispatch:
+                results = oracle_youtube_job.run_batch(["https://www.youtube.com/watch?v=0QhUIjofS3s"])
+            state = json.loads(Path(env["YOUTUBE_ORACLE_STATE_PATH"]).read_text(encoding="utf-8"))
+
+        self.assertEqual(results, [])
+        bundle.assert_not_called()
+        upload.assert_not_called()
+        dispatch.assert_not_called()
+        self.assertNotIn("failure_records", state)
+        self.assertEqual(len(state["excluded_video_ids"]), 1)
+
+    def test_main_does_not_select_excluded_members_only_archive(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            cookie_path = Path(raw_dir) / "youtube-cookies.txt"
+            cookie_path.write_text("", encoding="utf-8")
+            records = [
+                {"id": "0QhUIjofS3s", "upload_date": "20261014"},
+                {"id": "aTCWAb8wRd8", "upload_date": "20261013"},
+                {"id": "930HUhvRKHc", "upload_date": "20261012"},
+            ]
+            state = {
+                "processed_video_ids": [],
+                "excluded_video_ids": [
+                    {
+                        "video_id": "0QhUIjofS3s",
+                        "excluded_at": "2026-10-14T21:07:00Z",
+                        "reason_code": "youtube_membership_required",
+                    }
+                ],
+            }
+            with patch.dict(
+                os.environ,
+                {
+                    "YOUTUBE_ORACLE_STREAMS_URL": "https://www.youtube.com/@dotitube/streams",
+                    "YOUTUBE_ORACLE_COOKIES_PATH": str(cookie_path),
+                },
+                clear=True,
+            ), patch.object(sys, "argv", ["oracle_youtube_job"]), patch.object(
+                oracle_youtube_job,
+                "_utc_now",
+                return_value=dt.datetime(2026, 10, 15, tzinfo=dt.timezone.utc),
+            ), patch.object(
+                oracle_youtube_job, "_resolve_stream_archive_records", return_value=records
+            ), patch.object(
+                oracle_youtube_job, "_read_published_video_ids", return_value=set()
+            ), patch.object(
+                oracle_youtube_job, "_read_state", return_value=state
+            ), patch.object(
+                oracle_youtube_job, "_write_state"
+            ), patch.object(
+                oracle_youtube_job, "run_batch", return_value=[]
+            ) as run_batch, patch.object(
+                oracle_youtube_job, "_notify"
+            ):
+                exit_code = oracle_youtube_job.main()
+
+        self.assertEqual(exit_code, 0)
+        run_batch.assert_called_once_with(
+            [
+                "https://www.youtube.com/watch?v=aTCWAb8wRd8",
+                "https://www.youtube.com/watch?v=930HUhvRKHc",
+            ]
+        )
+
+    def test_single_run_marks_members_only_failure_excluded(self):
+        with tempfile.TemporaryDirectory() as raw_dir:
+            state_path = Path(raw_dir) / "state.json"
+            state_path.write_text("{}", encoding="utf-8")
+            env = {"YOUTUBE_ORACLE_STATE_PATH": str(state_path)}
+            with patch.dict(os.environ, env), patch.object(
+                oracle_youtube_job,
+                "_run_one",
+                side_effect=oracle_youtube_job.OracleJobFailure(
+                    "youtube_access_failure",
+                    "members-only content",
+                    reason_code="youtube_membership_required",
+                ),
+            ):
+                with self.assertRaises(oracle_youtube_job.OracleJobFailure):
+                    oracle_youtube_job.run("https://www.youtube.com/watch?v=0QhUIjofS3s")
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            [record["video_id"] for record in state["excluded_video_ids"]],
+            ["0QhUIjofS3s"],
+        )
+        self.assertEqual(state["excluded_video_ids"][0]["reason_code"], "youtube_membership_required")
+
+    def test_excluded_records_are_bounded_and_pruned_after_retention(self):
+        now = dt.datetime(2026, 10, 15, tzinfo=dt.timezone.utc)
+
+        def record_at(video_id: str, when: dt.datetime) -> dict[str, str]:
+            return {
+                "video_id": video_id,
+                "excluded_at": when.isoformat(timespec="seconds").replace("+00:00", "Z"),
+                "reason_code": "youtube_membership_required",
+            }
+
+        with tempfile.TemporaryDirectory() as raw_dir:
+            state_path = Path(raw_dir) / "state.json"
+            recent_entries = [
+                record_at(f"recent{n:05d}", now - dt.timedelta(hours=1))
+                for n in range(oracle_youtube_job.MAX_EXCLUDED_RECORDS)
+            ]
+            stale_entries = [
+                record_at(f"stale{n:05d}", now - dt.timedelta(days=70))
+                for n in range(3)
+            ]
+            state_path.write_text(
+                json.dumps({"excluded_video_ids": recent_entries + stale_entries}),
+                encoding="utf-8",
+            )
+            env = {"YOUTUBE_ORACLE_STATE_PATH": str(state_path)}
+            with patch.dict(os.environ, env):
+                oracle_youtube_job._mark_video_excluded(
+                    "0QhUIjofS3s",
+                    oracle_youtube_job.MEMBERSHIP_ONLY_REASON_CODE,
+                    now=now,
+                )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        retained = state["excluded_video_ids"]
+        self.assertEqual(len(retained), oracle_youtube_job.MAX_EXCLUDED_RECORDS)
+        self.assertEqual(retained[-1]["video_id"], "0QhUIjofS3s")
+        self.assertTrue(all(not record["video_id"].startswith("stale") for record in retained))
+        self.assertNotIn("recent00000", {record["video_id"] for record in retained})
 
     def test_batch_preflight_failure_is_retained_for_every_selected_video(self):
         video_urls = [
