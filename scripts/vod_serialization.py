@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+from public_vod_exclusions import filter_excluded_public_vods, is_public_vod_excluded
 from vod_highlights import (
     DetectConfig,
     SEGMENT_THUMBNAILS_DIR,
@@ -70,7 +72,7 @@ def is_youtube_video(video: Mapping[str, Any]) -> bool:
 def filter_youtube_videos(videos: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Exclude legacy Twitch cache entries from YouTube public output."""
 
-    return [video for video in videos if is_youtube_video(video)]
+    return filter_excluded_public_vods(video for video in videos if is_youtube_video(video))
 
 
 def normalize_tag_labels(tags: Iterable[Any]) -> list[str]:
@@ -107,6 +109,13 @@ def normalize_chat_total(value: Any) -> int | None:
     return chat_total
 
 
+def normalize_comments_per_hour(value: Any) -> float | None:
+    comments_per_hour = parse_non_negative_float(value)
+    if comments_per_hour is None:
+        return None
+    return round(comments_per_hour, 3)
+
+
 def parse_non_negative_float(value: Any) -> float | None:
     try:
         parsed = float(value)
@@ -117,11 +126,85 @@ def parse_non_negative_float(value: Any) -> float | None:
     return parsed
 
 
-def normalize_comments_per_hour(value: Any) -> float | None:
-    comments_per_hour = parse_non_negative_float(value)
-    if comments_per_hour is None:
+def normalize_cached_video(
+    video: Mapping[str, Any], *, analysis_version: str
+) -> dict[str, Any] | None:
+    vod_id = str(video.get("vod_id") or video.get("id") or "").strip()
+    if not vod_id:
         return None
-    return round(comments_per_hour, 3)
+    items = video.get("items") or video.get("segments") or []
+    normalized = {
+        "vod_id": vod_id,
+        "vod_url": video.get("vod_url") or video.get("url") or f"https://www.twitch.tv/videos/{vod_id}",
+        "title": video.get("title", ""),
+        "published_at": video.get("published_at", ""),
+        "thumbnail_url": video.get("thumbnail_url", ""),
+        "duration_sec": video.get("duration_sec"),
+        "count": int(video.get("count") or len(items)),
+        "chat_total": normalize_chat_total(video.get("chat_total")),
+        "comments_per_hour": normalize_comments_per_hour(video.get("comments_per_hour")),
+        "items": items,
+        "activity_map": normalize_activity_map(video.get("activity_map")),
+        "analysis_version": video.get("analysis_version", analysis_version),
+        "analyzed_at": video.get("analyzed_at") or video.get("updated_at") or "",
+    }
+    provider = str(video.get("provider") or "").strip().lower()
+    if provider and provider != "twitch":
+        normalized["provider"] = provider
+    return normalized
+
+
+def read_processed_cache(
+    paths: Iterable[Path], *, channel: str, analysis_version: str
+) -> dict[str, Any]:
+    for path in paths:
+        if not path.exists():
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+        except json.JSONDecodeError:
+            continue
+        videos = payload.get("videos") or payload.get("vods") or []
+        normalized = [
+            normalize_cached_video(video, analysis_version=analysis_version)
+            for video in videos
+        ]
+        return {
+            "channel": payload.get("channel", channel),
+            "analysis_version": payload.get("analysis_version", analysis_version),
+            "videos": filter_excluded_public_vods(
+                video for video in normalized if video
+            ),
+        }
+    return {"channel": channel, "analysis_version": analysis_version, "videos": []}
+
+
+def write_processed_cache(
+    path: Path,
+    videos: Iterable[dict[str, Any]],
+    now: datetime,
+    *,
+    channel: str,
+    channel_url: str,
+    analysis_version: str,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    retained_videos = filter_excluded_public_vods(
+        video for video in videos if str(video.get("vod_id") or "").strip()
+    )
+    ordered = sorted(
+        (sanitize_video_for_storage(video) for video in retained_videos),
+        key=lambda item: item.get("published_at", ""),
+        reverse=True,
+    )
+    payload = {
+        "updated_at": now.isoformat(timespec="seconds"),
+        "channel": channel,
+        "channel_url": channel_url,
+        "analysis_version": analysis_version,
+        "videos": ordered,
+    }
+    write_json_payload(path, payload)
 
 
 def resolve_comments_per_hour_duration_sec(
@@ -386,7 +469,8 @@ def is_public_vod_within_retention(video: dict[str, Any], now: datetime) -> bool
 
 def filter_public_videos_within_retention(videos: Iterable[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
     ordered_videos = order_public_videos(videos)
-    return [video for video in ordered_videos if is_public_vod_within_retention(video, now)]
+    retained = [video for video in ordered_videos if is_public_vod_within_retention(video, now)]
+    return filter_excluded_public_vods(retained)
 
 
 def collect_public_vod_id_set(videos: Iterable[dict[str, Any]]) -> set[str]:

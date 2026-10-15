@@ -74,6 +74,7 @@ from vod_highlights import (  # noqa: F401
     z_scores,
 )
 
+from public_vod_exclusions import filter_excluded_public_vods, is_public_vod_excluded
 from vod_serialization import (  # noqa: F401
     TAG_LABEL_ALIASES,
     assert_public_screenshot_urls_are_resolvable,
@@ -87,12 +88,14 @@ from vod_serialization import (  # noqa: F401
     has_segment_screenshot_file,
     infer_vod_id_from_segment_id,
     is_public_vod_within_retention,
+    normalize_cached_video as _normalize_cached_video,
     normalize_chat_total,
     normalize_comments_per_hour,
     normalize_tag_labels,
     order_public_videos,
     parse_non_negative_float,
     parse_timezone_aware_iso_datetime,
+    read_processed_cache,
     refresh_cached_video_metadata,
     render_compact_numeric_array,
     render_json_value,
@@ -105,6 +108,7 @@ from vod_serialization import (  # noqa: F401
     to_public_video_entry,
     to_public_video_index_entry,
     write_json_payload,
+    write_processed_cache as serialize_processed_cache,
 )
 
 __all__ = (
@@ -177,12 +181,14 @@ __all__ = (
     'has_segment_screenshot_file',
     'infer_vod_id_from_segment_id',
     'is_public_vod_within_retention',
+    'normalize_cached_video',
     'normalize_chat_total',
     'normalize_comments_per_hour',
     'normalize_tag_labels',
     'order_public_videos',
     'parse_non_negative_float',
     'parse_timezone_aware_iso_datetime',
+    'read_processed_cache',
     'refresh_cached_video_metadata',
     'render_compact_numeric_array',
     'render_json_value',
@@ -195,6 +201,7 @@ __all__ = (
     'to_public_video_entry',
     'to_public_video_index_entry',
     'write_json_payload',
+    'serialize_processed_cache',
 )
 
 ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
@@ -374,7 +381,9 @@ def run_normal_mode(now: datetime) -> None:
             videos = [video for video in videos if str(video.get("vod_id") or "").strip() != skipped_latest_vod_id]
 
     cache_payload = load_processed_cache()
-    cached_videos = [item for item in cache_payload.get("videos", []) if item.get("vod_id")]
+    cached_videos = filter_excluded_public_vods(
+        [item for item in cache_payload.get("videos", []) if item.get("vod_id")]
+    )
     cached_by_vod_id = {
         item["vod_id"]: item
         for item in cached_videos
@@ -413,7 +422,9 @@ def run_normal_mode(now: datetime) -> None:
 
 def run_backfill_mode(now: datetime, args: CliArgs) -> None:
     cache_payload = load_processed_cache()
-    cached_videos = [item for item in cache_payload.get("videos", []) if item.get("vod_id")]
+    cached_videos = filter_excluded_public_vods(
+        [item for item in cache_payload.get("videos", []) if item.get("vod_id")]
+    )
     cached_by_vod_id = {item["vod_id"]: item for item in cached_videos}
 
     source_limit = determine_backfill_source_limit(args.backfill_days, args.backfill_limit)
@@ -483,7 +494,7 @@ def select_backfill_videos(videos: list[dict[str, str]], now: datetime, backfill
     scoped: list[dict[str, str]] = []
     for video in videos:
         published_at = parse_timezone_aware_iso_datetime(video.get("published_at"))
-        if not published_at:
+        if not published_at or is_public_vod_excluded(video):
             continue
         if published_at < cutoff:
             break
@@ -645,47 +656,13 @@ def resolve_latest_vod_id(videos: Iterable[dict[str, Any]]) -> str:
 
 
 def load_processed_cache() -> dict[str, Any]:
-    for path in (CACHE_PATH, OUT_PATH):
-        if not path.exists():
-            continue
-        try:
-            payload = json.loads(path.read_text(encoding=JSON_READ_ENCODING))
-        except json.JSONDecodeError:
-            continue
-        videos = payload.get("videos") or payload.get("vods") or []
-        normalized = [normalize_cached_video(video) for video in videos]
-        return {
-            "channel": payload.get("channel", CHANNEL),
-            "analysis_version": payload.get("analysis_version", ANALYSIS_VERSION),
-            "videos": [video for video in normalized if video],
-        }
-    return {"channel": CHANNEL, "analysis_version": ANALYSIS_VERSION, "videos": []}
+    return read_processed_cache(
+        (CACHE_PATH, OUT_PATH), channel=CHANNEL, analysis_version=ANALYSIS_VERSION
+    )
 
 
 def normalize_cached_video(video: dict[str, Any]) -> dict[str, Any] | None:
-    vod_id = str(video.get("vod_id") or video.get("id") or "").strip()
-    if not vod_id:
-        return None
-    items = video.get("items") or video.get("segments") or []
-    normalized = {
-        "vod_id": vod_id,
-        "vod_url": video.get("vod_url") or video.get("url") or f"https://www.twitch.tv/videos/{vod_id}",
-        "title": video.get("title", ""),
-        "published_at": video.get("published_at", ""),
-        "thumbnail_url": video.get("thumbnail_url", ""),
-        "duration_sec": video.get("duration_sec"),
-        "count": int(video.get("count") or len(items)),
-        "chat_total": normalize_chat_total(video.get("chat_total")),
-        "comments_per_hour": normalize_comments_per_hour(video.get("comments_per_hour")),
-        "items": items,
-        "activity_map": normalize_activity_map(video.get("activity_map")),
-        "analysis_version": video.get("analysis_version", ANALYSIS_VERSION),
-        "analyzed_at": video.get("analyzed_at") or video.get("updated_at") or "",
-    }
-    provider = str(video.get("provider") or "").strip().lower()
-    if provider and provider != "twitch":
-        normalized["provider"] = provider
-    return normalized
+    return _normalize_cached_video(video, analysis_version=ANALYSIS_VERSION)
 
 
 def resolve_video_entry(
@@ -830,20 +807,14 @@ def merge_video_metadata(latest: dict[str, str], cached: dict[str, Any]) -> dict
 
 
 def write_processed_cache(videos: Iterable[dict[str, Any]], now: datetime) -> None:
-    CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    ordered = sorted(
-        [sanitize_video_for_storage(video) for video in videos if video.get("vod_id")],
-        key=lambda item: item.get("published_at", ""),
-        reverse=True,
+    serialize_processed_cache(
+        CACHE_PATH,
+        videos,
+        now,
+        channel=CHANNEL,
+        channel_url=CHANNEL_URL,
+        analysis_version=ANALYSIS_VERSION,
     )
-    payload = {
-        "updated_at": now.isoformat(timespec="seconds"),
-        "channel": CHANNEL,
-        "channel_url": CHANNEL_URL,
-        "analysis_version": ANALYSIS_VERSION,
-        "videos": ordered,
-    }
-    write_json_payload(CACHE_PATH, payload)
 
 
 def build_public_payload(videos: Iterable[dict[str, Any]], now: datetime) -> dict[str, Any]:
