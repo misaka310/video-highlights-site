@@ -1,7 +1,33 @@
 {
-  "updated_at": "2026-10-16T08:12:00+09:00",
-  "next_update_at": "2026-10-16T00:00:00+00:00",
+  "updated_at": "2026-10-17T07:15:00+09:00",
+  "next_update_at": "2026-10-17T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "WozkCqdJ45M",
+      "vod_url": "https://www.youtube.com/watch?v=WozkCqdJ45M",
+      "title": "使用数最下位苦手キャラでカンスト目指す！【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-16T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/WozkCqdJ45M/maxresdefault.jpg",
+      "duration_sec": 11065,
+      "count": 3,
+      "chat_total": 1022,
+      "comments_per_hour": 332.508,
+      "detail_path": "/data/vods/WozkCqdJ45M.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "34XdgvmXBxc",
+      "vod_url": "https://www.youtube.com/watch?v=34XdgvmXBxc",
+      "title": "寂しい夜の居場所を作ってくれてありがとうド深夜渡り【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-16T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/34XdgvmXBxc/maxresdefault.jpg",
+      "duration_sec": 21429,
+      "count": 3,
+      "chat_total": 1775,
+      "comments_per_hour": 298.194,
+      "detail_path": "/data/vods/34XdgvmXBxc.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "3qJvTukzhSQ",
       "vod_url": "https://www.youtube.com/watch?v=3qJvTukzhSQ",
