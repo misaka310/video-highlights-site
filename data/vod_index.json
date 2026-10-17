@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-17T07:15:00+09:00",
-  "next_update_at": "2026-10-17T00:00:00+00:00",
+  "updated_at": "2026-10-18T07:53:37+09:00",
+  "next_update_at": "2026-10-18T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "1yKzwfvq4uw",
+      "vod_url": "https://www.youtube.com/watch?v=1yKzwfvq4uw",
+      "title": "【SW解説求】ローグライクの対戦レースゲームで銀河一の走り屋となりナタリーポートマンに演じてもらう【スター・ウォーズ：ギャラクティック・レーサー】",
+      "published_at": "2026-10-17T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/1yKzwfvq4uw/maxresdefault.jpg",
+      "duration_sec": 14800,
+      "count": 3,
+      "chat_total": 1423,
+      "comments_per_hour": 346.135,
+      "detail_path": "/data/vods/1yKzwfvq4uw.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "WozkCqdJ45M",
       "vod_url": "https://www.youtube.com/watch?v=WozkCqdJ45M",
@@ -702,19 +715,6 @@
       "chat_total": 1506,
       "comments_per_hour": 410.168,
       "detail_path": "/data/vods/mZD_9m0T4M4.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "Q3Yv0juD0MQ",
-      "vod_url": "https://www.youtube.com/watch?v=Q3Yv0juD0MQ",
-      "title": "【本日DL開始！】私の読みだと新情報そろそろ出てしまうのでテスト前に妄想出し尽くす会【The Duskbloods/ダスクブラッド】",
-      "published_at": "2026-08-18T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/Q3Yv0juD0MQ/maxresdefault.jpg",
-      "duration_sec": 9335,
-      "count": 3,
-      "chat_total": 1326,
-      "comments_per_hour": 511.366,
-      "detail_path": "/data/vods/Q3Yv0juD0MQ.json",
       "provider": "youtube"
     }
   ]
