@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-18T07:53:37+09:00",
-  "next_update_at": "2026-10-18T00:00:00+00:00",
+  "updated_at": "2026-10-19T08:11:31+09:00",
+  "next_update_at": "2026-10-19T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "awKDkqUlc7Y",
+      "vod_url": "https://www.youtube.com/watch?v=awKDkqUlc7Y",
+      "title": "【カンストへ】それでも私は世界を愛することを諦めない、打倒暗黒面チャンネル【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-18T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/awKDkqUlc7Y/maxresdefault.jpg",
+      "duration_sec": 32099,
+      "count": 3,
+      "chat_total": 2885,
+      "comments_per_hour": 323.561,
+      "detail_path": "/data/vods/awKDkqUlc7Y.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "1yKzwfvq4uw",
       "vod_url": "https://www.youtube.com/watch?v=1yKzwfvq4uw",
@@ -702,19 +715,6 @@
       "chat_total": 1146,
       "comments_per_hour": 334.734,
       "detail_path": "/data/vods/_ntSaLv5LEs.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "mZD_9m0T4M4",
-      "vod_url": "https://www.youtube.com/watch?v=mZD_9m0T4M4",
-      "title": "【検証】カンストさん()本当にガチれば負けなかったのか？連勝チャレンジしてみる②【ナイトレイン/ELDEN RING NIGHTREIGN】",
-      "published_at": "2026-08-19T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/mZD_9m0T4M4/maxresdefault.jpg",
-      "duration_sec": 13218,
-      "count": 3,
-      "chat_total": 1506,
-      "comments_per_hour": 410.168,
-      "detail_path": "/data/vods/mZD_9m0T4M4.json",
       "provider": "youtube"
     }
   ]
