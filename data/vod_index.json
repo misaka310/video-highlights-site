@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-20T09:27:52+09:00",
+  "updated_at": "2026-10-21T07:36:27+09:00",
   "next_update_at": "2026-10-21T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "1_dvQK01Ui4",
+      "vod_url": "https://www.youtube.com/watch?v=1_dvQK01Ui4",
+      "title": "【選手権】公募したＴシャツモデルと待機画面アニメ用断末魔の優勝者を決めます！※一部賞品アリ【審査会場】",
+      "published_at": "2026-10-20T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/1_dvQK01Ui4/maxresdefault.jpg",
+      "duration_sec": 7727,
+      "count": 3,
+      "chat_total": 1252,
+      "comments_per_hour": 583.305,
+      "detail_path": "/data/vods/1_dvQK01Ui4.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "f2YEYGsk44s",
       "vod_url": "https://www.youtube.com/watch?v=f2YEYGsk44s",
