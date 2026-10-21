@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-21T07:36:27+09:00",
+  "updated_at": "2026-10-22T07:54:54+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -8705,7 +8705,7 @@
           "start_time": "00:19:10",
           "end_time": "00:21:00",
           "reason": "Chat activity spike around 0h19m10s (z-score=4.29).",
-          "headline": "笑いながら内部ログイン分離を議論",
+          "headline": "笑いと内部ログイン分離",
           "tags": [
             "ww",
             "えっ"
@@ -8722,7 +8722,7 @@
           "start_time": "01:07:20",
           "end_time": "01:08:10",
           "reason": "Chat activity spike around 1h7m20s (z-score=2.635).",
-          "headline": "浮いてるから深夜みたい",
+          "headline": "深夜のような雰囲気になる予感",
           "tags": [
             "ww"
           ],
@@ -8738,7 +8738,7 @@
           "start_time": "00:37:50",
           "end_time": "00:38:40",
           "reason": "Chat activity spike around 0h37m50s (z-score=2.635).",
-          "headline": "キングジを検索してみた",
+          "headline": "キングジ検索で何が判明",
           "tags": [
             "好プレー"
           ],
@@ -8767,7 +8767,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-21T07:36:27+09:00"
+      "analyzed_at": "2026-10-22T07:54:54+09:00"
     },
     {
       "vod_id": "ZRkL_2jJYuU",
@@ -8790,7 +8790,7 @@
           "start_time": "00:36:50",
           "end_time": "00:38:20",
           "reason": "Chat activity spike around 0h36m50s (z-score=3.869).",
-          "headline": "今日帰宅、フェーズ未訪問の謝罪",
+          "headline": "フェーズさんに行けず謝罪",
           "tags": [
             "ww",
             "好プレー"
@@ -8807,6 +8807,7 @@
           "start_time": "01:16:50",
           "end_time": "01:17:40",
           "reason": "Chat activity spike around 1h16m50s (z-score=3.869).",
+          "headline": "言われるレベルを信じろ",
           "tags": [
             "ww",
             "好プレー"
@@ -8823,7 +8824,7 @@
           "start_time": "01:01:30",
           "end_time": "01:02:20",
           "reason": "Chat activity spike around 1h1m30s (z-score=3.232).",
-          "headline": "音楽のすごいパションゲージオうん",
+          "headline": "パションゲージオうんがすごい",
           "tags": [
             "好プレー"
           ],
@@ -8852,7 +8853,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-21T07:36:27+09:00"
+      "analyzed_at": "2026-10-22T07:54:54+09:00"
     },
     {
       "vod_id": "2851339526",
@@ -9876,7 +9877,7 @@
           "start_time": "00:29:20",
           "end_time": "00:31:20",
           "reason": "Chat activity spike around 0h29m20s (z-score=3.99).",
-          "headline": "一度行ったラウンジの様子",
+          "headline": "高級ソファのラウンジ探訪",
           "tags": [
             "ww",
             "ホラー",
@@ -9894,7 +9895,7 @@
           "start_time": "01:01:20",
           "end_time": "01:02:10",
           "reason": "Chat activity spike around 1h1m20s (z-score=3.99).",
-          "headline": "エンディング話し合いなし",
+          "headline": "エンディングを何にするかの話し合い",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=3680s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_3680_3730.webp"
@@ -9908,7 +9909,7 @@
           "start_time": "00:10:50",
           "end_time": "00:11:40",
           "reason": "Chat activity spike around 0h10m50s (z-score=3.99).",
-          "headline": "おにぎりが300円前後になった",
+          "headline": "おにぎり価格が300円に上昇",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=650s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_650_700.webp"
@@ -9937,7 +9938,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-21T07:36:27+09:00"
+      "analyzed_at": "2026-10-22T07:54:54+09:00"
     },
     {
       "vod_id": "2845027398",
