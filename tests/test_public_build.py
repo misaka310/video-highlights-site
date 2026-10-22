@@ -28,6 +28,12 @@ class PublicBuildTests(unittest.TestCase):
         self.assertIn("npm ci && npm ci --prefix frontend && npm run build:public", render)
         self.assertIn("staticPublishPath: public", render)
 
+    def test_operations_document_the_render_build_command(self):
+        operations = (ROOT / "docs" / "OPERATIONS.md").read_text(encoding="utf-8")
+        self.assertIn("npm ci && npm ci --prefix frontend && npm run build:public", operations)
+        self.assertIn("Clear build cache", operations)
+        self.assertIn("frontend/node_modules", operations)
+
     def test_generated_output_has_dedicated_checks(self):
         self.assertTrue((ROOT / "scripts" / "check_public_build.py").is_file())
         self.assertTrue((ROOT / "scripts" / "check_public_reproducibility.py").is_file())

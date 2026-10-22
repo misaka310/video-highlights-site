@@ -41,6 +41,16 @@ npm run verify:live
 PR番号、run ID、コミットSHAをworkflowへ固定値として残さない。実行時に対象ブランチとhead SHAから解決し、マージ直前にもPR headが変わっていないことを確認する。
 PR作成、対象SHAの検証、head SHA確認、squash mergeは`.github/scripts/checked_pr_merge.py`を共通経路とする。通常のrelease PRは`pull_request` runを待ち、Actionsが作成する自動更新PR（`automation/update-vods`、`automation/youtube-material-*`）は承認待ちrunで停止しないよう、3つの必須workflowを`workflow_dispatch`で対象SHAへ明示実行する。
 
+## Render のビルド設定
+
+Render の静的サイトは `render.yaml` と同じビルドコマンドで動かす。サービス側の設定が上書きされていると、frontend の依存が入らないまま `public/` を作り、依存を追加したリリースだけがビルドで落ちる。
+
+- Build Command は `npm ci && npm ci --prefix frontend && npm run build:public` とする。
+- `frontend` 側の `npm ci` を省略しない。省略するとビルドキャッシュに残った古い `frontend/node_modules` が使われ、`tsc` が新しい依存を解決できず `Cannot find module ...` で失敗する。
+- ビルドログの最初の行が `added N packages` ではなく `up to date, audited 4 packages` の場合、root の `npm install` だけが実行されている。コマンドが `render.yaml` と食い違っているので設定を直す。
+- 依存を追加・更新したリリースでは、デプロイ前に Render の Clear build cache を実行してから Manual Deploy する。
+- `npm run build:public` は依存をインストールしない。ビルド中に依存を入れる変更は追加しない（`npm run setup` 済みの環境で動くことが前提）。
+
 ## 定期VOD更新
 
 YouTubeの本番取得経路は、`YOUTUBE_ORACLE_HOST`と`YOUTUBE_ORACLE_USER`で設定したOracle VMだけとする。OracleはYouTube live_chatの取得、YouTube公開字幕の任意取得、コメント時刻抽出、既存の10秒bucket/z-scoreによる見どころ決定、選択区間の音声・軽量映像の切り出しまでを担当する。Oracleがコメント本文を使って選んだ区間は後段処理の正本であり、GitHub Actionsはoffset-onlyデータから区間検出をやり直さない。GitHub ActionsはYouTubeへ直接アクセスせず、OCI Object Storageの一時PARオブジェクトを受け取ってOracle選択区間のWhisper、見出し、サムネイル、字幕JSON、検証、checked PR公開を担当する。Renderは`main`更新後の静的サイト公開を担当する。
