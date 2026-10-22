@@ -7,6 +7,7 @@ import type { PlaybackOptions, PlaybackRequest, PlaybackStatus } from "../player
 import {
   addPlayerListener,
   destroyPlayer,
+  safePause,
   safePlay,
   safeSeek,
   safeSetMuted,
@@ -22,6 +23,7 @@ const INTERACTIVE_SEEK_STABILIZE_MS = 2500;
 export type InteractivePlayerController = {
   requestPlayback: (vodId: string, startSec: number, options?: PlaybackOptions) => void;
   getCurrentTime: (options?: { preferPendingSeek?: boolean }) => number | null;
+  pause: () => void;
 };
 
 type UseInteractivePlayerOptions = {
@@ -87,6 +89,10 @@ export function useInteractivePlayer({
       }
     }
     return Number.isFinite(lastKnownPositionRef.current) ? lastKnownPositionRef.current : null;
+  };
+
+  const pause = () => {
+    safePause(playerRef.current);
   };
 
   const syncCurrentTime = () => {
@@ -445,5 +451,5 @@ export function useInteractivePlayer({
 
   useEffect(() => () => destroyInteractivePlayer(), []); // eslint-disable-line react-hooks/exhaustive-deps -- controller cleanup runs only on unmount
 
-  return { requestPlayback, getCurrentTime };
+  return { requestPlayback, getCurrentTime, pause };
 }

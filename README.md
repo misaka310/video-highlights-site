@@ -38,6 +38,13 @@ npm start
 
 `http://localhost:4174/` を開きます。
 
+制作動画（紹介動画）の本体をローカルで再生する場合は、動画を置いたディレクトリを `PUBLIC_MEDIA_DIR` に指定します。開発サーバーだけが `/media/*` を配信します。
+
+```powershell
+$env:PUBLIC_MEDIA_DIR = "C:\path\to\media"  # dotitao-intro.mp4 などを置く
+npm start
+```
+
 ## 入手・フィードバック・コントリビューション
 
 - ソースコードはこのGitHubリポジトリから取得できます。公開例を試すだけなら [dotitao moments](https://dotitao-moments.onrender.com/) を利用できます。
