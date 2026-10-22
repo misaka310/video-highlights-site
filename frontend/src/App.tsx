@@ -2,21 +2,35 @@ import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Empty, LayerCard } from "@cloudflare/kumo";
 import { ActivityMap } from "./components/activity-map.js";
 import { CaptionPanel } from "./components/caption-panel.js";
+import { ProducedVideosView } from "./components/produced-videos-view.js";
 import { SiteHeader } from "./components/site-header.js";
 import { VodRail } from "./components/vod-rail.js";
 import type { HighlightSegment } from "./domain/vod.js";
 import { useMediaQuery } from "./hooks/use-media-query.js";
+import { useProducedVideos } from "./hooks/use-produced-videos.js";
 import { useSiteMetadata } from "./hooks/use-site-metadata.js";
 import { useVodPage } from "./hooks/use-vod-page.js";
 import { createActivityGeometry, createActivityOverlay } from "./lib/activity-geometry.js";
 import { extractAnoneStatements, extractAnosaStatements, resolveCaptionWindow, type AnosaStatement, type CaptionData } from "./lib/captions.js";
 import { createVodSwitchPlaybackOptions } from "./player/playback-request.js";
+import { findProducedVideo } from "./lib/produced-videos.js";
 import { getVodProvider, pageUrl, parsePageSearch, resolveDurationSec } from "./lib/vod-data.js";
 import { TwitchPlayer, type TwitchPlayerHandle } from "./twitch-player";
 
+function parseViewSearch(search: string): { view: "highlights" | "videos"; videoId: string } {
+  const params = new URLSearchParams(search);
+  const videoId = params.get("video") || "";
+  const view = params.get("view") === "videos" || videoId ? "videos" : "highlights";
+  return { view, videoId };
+}
+
 export default function App() {
   const [page, setPageState] = useState(() => parsePageSearch(location.search));
+  const initialView = parseViewSearch(location.search);
   const { data, error } = useVodPage(page);
+  const { videos: producedVideos } = useProducedVideos();
+  const [view, setView] = useState<"highlights" | "videos">(initialView.view);
+  const [activeProducedVideoId, setActiveProducedVideoId] = useState(initialView.videoId);
   const playerRef = useRef<TwitchPlayerHandle>(null);
   const [activeVodId, setActiveVodId] = useState("");
   const [activeSegmentId, setActiveSegmentId] = useState("");
@@ -120,6 +134,54 @@ export default function App() {
     setPageState(safePage);
   }
 
+  function updateProducedVideoParam(videoId: string) {
+    const url = new URL(location.href);
+    if (videoId) url.searchParams.set("video", videoId);
+    else url.searchParams.delete("video");
+    history.replaceState({}, "", url.toString());
+  }
+
+  function showProducedVideos() {
+    if (!producedVideos.length) return;
+    const url = new URL(location.href);
+    url.searchParams.set("view", "videos");
+    url.searchParams.set("video", activeProducedVideoId || producedVideos[0].video_id);
+    history.replaceState({}, "", url.toString());
+    setActiveProducedVideoId(activeProducedVideoId || producedVideos[0].video_id);
+    setView("videos");
+    playerRef.current?.pause();
+  }
+
+  function showHighlights() {
+    const url = new URL(location.href);
+    url.searchParams.delete("view");
+    url.searchParams.delete("video");
+    history.replaceState({}, "", url.toString());
+    setView("highlights");
+  }
+
+  function selectProducedVideo(videoId: string) {
+    setActiveProducedVideoId(videoId);
+    updateProducedVideoParam(videoId);
+  }
+
+  const watchingVideos = view === "videos" && producedVideos.length > 0;
+  const activeProducedVideo = watchingVideos ? findProducedVideo(producedVideos, activeProducedVideoId) || producedVideos[0] : null;
+  const previousViewRef = useRef<"highlights" | "videos">(view);
+
+  useEffect(() => {
+    const previousView = previousViewRef.current;
+    previousViewRef.current = view;
+    if (previousView === view || view !== "highlights" || !activeVod) return;
+    // 一覧から戻るとVODプレイヤーは作り直されるため、直前のVODと位置を復元する。
+    playerRef.current?.requestPlayback(activeVod.vod_id, Number(activeSegment?.start_sec ?? positionSec) || 0, {
+      autoplay: false,
+      muted: true,
+      triggeredByUser: false,
+      provider: getVodProvider(activeVod),
+    });
+  }, [activeSegment?.start_sec, activeVod, positionSec, view]);
+
   function requestUserPlayback(vodId: string, startSec: number, provider = getVodProvider(activeVod)) {
     const safeStartSec = Math.max(0, Math.floor(Number(startSec) || 0));
     setPositionSec(safeStartSec);
@@ -194,52 +256,67 @@ export default function App() {
         updatedAt={data.updatedAt}
         nextUpdateAt={data.nextUpdateAt}
         feedbackUrl={data.siteConfig.site?.feedback_url || ""}
+        nav={
+          watchingVideos
+            ? { icon: "back", label: "配信の見どころ", onClick: showHighlights }
+            : producedVideos.length
+              ? { icon: "play", label: "紹介動画", count: producedVideos.length, onClick: showProducedVideos }
+              : undefined
+        }
       />
 
-      <main className="content-grid">
-        <section className="player-column" aria-label="再生エリア">
-          <LayerCard>
-            <LayerCard.Primary>
-              <div className="playback-surface">
-                <TwitchPlayer
-                  ref={playerRef}
-                  onPositionChange={setPositionSec}
-                  onStatusChange={(label) => setPlayerState(label)}
-                />
-                <div className={captions ? "playback-assist-panel" : "playback-assist-panel playback-assist-panel--map-only"}>
-                  <ActivityMap
-                    geometry={activityGeometry}
-                    overlay={activityOverlay}
-                    positionSec={positionSec}
-                    onSeek={seekByMap}
-                    onRewind={rewindTenSeconds}
-                  />
-                  {captions ? <CaptionPanel window={captionWindow} /> : null}
-                </div>
-              </div>
-            </LayerCard.Primary>
-          </LayerCard>
-        </section>
-
-        <VodRail
-          vods={data.vods}
-          activeVod={activeVod}
-          segments={segments}
-          activeSegmentId={activeSegment?.id || ""}
-          anosaStatements={anosaStatements}
-          anoneStatements={anoneStatements}
-          captionsAvailable={Boolean(captions)}
-          durationSec={durationSec}
-          playerState={playerState}
-          positionSec={positionSec}
-          page={page}
-          totalCount={data.totalCount}
-          onSelectVod={selectVod}
-          onSelectSegment={selectSegment}
-          onSelectPhrase={selectPhrase}
-          onSetPage={setPage}
+      {watchingVideos && activeProducedVideo ? (
+        <ProducedVideosView
+          videos={producedVideos}
+          activeVideo={activeProducedVideo}
+          onSelect={selectProducedVideo}
         />
-      </main>
+      ) : (
+        <main className="content-grid">
+          <section className="player-column" aria-label="再生エリア">
+            <LayerCard>
+              <LayerCard.Primary>
+                <div className="playback-surface">
+                  <TwitchPlayer
+                    ref={playerRef}
+                    onPositionChange={setPositionSec}
+                    onStatusChange={(label) => setPlayerState(label)}
+                  />
+                  <div className={captions ? "playback-assist-panel" : "playback-assist-panel playback-assist-panel--map-only"}>
+                    <ActivityMap
+                      geometry={activityGeometry}
+                      overlay={activityOverlay}
+                      positionSec={positionSec}
+                      onSeek={seekByMap}
+                      onRewind={rewindTenSeconds}
+                    />
+                    {captions ? <CaptionPanel window={captionWindow} /> : null}
+                  </div>
+                </div>
+              </LayerCard.Primary>
+            </LayerCard>
+          </section>
+
+          <VodRail
+            vods={data.vods}
+            activeVod={activeVod}
+            segments={segments}
+            activeSegmentId={activeSegment?.id || ""}
+            anosaStatements={anosaStatements}
+            anoneStatements={anoneStatements}
+            captionsAvailable={Boolean(captions)}
+            durationSec={durationSec}
+            playerState={playerState}
+            positionSec={positionSec}
+            page={page}
+            totalCount={data.totalCount}
+            onSelectVod={selectVod}
+            onSelectSegment={selectSegment}
+            onSelectPhrase={selectPhrase}
+            onSetPage={setPage}
+          />
+        </main>
+      )}
     </div>
   );
 }

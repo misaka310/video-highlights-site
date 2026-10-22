@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -158,6 +159,34 @@ def check_thumbnail_references() -> None:
                 fail(f"missing referenced thumbnail: {relative}")
 
 
+def check_produced_videos() -> None:
+    source = DATA / "produced_videos.json"
+    if not source.is_file():
+        return
+    published = PUBLIC / "data" / "produced_videos.json"
+    if not published.is_file():
+        fail("missing public/data/produced_videos.json")
+
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from export_produced_videos import build_public_payload
+
+    if read_json(published) != build_public_payload(read_json(source)):
+        fail("public/data/produced_videos.json was not filtered by export_produced_videos.py")
+
+    payload = read_json(published)
+    videos = payload.get("videos", []) if isinstance(payload, dict) else []
+    for video in videos:
+        for key in ("video_id", "title", "video_url"):
+            if not str(video.get(key) or "").strip():
+                fail(f"produced video entry is missing {key}")
+        poster = str(video.get("poster_url") or "").strip()
+        if not poster or poster.startswith(("http://", "https://")):
+            continue
+        candidate = PUBLIC / poster.lstrip("/") if poster.startswith("/") else PUBLIC / "data" / poster.lstrip("/")
+        if not candidate.is_file():
+            fail(f"missing produced video poster: {poster}")
+
+
 def check_render_target() -> None:
     render_text = (ROOT / "render.yaml").read_text(encoding="utf-8")
     if "staticPublishPath: public" not in render_text:
@@ -170,6 +199,7 @@ def main() -> None:
     check_site_config()
     check_static_metadata()
     check_thumbnail_references()
+    check_produced_videos()
     check_render_target()
     print("public build check passed")
 

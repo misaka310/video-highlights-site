@@ -28,6 +28,15 @@ export function safePlay(player: TwitchPlayerInstance | null): void {
   }
 }
 
+export function safePause(player: TwitchPlayerInstance | null): void {
+  if (!player?.pause) return;
+  try {
+    player.pause();
+  } catch {
+    // Ignore transient SDK errors during player initialization.
+  }
+}
+
 export function safeSetMuted(player: TwitchPlayerInstance | null, muted: boolean): void {
   if (!player?.setMuted) return;
   try {
