@@ -109,6 +109,38 @@ YouTube自身が公開する字幕を、再生同期表示用に正規化した�
 
 cue時刻は同じYouTube動画の再生秒を基準とするため、Twitchとのoffset補正は持ちません。保持期間外VODの字幕ファイルは公開データ更新時に削除します。
 
+## `data/produced_videos.json`
+
+VODとは別に、このサイトのために制作した動画（紹介動画など）の公開データです。VOD一覧・見どころ・盛り上がりマップ・字幕の入力にはなりません。
+
+```json
+{
+  "updated_at": "2026-10-21T07:09:14+09:00",
+  "videos": [
+    {
+      "video_id": "dotitao-intro",
+      "title": "…",
+      "description": "…",
+      "credits": "…",
+      "duration_sec": 300.5,
+      "published_at": "2026-10-21",
+      "poster_url": "produced-video-posters/dotitao-intro.jpg",
+      "video_url": "/media/dotitao-intro.mp4",
+      "chapters": [{ "start_sec": 0, "label": "…" }]
+    }
+  ]
+}
+```
+
+- `video_id`、`title`、`video_url`、`duration_sec`、`published_at` は必須です。
+- `poster_url` は `data/` 配下の相対パスだけを許可し、ファイルの存在を公開ビルド検査で確認します。
+- `chapters[].start_sec` は昇順・重複なしとし、`duration_sec` 未満に収めます。
+- `video_url` は `http(s)://` の絶対URL、またはサイト直下のパスです。制作動画の本体ファイルはリポジトリへ置かず、配信できるURLが決まった時点で設定します。
+- `video_url` はHLSのマスタープレイリスト（`.m3u8`）を推奨します。HLSでは回線に応じて解像度が変わり、モバイルでも待たずに再生できます。`hls.js` を使い、ネイティブHLS対応ブラウザではそのまま再生します。MP4の直リンクも指定できます。
+- HLSを用意する場合は、1080p / 720p / 480pの3段階を4秒セグメントで作り、`master.m3u8` から各 `index.m3u8` を参照します。各段は同じキーフレーム間隔（4秒）で作ります。
+- 公開ビルドは `scripts/export_produced_videos.py` を通し、`video_url` が絶対URLの制作動画だけを `public/data/produced_videos.json` へ出力します。ローカル確認用の `/media/*` は公開物へ出さず、対象が0件なら空の `videos` を出力します（サイトは導線を表示しません）。
+- 素材の本体をローカルで確認するときだけ、開発サーバーが `PUBLIC_MEDIA_DIR` を指すディレクトリから `/media/*` を配信します。この経路は開発専用で、公開ビルドは動画本体をコピーしません。
+
 ## `activity_map`
 
 - `bucket_sec`: 集計間隔。通常10秒

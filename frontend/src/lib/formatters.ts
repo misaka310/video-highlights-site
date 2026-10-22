@@ -8,6 +8,13 @@ export function formatClock(totalSeconds: number): string {
   return `${hours}:${minutes}:${seconds}`;
 }
 
+export function formatMinuteClock(totalSeconds: number): string {
+  const total = Math.max(0, Math.floor(totalSeconds || 0));
+  const minutes = Math.floor(total / 60);
+  const seconds = String(total % 60).padStart(2, "0");
+  return `${minutes}:${seconds}`;
+}
+
 export function formatDate(value: string, options: Intl.DateTimeFormatOptions): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "―";
