@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LayerCard } from "@cloudflare/kumo";
 import { PlayIcon } from "@phosphor-icons/react";
 import type { ProducedVideo } from "../domain/vod.js";
+import { useHlsVideo } from "../hooks/use-hls-video.js";
 import { formatDate, formatMinuteClock } from "../lib/formatters.js";
 import { currentChapterIndex } from "../lib/produced-videos.js";
+import { isHlsSource } from "../lib/video-source.js";
 
 type ProducedVideosViewProps = {
   videos: ProducedVideo[];
@@ -16,18 +18,34 @@ export function ProducedVideosView({ videos, activeVideo, onSelect }: ProducedVi
   const playOnLoadRef = useRef(false);
   const [positionSec, setPositionSec] = useState(0);
   const [failed, setFailed] = useState(false);
+  const hlsSource = isHlsSource(activeVideo.video_url);
+
+  const playWhenReady = useCallback(() => {
+    if (!playOnLoadRef.current) return;
+    playOnLoadRef.current = false;
+    void videoRef.current?.play().catch(() => undefined);
+  }, []);
+
+  const handleVideoError = useCallback(() => setFailed(true), []);
+
+  useHlsVideo({
+    videoRef,
+    url: hlsSource ? activeVideo.video_url : "",
+    onReady: playWhenReady,
+    onError: handleVideoError,
+  });
 
   useEffect(() => {
     setPositionSec(0);
     setFailed(false);
     const element = videoRef.current;
-    if (!element) return;
+    if (!element || hlsSource) return;
     element.load();
     if (playOnLoadRef.current) {
       playOnLoadRef.current = false;
       void element.play().catch(() => undefined);
     }
-  }, [activeVideo.video_id]);
+  }, [activeVideo.video_id, hlsSource]);
 
   const activeChapter = currentChapterIndex(activeVideo.chapters, positionSec);
   const meta = [
@@ -64,13 +82,13 @@ export function ProducedVideosView({ videos, activeVideo, onSelect }: ProducedVi
                 <video
                   ref={videoRef}
                   className="produced-element"
-                  src={activeVideo.video_url}
+                  src={hlsSource ? undefined : activeVideo.video_url}
                   poster={activeVideo.poster_url || undefined}
                   controls
                   playsInline
                   preload="metadata"
                   onTimeUpdate={(event) => setPositionSec(event.currentTarget.currentTime)}
-                  onError={() => setFailed(true)}
+                  onError={handleVideoError}
                 />
               </div>
               <div className="produced-detail">
