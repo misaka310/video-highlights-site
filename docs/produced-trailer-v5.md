@@ -8,10 +8,8 @@
 - Cloudflare Pagesの独立プロジェクト：`dotitao-trailer-v5`。既存の `dotitao-media` と `dotitao-quotes` は変更しない。
 - **正式公開URL：** https://dotitao-trailer-v5.pages.dev/master.m3u8
 - `data/produced_videos.json` の `dotitao-trailer-2026` エントリで上記URLを使用する。
-- ポスター：`data/produced-video-posters/dotitao-trailer.jpg`。
+- ポスター：`data/produced-video-posters/dotitao-trailer-v5.jpg`。
 - 本番配信検証：master + 1080p/720p/480p各index + 39個の.tsをHTTP 200で取得。全43 URLで `Access-Control-Allow-Origin: *` を確認。
 - 検証時点：2026-10-23（JST）。Cloudflareへの初回デプロイは44ファイル成功、完了URL `https://5d0e1442.dotitao-trailer-v5.pages.dev`。
 - メディア本体をサイトのGitリポジトリにコピーしない（サイト仕様の外部HLS配信）。
 - **v6/v7へ無断で切り替えない。**
-
-- 公開画面の作品名・説明・クレジットから管理用の版番号とリポジトリ名を除去。公開作品名は「ドチタオ ― トレーラー」。制作履歴には採用版と原本ハッシュを維持。

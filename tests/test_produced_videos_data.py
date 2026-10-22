@@ -41,7 +41,7 @@ class ProducedVideosDataTests(unittest.TestCase):
             public_value = str(trailer[field])
             for internal_word in ("v5", "正式採用", "制作正本", "177_dotitao-video-production"):
                 self.assertNotIn(internal_word, public_value, f"{field} leaks production metadata")
-        self.assertEqual("ドチタオ ― トレーラー", trailer["title"])
+        self.assertEqual("ドチタオ トレーラー", trailer["title"])
         self.assertEqual("produced-video-posters/dotitao-trailer.jpg", trailer["poster_url"])
 
     def test_build_and_public_checks_copy_produced_videos(self):
