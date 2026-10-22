@@ -24,7 +24,7 @@ def npm_environment() -> dict[str, str]:
 def run_npm_ci(directory: Path) -> None:
     npm = shutil.which("npm")
     if not npm:
-        raise RuntimeError("npm is required; install Node.js 20 or later")
+        raise RuntimeError("npm is required; install a supported, security-patched Node.js LTS (22.23.4 or 24.22.1)")
     print(f"+ {npm} ci (cwd={directory})", flush=True)
     subprocess.run([npm, "ci"], cwd=directory, check=True, env=npm_environment())
 
