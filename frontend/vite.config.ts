@@ -20,6 +20,9 @@ const contentTypes: Record<string, string> = {
   ".m4v": "video/mp4",
   ".webm": "video/webm",
   ".m4a": "audio/mp4",
+  ".m3u8": "application/vnd.apple.mpegurl",
+  ".ts": "video/mp2t",
+  ".m4s": "video/iso.segment",
 };
 
 function serveLocalMedia(
