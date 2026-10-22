@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-23T04:14:55+09:00",
+  "updated_at": "2026-10-23T05:19:40.447+09:00",
   "videos": [
     {
       "video_id": "dotitao-trailer-2026",
@@ -9,7 +9,7 @@
       "duration_sec": 49.083,
       "published_at": "2026-10-23",
       "poster_url": "produced-video-posters/dotitao-trailer-v5.jpg",
-      "video_url": "/media/master.m3u8",
+      "video_url": "https://dotitao-trailer-v5.pages.dev/master.m3u8",
       "chapters": []
     },
     {
