@@ -48,6 +48,28 @@ export type VodIndexData = {
   videos?: VodIndexEntry[];
 };
 
+export type ProducedVideoChapter = {
+  start_sec: number;
+  label: string;
+};
+
+export type ProducedVideo = {
+  video_id: string;
+  title: string;
+  description?: string;
+  credits?: string;
+  duration_sec?: number;
+  published_at?: string;
+  poster_url?: string;
+  video_url: string;
+  chapters: ProducedVideoChapter[];
+};
+
+export type ProducedVideoIndexData = {
+  updated_at?: string;
+  videos?: unknown[];
+};
+
 export type RuntimeSiteConfig = {
   site?: {
     name?: string;
