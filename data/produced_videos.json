@@ -1,6 +1,29 @@
 {
-  "updated_at": "2026-10-21T07:09:14+09:00",
+  "updated_at": "2026-10-22T18:05:00+09:00",
   "videos": [
+    {
+      "video_id": "dotitao-quotes",
+      "title": "言葉の記録 ― ドチタオ名言集",
+      "description": "配信から生まれた11の言葉を、本人の声と映像でたどる4分34秒。ゲームの遊び方から人生観まで、言葉を主役に構成した短編です。",
+      "credits": "引用元: ドチタオさんの配信アーカイブ／BGM・効果音: 自作の合成音",
+      "duration_sec": 274,
+      "published_at": "2026-10-22",
+      "poster_url": "produced-video-posters/dotitao-quotes.jpg",
+      "video_url": "https://github.com/misaka310/video-highlights-site/releases/download/media-quotes-v4/DOTITAO_THE_WORDS_V4_web.mp4",
+      "chapters": [
+        { "start_sec": 0, "label": "一度きり" },
+        { "start_sec": 24, "label": "友情" },
+        { "start_sec": 46, "label": "存在" },
+        { "start_sec": 83, "label": "出会い" },
+        { "start_sec": 99, "label": "社会" },
+        { "start_sec": 133, "label": "感謝" },
+        { "start_sec": 161, "label": "最高効率" },
+        { "start_sec": 177, "label": "楽しみ方" },
+        { "start_sec": 211, "label": "挑戦" },
+        { "start_sec": 231, "label": "誇り" },
+        { "start_sec": 248, "label": "信念" }
+      ]
+    },
     {
       "video_id": "dotitao-intro",
       "title": "どちらかが倒れるまでやろうよ ― はじめての人のための「ドチタオ」紹介",
