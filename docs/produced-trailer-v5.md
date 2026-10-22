@@ -1,10 +1,15 @@
-# ドチタオ トレーラー v5 のサイト登録
+# ドチタオ トレーラー v5 のサイト登録と公開
 
-- 本採用した動画は 177_dotitao-video-production/projects/trailer-2026-10/out/dotitao_trailer_v5.mp4。
-- HLS配信パッケージは C:\00_data\media\dotitao-trailer-v5-hls（1080p/720p/480p、各4秒、master.m3u8）。
-- data/produced_videos.json に登録済み。
-- 現時点の video_url は開発サーバー専用 /media/master.m3u8。PUBLIC_MEDIA_DIR を上のHLSパッケージに設定して確認する。
-- 本番公開にはCloudflare PagesなどへHLSをアップロードし、実際に再生確認した公開master.m3u8の絶対URLへ video_url を更新する。
-- 仕様により絶対URLでない動画は本番サイトの公開ビルドから除外される。公開済みとは判定しない。
-- デプロイ前に既存の他の紹介動画の公開先を変更・上書きしない。独立したメディアホストへ配信する。
-- 正式採用版はv5。v6/v7への差し替え禁止。
+- **正式採用：v5**。正本は `177_dotitao-video-production/projects/trailer-2026-10/out/dotitao_trailer_v5.mp4`。
+- 元動画は `C:\00_dev-data\streams\derived\dotitao-trailer-2026-10\v3\out\dotitao_trailer_v5.mp4`。
+- SHA-256：`d904886c7986e8e50af3da3a4fa9e0dc9ed462bad4eda99a5e4ffad2920d2225`。
+- 長さ：49.083秒。1920×1080、H.264映像 / AAC音声。
+- 配信HLS：`C:\00_data\media\dotitao-trailer-v5-hls`。1080p / 720p / 480p、4秒セグメント（13本×3画質）。
+- Cloudflare Pagesの独立プロジェクト：`dotitao-trailer-v5`。既存の `dotitao-media` と `dotitao-quotes` は変更しない。
+- **正式公開URL：** https://dotitao-trailer-v5.pages.dev/master.m3u8
+- `data/produced_videos.json` の `dotitao-trailer-2026` エントリで上記URLを使用する。
+- ポスター：`data/produced-video-posters/dotitao-trailer-v5.jpg`。
+- 本番配信検証：master + 1080p/720p/480p各index + 39個の.tsをHTTP 200で取得。全43 URLで `Access-Control-Allow-Origin: *` を確認。
+- 検証時点：2026-10-23（JST）。Cloudflareへの初回デプロイは44ファイル成功、完了URL `https://5d0e1442.dotitao-trailer-v5.pages.dev`。
+- メディア本体をサイトのGitリポジトリにコピーしない（サイト仕様の外部HLS配信）。
+- **v6/v7へ無断で切り替えない。**
