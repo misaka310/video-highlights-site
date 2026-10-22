@@ -1,6 +1,17 @@
 {
-  "updated_at": "2026-10-22T18:05:00+09:00",
+  "updated_at": "2026-10-23T05:19:40.447+09:00",
   "videos": [
+    {
+      "video_id": "dotitao-trailer-2026",
+      "title": "ドチタオ トレーラー（正式採用 v5）",
+      "description": "ドチタオの配信映像を編集した49秒の紹介トレーラー。正式採用版はv5。",
+      "credits": "映像・音声：ドチタオの配信アーカイブを編集。制作正本：177_dotitao-video-production。",
+      "duration_sec": 49.083,
+      "published_at": "2026-10-23",
+      "poster_url": "produced-video-posters/dotitao-trailer-v5.jpg",
+      "video_url": "https://dotitao-trailer-v5.pages.dev/master.m3u8",
+      "chapters": []
+    },
     {
       "video_id": "dotitao-quotes",
       "title": "言葉の記録 ― ドチタオ名言集",
@@ -11,17 +22,50 @@
       "poster_url": "produced-video-posters/dotitao-quotes.jpg",
       "video_url": "https://dotitao-quotes.pages.dev/quotes/master.m3u8",
       "chapters": [
-        { "start_sec": 0, "label": "一度きり" },
-        { "start_sec": 24, "label": "友情" },
-        { "start_sec": 46, "label": "存在" },
-        { "start_sec": 83, "label": "出会い" },
-        { "start_sec": 99, "label": "社会" },
-        { "start_sec": 133, "label": "感謝" },
-        { "start_sec": 161, "label": "最高効率" },
-        { "start_sec": 177, "label": "楽しみ方" },
-        { "start_sec": 211, "label": "挑戦" },
-        { "start_sec": 231, "label": "誇り" },
-        { "start_sec": 248, "label": "信念" }
+        {
+          "start_sec": 0,
+          "label": "一度きり"
+        },
+        {
+          "start_sec": 24,
+          "label": "友情"
+        },
+        {
+          "start_sec": 46,
+          "label": "存在"
+        },
+        {
+          "start_sec": 83,
+          "label": "出会い"
+        },
+        {
+          "start_sec": 99,
+          "label": "社会"
+        },
+        {
+          "start_sec": 133,
+          "label": "感謝"
+        },
+        {
+          "start_sec": 161,
+          "label": "最高効率"
+        },
+        {
+          "start_sec": 177,
+          "label": "楽しみ方"
+        },
+        {
+          "start_sec": 211,
+          "label": "挑戦"
+        },
+        {
+          "start_sec": 231,
+          "label": "誇り"
+        },
+        {
+          "start_sec": 248,
+          "label": "信念"
+        }
       ]
     },
     {
@@ -34,12 +78,30 @@
       "poster_url": "produced-video-posters/dotitao-intro.jpg",
       "video_url": "https://dotitao-media.pages.dev/dotitao-intro/master.m3u8",
       "chapters": [
-        { "start_sec": 0, "label": "どちらかが倒れるまでやろうよ" },
-        { "start_sec": 21, "label": "ドチタオってどんな人？" },
-        { "start_sec": 42, "label": "配信スタイル" },
-        { "start_sec": 100, "label": "人柄" },
-        { "start_sec": 177, "label": "見どころ" },
-        { "start_sec": 284, "label": "エンディング" }
+        {
+          "start_sec": 0,
+          "label": "どちらかが倒れるまでやろうよ"
+        },
+        {
+          "start_sec": 21,
+          "label": "ドチタオってどんな人？"
+        },
+        {
+          "start_sec": 42,
+          "label": "配信スタイル"
+        },
+        {
+          "start_sec": 100,
+          "label": "人柄"
+        },
+        {
+          "start_sec": 177,
+          "label": "見どころ"
+        },
+        {
+          "start_sec": 284,
+          "label": "エンディング"
+        }
       ]
     }
   ]
