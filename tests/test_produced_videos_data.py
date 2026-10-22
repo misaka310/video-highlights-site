@@ -33,6 +33,17 @@ class ProducedVideosDataTests(unittest.TestCase):
                 self.assertTrue(str(chapter.get("label") or "").strip())
                 self.assertLess(float(chapter["start_sec"]), float(video["duration_sec"]))
 
+    def test_trailer_public_copy_omits_internal_version_and_repository_details(self):
+        payload = json.loads(PRODUCED_VIDEOS.read_text(encoding="utf-8-sig"))
+        trailer = next(video for video in payload["videos"] if video["video_id"] == "dotitao-trailer-2026")
+
+        for field in ("title", "description", "credits", "poster_url"):
+            public_value = str(trailer[field])
+            for internal_word in ("v5", "正式採用", "制作正本", "177_dotitao-video-production"):
+                self.assertNotIn(internal_word, public_value, f"{field} leaks production metadata")
+        self.assertEqual("ドチタオ ― トレーラー", trailer["title"])
+        self.assertEqual("produced-video-posters/dotitao-trailer.jpg", trailer["poster_url"])
+
     def test_build_and_public_checks_copy_produced_videos(self):
         build = (ROOT / "scripts" / "build_public.sh").read_text(encoding="utf-8")
         check = (ROOT / "scripts" / "check_public_build.py").read_text(encoding="utf-8")
