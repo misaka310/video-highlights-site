@@ -9,7 +9,7 @@
       "duration_sec": 274,
       "published_at": "2026-10-22",
       "poster_url": "produced-video-posters/dotitao-quotes.jpg",
-      "video_url": "https://github.com/misaka310/video-highlights-site/releases/download/media-quotes-v4/DOTITAO_THE_WORDS_V4_web.mp4",
+      "video_url": "https://dotitao-quotes.pages.dev/quotes/master.m3u8",
       "chapters": [
         { "start_sec": 0, "label": "一度きり" },
         { "start_sec": 24, "label": "友情" },
