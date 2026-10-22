@@ -1,0 +1,23 @@
+{
+  "updated_at": "2026-10-21T07:09:14+09:00",
+  "videos": [
+    {
+      "video_id": "dotitao-intro",
+      "title": "どちらかが倒れるまでやろうよ ― はじめての人のための「ドチタオ」紹介",
+      "description": "フロムゲーを中心に配信しているドチタオさんを、初めて知る人向けに、ずんだもん・四国めたんが紹介します。配信スタイル、人柄、見どころを、本人の配信映像といっしょにまとめました。",
+      "credits": "音声: VOICEVOX:ずんだもん、四国めたん／立ち絵: 坂本アヒル／BGM: しゃろう「10℃」",
+      "duration_sec": 300.5,
+      "published_at": "2026-10-21",
+      "poster_url": "produced-video-posters/dotitao-intro.jpg",
+      "video_url": "/media/dotitao-intro.mp4",
+      "chapters": [
+        { "start_sec": 0, "label": "どちらかが倒れるまでやろうよ" },
+        { "start_sec": 21, "label": "ドチタオってどんな人？" },
+        { "start_sec": 42, "label": "配信スタイル" },
+        { "start_sec": 100, "label": "人柄" },
+        { "start_sec": 177, "label": "見どころ" },
+        { "start_sec": 284, "label": "エンディング" }
+      ]
+    }
+  ]
+}

@@ -69,6 +69,16 @@ if [ -d data/captions ]; then
   done
 fi
 
+if [ -f data/produced_videos.json ]; then
+  mkdir -p public/data
+  "${PYTHON_BIN}" scripts/export_produced_videos.py data/produced_videos.json public/data/produced_videos.json
+fi
+
+if [ -d data/produced-video-posters ]; then
+  mkdir -p public/data/produced-video-posters
+  cp -R data/produced-video-posters/. public/data/produced-video-posters/
+fi
+
 node scripts/export-site-config.mjs public/site-config.json
 "${PYTHON_BIN}" scripts/apply_site_metadata.py public/index.html public/site-config.json
 
