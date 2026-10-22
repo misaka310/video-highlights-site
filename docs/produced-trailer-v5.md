@@ -13,3 +13,9 @@
 - 検証時点：2026-10-23（JST）。Cloudflareへの初回デプロイは44ファイル成功、完了URL `https://5d0e1442.dotitao-trailer-v5.pages.dev`。
 - メディア本体をサイトのGitリポジトリにコピーしない（サイト仕様の外部HLS配信）。
 - **v6/v7へ無断で切り替えない。**
+
+## 公開サイト固定URL
+
+- 閲覧者向け再生URL: `https://dotitao-moments.onrender.com/media/dotitao-trailer/master.m3u8`（バージョン番号を含まない）。
+- `frontend/public/media/dotitao-trailer/master.m3u8` から現行のCloudflare上の画質別プレイリストを絶対URLで参照する。Cloudflareプロジェクト名は内部配信上の技術的識別子として維持し、公開UIデータのURLには使わない。
+- 元動画・セグメントは外部CDNに保持する。サイト側は軽量マスターのみ。

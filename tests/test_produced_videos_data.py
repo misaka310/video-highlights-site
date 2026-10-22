@@ -44,6 +44,21 @@ class ProducedVideosDataTests(unittest.TestCase):
         self.assertEqual("ドチタオ トレーラー", trailer["title"])
         self.assertEqual("produced-video-posters/dotitao-trailer.jpg", trailer["poster_url"])
 
+    def test_trailer_uses_versionless_public_hls_entrypoint(self):
+        payload = json.loads(PRODUCED_VIDEOS.read_text(encoding="utf-8-sig"))
+        trailer = next(video for video in payload["videos"] if video["video_id"] == "dotitao-trailer-2026")
+        self.assertEqual(
+            "https://dotitao-moments.onrender.com/media/dotitao-trailer/master.m3u8",
+            trailer["video_url"],
+        )
+        manifest_path = ROOT / "frontend" / "public" / "media" / "dotitao-trailer" / "master.m3u8"
+        playlist = manifest_path.read_text(encoding="utf-8")
+        self.assertTrue(playlist.startswith("#EXTM3U\n"))
+        variant_urls = [line for line in playlist.splitlines() if line.startswith("https://")]
+        self.assertEqual(3, len(variant_urls))
+        self.assertEqual(3, playlist.count("#EXT-X-STREAM-INF:"))
+        self.assertTrue(all(url.endswith("/index.m3u8") for url in variant_urls))
+
     def test_build_and_public_checks_copy_produced_videos(self):
         build = (ROOT / "scripts" / "build_public.sh").read_text(encoding="utf-8")
         check = (ROOT / "scripts" / "check_public_build.py").read_text(encoding="utf-8")
