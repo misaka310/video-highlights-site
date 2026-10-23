@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-22T07:54:54+09:00",
-  "next_update_at": "2026-10-22T00:00:00+00:00",
+  "updated_at": "2026-10-23T06:42:52+09:00",
+  "next_update_at": "2026-10-23T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "4eC0spOKsoo",
+      "vod_url": "https://www.youtube.com/watch?v=4eC0spOKsoo",
+      "title": "使用数最下キャラでカンストを目指す！！←沼ってます【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-21T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/4eC0spOKsoo/maxresdefault.jpg",
+      "duration_sec": 21637,
+      "count": 3,
+      "chat_total": 2395,
+      "comments_per_hour": 398.484,
+      "detail_path": "/data/vods/4eC0spOKsoo.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "1_dvQK01Ui4",
       "vod_url": "https://www.youtube.com/watch?v=1_dvQK01Ui4",
@@ -611,32 +624,6 @@
       "chat_total": 2842,
       "comments_per_hour": 997.387,
       "detail_path": "/data/vods/qoIVESNLKHc.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "-8qMP8le5wI",
-      "vod_url": "https://www.youtube.com/watch?v=-8qMP8le5wI",
-      "title": "【感想会】ダスクブラッドネットワークテストの興奮を共有する会④【The Duskbloods/ダスクブラッド】",
-      "published_at": "2026-08-23T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/-8qMP8le5wI/maxresdefault.jpg",
-      "duration_sec": 6341,
-      "count": 3,
-      "chat_total": 1716,
-      "comments_per_hour": 974.231,
-      "detail_path": "/data/vods/-8qMP8le5wI.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "XdaSvQoJ4HI",
-      "vod_url": "https://www.youtube.com/watch?v=XdaSvQoJ4HI",
-      "title": "【GRWM】ネットワークテストを完ぺきにこなす準備→行ってきます④【The Duskbloods/ダスクブラッド】",
-      "published_at": "2026-08-23T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/XdaSvQoJ4HI/maxresdefault.jpg",
-      "duration_sec": 2451,
-      "count": 2,
-      "chat_total": 333,
-      "comments_per_hour": 489.106,
-      "detail_path": "/data/vods/XdaSvQoJ4HI.json",
       "provider": "youtube"
     }
   ]
