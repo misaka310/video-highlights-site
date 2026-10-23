@@ -1,10 +1,10 @@
 # ドチタオ トレーラー v5 のサイト登録と公開
 
-- **正式採用：v5**。正本は `dotitao-video-production/projects/trailer-2026-10/out/dotitao_trailer_v5.mp4`。
-- 元動画は `<local-data>\streams\derived\dotitao-trailer-2026-10\v3\out\dotitao_trailer_v5.mp4`。
+- **正式採用：v5**。正本は制作プロジェクト側の `projects/trailer-2026-10/out/dotitao_trailer_v5.mp4`。
+- 元動画はローカル制作環境で生成した `dotitao_trailer_v5.mp4`（リポジトリには含めない）。
 - SHA-256：`d904886c7986e8e50af3da3a4fa9e0dc9ed462bad4eda99a5e4ffad2920d2225`。
 - 長さ：49.083秒。1920×1080、H.264映像 / AAC音声。
-- 配信HLS：`<local-data>\media\dotitao-trailer-v5-hls`。1080p / 720p / 480p、4秒セグメント（13本×3画質）。
+- 配信HLSはローカルのメディアディレクトリから生成。1080p / 720p / 480p、4秒セグメント（13本×3画質）。
 - Cloudflare Pagesの独立プロジェクト：`dotitao-trailer-v5`。既存の `dotitao-media` と `dotitao-quotes` は変更しない。
 - **正式公開URL：** https://dotitao-trailer-v5.pages.dev/master.m3u8
 - `data/produced_videos.json` の `dotitao-trailer-2026` エントリで上記URLを使用する。
