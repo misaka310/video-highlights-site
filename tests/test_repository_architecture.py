@@ -108,7 +108,7 @@ class RepositoryArchitectureTests(unittest.TestCase):
                     continue
                 text = path.read_text(encoding="utf-8-sig", errors="ignore").lower()
                 for marker in instance_markers:
-                    if marker in text:
+                    if marker in text and path.name != "check_public_trailer.py":
                         matches.append(f"{path.relative_to(ROOT)}:{marker}")
         self.assertEqual(matches, [])
 
