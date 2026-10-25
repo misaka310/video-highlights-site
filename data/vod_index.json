@@ -1,7 +1,46 @@
 {
-  "updated_at": "2026-10-23T06:42:52+09:00",
-  "next_update_at": "2026-10-23T00:00:00+00:00",
+  "updated_at": "2026-10-25T09:18:15+09:00",
+  "next_update_at": "2026-10-26T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "m8hpedF-u5M",
+      "vod_url": "https://www.youtube.com/watch?v=m8hpedF-u5M",
+      "title": "苦手武器を使う苦手キャラでカンストして私は次のステップへ【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-24T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/m8hpedF-u5M/maxresdefault.jpg",
+      "duration_sec": 31572,
+      "count": 3,
+      "chat_total": 3615,
+      "comments_per_hour": 412.201,
+      "detail_path": "/data/vods/m8hpedF-u5M.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "HTljfqsFTt4",
+      "vod_url": "https://www.youtube.com/watch?v=HTljfqsFTt4",
+      "title": "良い子はすぐ寝ろ、ここからは大人のナイトレインの時間だ【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-23T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/HTljfqsFTt4/maxresdefault.jpg",
+      "duration_sec": 20552,
+      "count": 3,
+      "chat_total": 1993,
+      "comments_per_hour": 349.105,
+      "detail_path": "/data/vods/HTljfqsFTt4.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "9hPNl5o0H8k",
+      "vod_url": "https://www.youtube.com/watch?v=9hPNl5o0H8k",
+      "title": "カンストチャレンジ中に深度4に落ちたところです【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-22T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/9hPNl5o0H8k/maxresdefault.jpg",
+      "duration_sec": 18218,
+      "count": 3,
+      "chat_total": 2014,
+      "comments_per_hour": 397.98,
+      "detail_path": "/data/vods/9hPNl5o0H8k.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "4eC0spOKsoo",
       "vod_url": "https://www.youtube.com/watch?v=4eC0spOKsoo",
@@ -598,32 +637,6 @@
       "chat_total": 1315,
       "comments_per_hour": 470.717,
       "detail_path": "/data/vods/2GxfgE6OrXg.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "8IsV6LXcegk",
-      "vod_url": "https://www.youtube.com/watch?v=8IsV6LXcegk",
-      "title": "【同時視聴】ゲームの新情報を見張る会【gamescom 2026】←【検証】ダスブラの4日間でどの程度操作方法を忘れたのか？～2000時間夜を渡ったチンパン～【ナイトレイン】",
-      "published_at": "2026-08-25T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/8IsV6LXcegk/maxresdefault.jpg",
-      "duration_sec": 25321,
-      "count": 3,
-      "chat_total": 1499,
-      "comments_per_hour": 213.12,
-      "detail_path": "/data/vods/8IsV6LXcegk.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "qoIVESNLKHc",
-      "vod_url": "https://www.youtube.com/watch?v=qoIVESNLKHc",
-      "title": "【全日終了！】ダスブラテストが終了したので感想をまとめる＆質問答えます【The Duskbloods/ダスクブラッド】",
-      "published_at": "2026-08-24T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/qoIVESNLKHc/maxresdefault.jpg",
-      "duration_sec": 10258,
-      "count": 3,
-      "chat_total": 2842,
-      "comments_per_hour": 997.387,
-      "detail_path": "/data/vods/qoIVESNLKHc.json",
       "provider": "youtube"
     }
   ]
