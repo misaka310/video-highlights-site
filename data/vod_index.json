@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-25T15:35:11+09:00",
+  "updated_at": "2026-10-26T07:28:55+09:00",
   "next_update_at": "2026-10-26T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "bhs1QUTomd0",
+      "vod_url": "https://www.youtube.com/watch?v=bhs1QUTomd0",
+      "title": "苦手武器を使う苦手キャラでカンストして私は次のステージへ【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-25T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/bhs1QUTomd0/maxresdefault.jpg",
+      "duration_sec": 20187,
+      "count": 3,
+      "chat_total": 2725,
+      "comments_per_hour": 485.956,
+      "detail_path": "/data/vods/bhs1QUTomd0.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "m8hpedF-u5M",
       "vod_url": "https://www.youtube.com/watch?v=m8hpedF-u5M",
