@@ -21,14 +21,13 @@ class PublicBuildTests(unittest.TestCase):
             published.mkdir(parents=True)
             (source / "current.json").write_text("{}", encoding="utf-8")
             (published / "current.json").write_text("{}", encoding="utf-8")
-            excluded_id = sorted(check_public_build.PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS)[0]
-            (published / f"{excluded_id}.json").write_text("{}", encoding="utf-8")
+            (published / "stale-detail.json").write_text("{}", encoding="utf-8")
 
             with self.assertRaisesRegex(SystemExit, "unexpected public VOD detail JSON"):
                 check_public_build.check_json_directory_matches_sources(source, published, "VOD detail")
 
     def test_permanently_excluded_ids_are_rejected_from_all_public_paths(self):
-        excluded_id = sorted(check_public_build.PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS)[0]
+        excluded_id = "excluded-test-vod"
         forbidden_paths = (
             "data/vods.json",
             "data/vod_index.json",
@@ -61,7 +60,10 @@ class PublicBuildTests(unittest.TestCase):
                 else:
                     forbidden.write_text("{}", encoding="utf-8")
 
-                with patch.multiple(check_public_build, ROOT=root, DATA=data, PUBLIC=public):
+                with (
+                    patch.object(check_public_build, "PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS", frozenset({excluded_id})),
+                    patch.multiple(check_public_build, ROOT=root, DATA=data, PUBLIC=public),
+                ):
                     with self.assertRaisesRegex(SystemExit, "permanently excluded VOD"):
                         check_public_build.check_permanently_excluded_public_vods()
 

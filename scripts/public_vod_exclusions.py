@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-# User-approved privacy removal: these VODs must not re-enter cached or public data.
-PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS = frozenset({"5VzXYJdQwMY"})
+# Explicit privacy removals only. Membership-required archives are handled by the Oracle job.
+PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS = frozenset()
 
 
 def is_public_vod_excluded(video: Mapping[str, Any]) -> bool:
