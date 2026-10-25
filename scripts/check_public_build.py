@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from public_vod_exclusions import PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS
+
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC = ROOT / "public"
 DATA = ROOT / "data"
@@ -68,6 +70,17 @@ def check_required_files() -> None:
         fail("missing CSS bundle under public/assets")
 
 
+def check_json_directory_matches_sources(source_dir: Path, public_dir: Path, label: str) -> None:
+    source_names = {path.name for path in source_dir.glob("*.json")} if source_dir.is_dir() else set()
+    public_names = {path.name for path in public_dir.glob("*.json")} if public_dir.is_dir() else set()
+    unexpected = sorted(public_names - source_names)
+    missing = sorted(source_names - public_names)
+    if unexpected:
+        fail(f"unexpected public {label} JSON files: {unexpected}")
+    if missing:
+        fail(f"missing public {label} JSON files: {missing}")
+
+
 def check_public_json_matches_sources() -> None:
     for relative_path in ("vods.json", "vod_index.json"):
         source = read_json(DATA / relative_path)
@@ -77,23 +90,49 @@ def check_public_json_matches_sources() -> None:
 
     source_captions = DATA / "captions"
     public_captions = PUBLIC / "data" / "captions"
+    check_json_directory_matches_sources(source_captions, public_captions, "caption")
     if source_captions.is_dir():
         for source_path in sorted(source_captions.glob("*.json")):
             public_path = public_captions / source_path.name
-            if not public_path.is_file():
-                fail(f"missing captions JSON: {public_path.relative_to(ROOT)}")
             if read_json(public_path) != read_json(source_path):
                 fail(f"published captions differ from source: {source_path.name}")
 
     source_details = DATA / "vods"
     public_details = PUBLIC / "data" / "vods"
+    check_json_directory_matches_sources(source_details, public_details, "VOD detail")
     if source_details.is_dir():
         for source_path in sorted(source_details.glob("*.json")):
             public_path = public_details / source_path.name
-            if not public_path.is_file():
-                fail(f"missing VOD detail JSON: {public_path.relative_to(ROOT)}")
             if read_json(public_path) != read_json(source_path):
                 fail(f"published VOD detail differs from source: {source_path.name}")
+
+
+def check_permanently_excluded_public_vods() -> None:
+    aggregate_paths = (
+        DATA / "vods.json",
+        DATA / "vod_index.json",
+        PUBLIC / "data" / "vods.json",
+        PUBLIC / "data" / "vod_index.json",
+    )
+    for path in aggregate_paths:
+        payload = read_json(path)
+        videos = payload.get("videos", []) if isinstance(payload, dict) else []
+        if not isinstance(videos, list):
+            fail(f"{path.relative_to(ROOT)} must contain a videos list")
+        for video in videos:
+            if isinstance(video, dict) and str(video.get("vod_id") or "").strip() in PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS:
+                fail(f"permanently excluded VOD appears in {path.relative_to(ROOT)}")
+
+    for vod_id in PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS:
+        forbidden_paths = (
+            DATA / "vods" / f"{vod_id}.json",
+            PUBLIC / "data" / "vods" / f"{vod_id}.json",
+            DATA / "captions" / f"{vod_id}.json",
+            PUBLIC / "data" / "captions" / f"{vod_id}.json",
+        )
+        for path in forbidden_paths:
+            if path.exists():
+                fail(f"permanently excluded VOD artifact exists: {path.relative_to(ROOT)}")
 
 
 def check_site_config() -> None:
@@ -196,6 +235,7 @@ def check_render_target() -> None:
 def main() -> None:
     check_required_files()
     check_public_json_matches_sources()
+    check_permanently_excluded_public_vods()
     check_site_config()
     check_static_metadata()
     check_thumbnail_references()
