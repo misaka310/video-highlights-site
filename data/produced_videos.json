@@ -1,6 +1,17 @@
 {
-  "updated_at": "2026-10-23T05:19:40.447+09:00",
+  "updated_at": "2026-10-25T08:55:10+09:00",
   "videos": [
+    {
+      "video_id": "pikmin-highlights-20261024",
+      "title": "初見ピクミン30日間 犠牲1070匹の記録",
+      "description": "初見ピクミン30日間。水場での大量犠牲、ヘビガラスとの激戦、30日目の発進と累計1070匹の犠牲までをまとめた33分30秒の総集編。",
+      "credits": "映像・音声：ドチタオの配信アーカイブを編集",
+      "duration_sec": 2010,
+      "published_at": "2026-10-24",
+      "poster_url": "produced-video-posters/pikmin-highlights-20261024.jpg",
+      "video_url": "https://dotitao-pikmin-highlights.pages.dev/master.m3u8",
+      "chapters": []
+    },
     {
       "video_id": "dotitao-trailer-2026",
       "title": "ドチタオ トレーラー",
