@@ -26,6 +26,10 @@ def fetch_json_bytes(url: str) -> tuple[bytes, Any]:
 
 
 def verify_excluded_vod_details(base_url: str, deadline: float) -> None:
+    if not PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS:
+        print("no permanently excluded VOD detail URLs configured")
+        return
+
     for vod_id in sorted(PERMANENTLY_EXCLUDED_PUBLIC_VOD_IDS):
         url = f"{base_url.rstrip('/')}/data/vods/{vod_id}.json"
         last_status = "no response"

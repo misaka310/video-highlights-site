@@ -24,6 +24,8 @@ from vod_highlights import (
 from youtube_url import is_youtube_url
 
 PUBLIC_VOD_RETENTION_DAYS = 60
+# One user-requested restoration exception; the global 60-day retention remains unchanged.
+PUBLIC_VOD_RETENTION_EXCEPTION_IDS = frozenset({"5VzXYJdQwMY"})
 
 
 PUBLIC_ITEM_FIELDS = (
@@ -463,6 +465,9 @@ def is_public_vod_within_retention(video: dict[str, Any], now: datetime) -> bool
     published_at = parse_timezone_aware_iso_datetime(video.get("published_at"))
     if not published_at:
         return False
+    vod_id = str(video.get("vod_id") or "").strip()
+    if vod_id in PUBLIC_VOD_RETENTION_EXCEPTION_IDS:
+        return True
     cutoff = now - timedelta(days=PUBLIC_VOD_RETENTION_DAYS)
     return published_at >= cutoff
 
