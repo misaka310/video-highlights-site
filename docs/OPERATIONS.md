@@ -26,7 +26,7 @@ npm run verify:live
 
 実YouTube/Renderをブラウザ操作で検証する場合は、ユーザーの明示許可があるときだけ `npm run verify:live:browser` を実行する。
 
-本番URLは`config/site.json`の`site.base_url`から解決し、`LIVE_BASE_URL`が指定された場合だけ上書きする。HTMLは配信基盤が除去する空行を無視して照合し、JavaScript・CSS・設定ファイルは内容hashを一致させる。検証対象URLが空の場合はskipせず設定エラーとして失敗させる。
+本番URLは`config/site.json`の`site.base_url`から解決し、`LIVE_BASE_URL`が指定された場合だけ上書きする。`verify:live`は本番`data/vods.json`とローカル公開データの構造一致に加え、恒久除外VODの個別詳細URLがHTTP 404になることを確認する。CDNに残る古いHTTP 200は、`LIVE_VERIFY_TIMEOUT_SEC`（既定600秒）の期限内で再確認し、期限まで404にならなければ失敗させる。`production-verification.json`は両方の検査成功後にだけ書く。検証対象URLが空の場合はskipせず設定エラーとして失敗させる。
 
 ## 公開フロー
 
