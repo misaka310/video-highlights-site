@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-26T07:28:55+09:00",
-  "next_update_at": "2026-10-26T00:00:00+00:00",
+  "updated_at": "2026-10-27T06:47:11+09:00",
+  "next_update_at": "2026-10-27T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "XSzLaUdY5so",
+      "vod_url": "https://www.youtube.com/watch?v=XSzLaUdY5so",
+      "title": "マジでもう限界に近いのですがなんか最近ナイトレインが面白すぎてやばい【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-26T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/XSzLaUdY5so/maxresdefault.jpg",
+      "duration_sec": 12157,
+      "count": 3,
+      "chat_total": 1304,
+      "comments_per_hour": 386.148,
+      "detail_path": "/data/vods/XSzLaUdY5so.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "bhs1QUTomd0",
       "vod_url": "https://www.youtube.com/watch?v=bhs1QUTomd0",
@@ -637,19 +650,6 @@
       "chat_total": 2124,
       "comments_per_hour": 490.626,
       "detail_path": "/data/vods/lobFZyr7Ehg.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "2GxfgE6OrXg",
-      "vod_url": "https://www.youtube.com/watch?v=2GxfgE6OrXg",
-      "title": "【本日発売】Switch2版エルデンで待ちに待った追加要素を堪能しよう【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-08-27T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/2GxfgE6OrXg/maxresdefault.jpg",
-      "duration_sec": 10057,
-      "count": 3,
-      "chat_total": 1315,
-      "comments_per_hour": 470.717,
-      "detail_path": "/data/vods/2GxfgE6OrXg.json",
       "provider": "youtube"
     },
     {

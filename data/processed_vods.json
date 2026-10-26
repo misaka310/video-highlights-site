@@ -1,9 +1,112 @@
 {
-  "updated_at": "2026-10-26T07:28:55+09:00",
+  "updated_at": "2026-10-27T06:47:11+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
   "videos": [
+    {
+      "vod_id": "XSzLaUdY5so",
+      "provider": "youtube",
+      "vod_url": "https://www.youtube.com/watch?v=XSzLaUdY5so",
+      "title": "マジでもう限界に近いのですがなんか最近ナイトレインが面白すぎてやばい【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-26T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/XSzLaUdY5so/maxresdefault.jpg",
+      "duration_sec": 12157,
+      "count": 3,
+      "chat_total": 1304,
+      "comments_per_hour": 386.148,
+      "items": [
+        {
+          "rank": 1,
+          "id": "XSzLaUdY5so_7420_7540",
+          "start_sec": 7420,
+          "end_sec": 7540,
+          "duration_sec": 120,
+          "start_time": "02:03:40",
+          "end_time": "02:05:40",
+          "reason": "Chat activity spike around 2h3m40s (z-score=3.26).",
+          "headline": "全員登録してんじゃないか",
+          "tags": [
+            "あ",
+            "おめ"
+          ],
+          "watch_url": "https://www.youtube.com/watch?v=XSzLaUdY5so&t=7420s",
+          "screenshot_url": "/data/segment-thumbnails/XSzLaUdY5so/XSzLaUdY5so_7420_7540.webp"
+        },
+        {
+          "rank": 2,
+          "id": "XSzLaUdY5so_3050_3170",
+          "start_sec": 3050,
+          "end_sec": 3170,
+          "duration_sec": 120,
+          "start_time": "00:50:50",
+          "end_time": "00:52:50",
+          "reason": "Chat activity spike around 0h50m50s (z-score=3.26).",
+          "headline": "変わり物アピールで笑い",
+          "tags": [
+            "好プレー",
+            "ww"
+          ],
+          "watch_url": "https://www.youtube.com/watch?v=XSzLaUdY5so&t=3050s",
+          "screenshot_url": "/data/segment-thumbnails/XSzLaUdY5so/XSzLaUdY5so_3050_3170.webp"
+        },
+        {
+          "rank": 3,
+          "id": "XSzLaUdY5so_2470_2550",
+          "start_sec": 2470,
+          "end_sec": 2550,
+          "duration_sec": 80,
+          "start_time": "00:41:10",
+          "end_time": "00:42:30",
+          "reason": "Chat activity spike around 0h41m10s (z-score=4.09).",
+          "headline": "見なくするボタンが見つからず失敗",
+          "tags": [],
+          "watch_url": "https://www.youtube.com/watch?v=XSzLaUdY5so&t=2470s",
+          "screenshot_url": "/data/segment-thumbnails/XSzLaUdY5so/XSzLaUdY5so_2470_2550.webp"
+        }
+      ],
+      "activity_map": {
+        "bucket_sec": 10,
+        "duration_sec": 12157,
+        "last_comment_sec": 12151,
+        "peak_count": 7,
+        "buckets": [
+          1, 0, 0, 0, 0, 0, 0, 0, 1, 5, 1, 1, 1, 1, 0, 3, 0, 4, 1, 0, 1, 2, 0, 0, 3, 1, 1, 1, 0, 3, 5, 0, 1, 1, 1, 2, 1, 1, 2, 1,
+          1, 1, 2, 0, 2, 4, 1, 2, 2, 1, 1, 0, 1, 2, 2, 0, 4, 0, 0, 0, 2, 1, 6, 1, 1, 4, 2, 2, 0, 3, 3, 0, 1, 1, 1, 0, 7, 4, 0, 1,
+          1, 0, 3, 1, 1, 1, 0, 0, 2, 0, 2, 1, 0, 2, 0, 1, 1, 0, 0, 1, 1, 0, 1, 1, 1, 1, 2, 1, 1, 0, 0, 1, 3, 0, 3, 0, 1, 1, 0, 0,
+          1, 2, 1, 0, 1, 2, 2, 1, 0, 3, 1, 0, 3, 2, 0, 0, 3, 3, 0, 0, 2, 1, 1, 2, 1, 3, 1, 3, 1, 1, 1, 0, 1, 0, 5, 3, 0, 1, 2, 4,
+          3, 1, 0, 3, 1, 1, 2, 1, 0, 2, 2, 0, 0, 2, 2, 0, 0, 1, 2, 0, 0, 1, 1, 0, 0, 2, 2, 2, 1, 2, 0, 0, 1, 1, 2, 1, 3, 3, 0, 1,
+          1, 0, 1, 1, 3, 7, 4, 4, 1, 2, 4, 2, 2, 1, 1, 3, 3, 1, 2, 1, 1, 3, 2, 2, 3, 2, 1, 0, 1, 1, 0, 0, 1, 1, 5, 1, 1, 0, 0, 2,
+          3, 1, 1, 1, 3, 2, 1, 3, 0, 5, 1, 1, 6, 0, 4, 2, 0, 1, 0, 3, 1, 1, 3, 2, 7, 2, 0, 1, 1, 2, 0, 2, 1, 0, 1, 2, 0, 0, 2, 3,
+          2, 1, 0, 3, 0, 2, 5, 6, 1, 0, 0, 2, 1, 0, 0, 1, 1, 2, 1, 1, 0, 4, 1, 4, 2, 2, 1, 5, 1, 5, 4, 1, 2, 5, 5, 4, 3, 3, 3, 3,
+          2, 0, 0, 2, 2, 0, 1, 1, 3, 0, 4, 0, 0, 0, 0, 1, 1, 0, 2, 1, 0, 2, 0, 1, 0, 0, 0, 2, 2, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1,
+          1, 1, 3, 1, 0, 1, 1, 3, 4, 0, 1, 1, 1, 2, 1, 0, 2, 1, 1, 3, 2, 1, 4, 1, 1, 0, 0, 0, 4, 2, 1, 1, 0, 4, 3, 1, 3, 0, 0, 1,
+          2, 0, 0, 0, 1, 1, 0, 3, 0, 1, 0, 1, 1, 0, 1, 0, 0, 2, 0, 1, 2, 1, 3, 0, 1, 2, 0, 1, 1, 0, 0, 0, 3, 2, 1, 2, 0, 2, 4, 2,
+          2, 2, 2, 1, 2, 0, 3, 4, 0, 0, 0, 3, 1, 0, 1, 1, 2, 4, 3, 0, 2, 2, 1, 1, 3, 0, 4, 0, 1, 6, 1, 1, 2, 2, 1, 2, 2, 0, 2, 1,
+          2, 0, 0, 1, 3, 2, 3, 0, 0, 2, 1, 2, 1, 4, 0, 0, 2, 1, 0, 4, 2, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 3, 1, 1, 0,
+          2, 0, 0, 2, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 2, 1, 4, 0, 2, 0, 1, 0, 2, 1, 0, 0, 1, 0, 3,
+          1, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 1, 0, 4, 2, 1, 3, 3, 1, 0, 3, 3, 4, 1, 0, 2, 1, 0, 0, 1, 1, 4, 0, 0, 0,
+          3, 0, 1, 0, 0, 3, 1, 0, 0, 3, 0, 0, 2, 1, 0, 0, 0, 1, 2, 1, 0, 3, 1, 0, 2, 1, 0, 0, 1, 1, 1, 0, 2, 1, 0, 0, 0, 0, 0, 2,
+          1, 0, 2, 1, 0, 0, 0, 1, 0, 2, 2, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 2, 1, 1, 0, 1, 0, 2, 1, 2, 0, 1,
+          1, 2, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 2, 1, 0, 0, 0, 1, 0, 1, 1, 0, 2, 1, 1, 1, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 2, 0, 0, 0,
+          1, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 2, 1, 2, 2, 1, 0, 3, 0, 0, 1, 3, 2, 2, 5, 2, 4, 3, 5, 0, 2, 5, 3, 2, 2, 2, 1, 1, 1, 0,
+          1, 2, 1, 0, 0, 3, 2, 0, 1, 0, 2, 1, 1, 1, 1, 0, 3, 0, 0, 0, 1, 0, 2, 2, 1, 1, 0, 1, 0, 1, 2, 1, 1, 5, 0, 1, 2, 0, 1, 0,
+          0, 0, 0, 0, 2, 0, 0, 1, 0, 1, 0, 3, 1, 2, 2, 0, 1, 1, 0, 2, 1, 3, 3, 1, 1, 1, 0, 3, 2, 0, 1, 2, 0, 1, 0, 1, 1, 0, 1, 2,
+          1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 2, 1, 1, 1, 1, 0, 2, 0, 0, 0, 0, 1, 0, 1, 0, 2, 1, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0,
+          0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 3, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 3, 1, 1, 2, 2, 1, 0, 0, 1, 0, 1, 0, 0,
+          0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 2, 4, 1, 0, 2, 0, 0, 3, 3, 1, 1, 0, 0, 0, 0, 1, 0, 2, 1, 0, 0, 1, 5,
+          3, 2, 2, 1, 1, 3, 2, 1, 2, 1, 1, 0, 0, 2, 0, 3, 0, 1, 3, 2, 1, 2, 1, 0, 0, 0, 2, 0, 0, 2, 0, 1, 1, 3, 2, 1, 2, 0, 0, 0,
+          0, 2, 1, 0, 1, 3, 3, 1, 0, 1, 2, 2, 2, 1, 2, 0, 1, 1, 1, 3, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0,
+          4, 1, 2, 0, 2, 2, 2, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 2, 0, 3, 1, 0, 1, 0, 0, 2, 0, 0, 0, 1, 1, 1,
+          3, 0, 2, 2, 1, 0, 0, 2, 1, 1, 0, 0, 1, 1, 1, 3, 0, 2, 1, 4, 0, 0, 2, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0,
+          0, 0, 2, 3, 0, 1, 1, 1, 0, 0, 0, 0, 2, 1, 1, 0, 0, 2, 4, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+          0, 1, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 2, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 2, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0,
+          1, 0, 1, 1, 0, 0, 1, 0, 2, 1, 0, 2, 0, 1, 1, 1, 0
+        ]
+      },
+      "analysis_version": "chat-zscore-v8",
+      "analyzed_at": "2026-10-27T06:47:11+09:00"
+    },
     {
       "vod_id": "bhs1QUTomd0",
       "provider": "youtube",
@@ -8882,7 +8985,7 @@
           "start_time": "00:45:50",
           "end_time": "00:46:40",
           "reason": "Chat activity spike around 0h45m50s (z-score=3.356).",
-          "headline": "メニューがビンビン連続中",
+          "headline": "メニューがビンビン、設定オフ推奨",
           "tags": [
             "ww",
             "ホラー"
@@ -8917,7 +9020,7 @@
           "start_time": "01:15:10",
           "end_time": "01:16:00",
           "reason": "Chat activity spike around 1h15m10s (z-score=2.695).",
-          "headline": "フレームレート約60、左右で変動感",
+          "headline": "フレームレートが60に近い感覚",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg&t=4510s",
           "screenshot_url": "/data/segment-thumbnails/ekhHnGl2pAg/ekhHnGl2pAg_4510_4560.webp"
@@ -8945,7 +9048,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-26T07:28:55+09:00"
+      "analyzed_at": "2026-10-27T06:47:11+09:00"
     },
     {
       "vod_id": "IVoq5mrBmQ8",
@@ -9377,7 +9480,7 @@
           "start_time": "00:19:10",
           "end_time": "00:21:00",
           "reason": "Chat activity spike around 0h19m10s (z-score=4.29).",
-          "headline": "ログインやマッチングは内部的に別",
+          "headline": "どかしに行くは不自然発言",
           "tags": [
             "ww",
             "えっ"
@@ -9394,7 +9497,7 @@
           "start_time": "01:07:20",
           "end_time": "01:08:10",
           "reason": "Chat activity spike around 1h7m20s (z-score=2.635).",
-          "headline": "深夜みたいな感じになる",
+          "headline": "深夜みたいに浮いてる感",
           "tags": [
             "ww"
           ],
@@ -9410,7 +9513,7 @@
           "start_time": "00:37:50",
           "end_time": "00:38:40",
           "reason": "Chat activity spike around 0h37m50s (z-score=2.635).",
-          "headline": "キング城の正体は何か",
+          "headline": "キングジを検索して吸血王確認",
           "tags": [
             "好プレー"
           ],
@@ -9439,7 +9542,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-26T07:28:55+09:00"
+      "analyzed_at": "2026-10-27T06:47:11+09:00"
     },
     {
       "vod_id": "ZRkL_2jJYuU",
@@ -9462,7 +9565,7 @@
           "start_time": "00:36:50",
           "end_time": "00:38:20",
           "reason": "Chat activity spike around 0h36m50s (z-score=3.869).",
-          "headline": "フェーズさんに行けず謝罪",
+          "headline": "1度もフェーズさんに行けませんでした",
           "tags": [
             "ww",
             "好プレー"
@@ -9479,7 +9582,7 @@
           "start_time": "01:16:50",
           "end_time": "01:17:40",
           "reason": "Chat activity spike around 1h16m50s (z-score=3.869).",
-          "headline": "言われるレベルか信じて",
+          "headline": "だって言われるレベルなのね",
           "tags": [
             "ww",
             "好プレー"
@@ -9496,7 +9599,7 @@
           "start_time": "01:01:30",
           "end_time": "01:02:20",
           "reason": "Chat activity spike around 1h1m30s (z-score=3.232).",
-          "headline": "音楽のすごさ、パションゲージオうん再び",
+          "headline": "パションゲージオうんがすごい音楽",
           "tags": [
             "好プレー"
           ],
@@ -9525,7 +9628,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-26T07:28:55+09:00"
+      "analyzed_at": "2026-10-27T06:47:11+09:00"
     },
     {
       "vod_id": "2851339526",
@@ -10677,7 +10780,7 @@
           "start_time": "00:29:20",
           "end_time": "00:31:20",
           "reason": "Chat activity spike around 0h29m20s (z-score=3.99).",
-          "headline": "ラウンジのソファーは高そうで注目",
+          "headline": "ラウンジの高級ソファーが衝撃",
           "tags": [
             "ww",
             "ホラー",
@@ -10695,7 +10798,7 @@
           "start_time": "01:01:20",
           "end_time": "01:02:10",
           "reason": "Chat activity spike around 1h1m20s (z-score=3.99).",
-          "headline": "話し合いは大したことなし",
+          "headline": "エンディングの話し合いは不十分",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=3680s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_3680_3730.webp"
@@ -10709,7 +10812,7 @@
           "start_time": "00:10:50",
           "end_time": "00:11:40",
           "reason": "Chat activity spike around 0h10m50s (z-score=3.99).",
-          "headline": "最近のおにぎり価格は300円",
+          "headline": "おにぎり価格が300円に上昇",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=650s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_650_700.webp"
@@ -10738,7 +10841,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-26T07:28:55+09:00"
+      "analyzed_at": "2026-10-27T06:47:11+09:00"
     },
     {
       "vod_id": "2845027398",
