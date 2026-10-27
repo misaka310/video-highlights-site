@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-27T06:47:11+09:00",
-  "next_update_at": "2026-10-27T00:00:00+00:00",
+  "updated_at": "2026-10-28T06:45:07+09:00",
+  "next_update_at": "2026-10-28T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "QZiZVexPfEQ",
+      "vod_url": "https://www.youtube.com/watch?v=QZiZVexPfEQ",
+      "title": "そのうち国が禁止しかねないほどに中毒性が高いこの作品【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-27T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/QZiZVexPfEQ/maxresdefault.jpg",
+      "duration_sec": 15538,
+      "count": 3,
+      "chat_total": 1391,
+      "comments_per_hour": 322.281,
+      "detail_path": "/data/vods/QZiZVexPfEQ.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "XSzLaUdY5so",
       "vod_url": "https://www.youtube.com/watch?v=XSzLaUdY5so",
@@ -637,19 +650,6 @@
       "chat_total": 2746,
       "comments_per_hour": 394.32,
       "detail_path": "/data/vods/Ua69BzhgfV0.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "lobFZyr7Ehg",
-      "vod_url": "https://www.youtube.com/watch?v=lobFZyr7Ehg",
-      "title": "【本日発売】Switch2版エルデンで待ちに待った追加要素を堪能しよう【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-08-28T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/lobFZyr7Ehg/maxresdefault.jpg",
-      "duration_sec": 15585,
-      "count": 3,
-      "chat_total": 2124,
-      "comments_per_hour": 490.626,
-      "detail_path": "/data/vods/lobFZyr7Ehg.json",
       "provider": "youtube"
     },
     {
