@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-28T06:45:07+09:00",
-  "next_update_at": "2026-10-28T00:00:00+00:00",
+  "updated_at": "2026-10-29T06:46:34+09:00",
+  "next_update_at": "2026-10-29T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "DKdhvsIGYaA",
+      "vod_url": "https://www.youtube.com/watch?v=DKdhvsIGYaA",
+      "title": "【侵入歓迎】Switch2とかいうどこでもエルデンが出来る神ハードのおかげでどこでも道場が開けます【エルデンリング/ELDEN RING Tarnished Edition】",
+      "published_at": "2026-10-28T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/DKdhvsIGYaA/maxresdefault.jpg",
+      "duration_sec": 11780,
+      "count": 3,
+      "chat_total": 1548,
+      "comments_per_hour": 473.073,
+      "detail_path": "/data/vods/DKdhvsIGYaA.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "QZiZVexPfEQ",
       "vod_url": "https://www.youtube.com/watch?v=QZiZVexPfEQ",
