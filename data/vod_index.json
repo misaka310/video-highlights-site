@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-10-30T06:49:29+09:00",
-  "next_update_at": "2026-10-30T00:00:00+00:00",
+  "updated_at": "2026-11-01T07:28:17+09:00",
+  "next_update_at": "2026-11-01T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "zKON8HCvu_I",
+      "vod_url": "https://www.youtube.com/watch?v=zKON8HCvu_I",
+      "title": "苦手キャラでカンストを目指すチャレンジ←かなり沼ってます【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-10-31T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/zKON8HCvu_I/maxresdefault.jpg",
+      "duration_sec": 36885,
+      "count": 3,
+      "chat_total": 3659,
+      "comments_per_hour": 357.121,
+      "detail_path": "/data/vods/zKON8HCvu_I.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "u3d4zjhhE10",
       "vod_url": "https://www.youtube.com/watch?v=u3d4zjhhE10",
@@ -637,32 +650,6 @@
       "chat_total": 1786,
       "comments_per_hour": 361.66,
       "detail_path": "/data/vods/V4ptTBDfRvk.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "7WOvIrLpD9E",
-      "vod_url": "https://www.youtube.com/watch?v=7WOvIrLpD9E",
-      "title": "【侵入歓迎】既プレイを疑われている女のエルデン←どちらとも読める【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-01T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/7WOvIrLpD9E/maxresdefault.jpg",
-      "duration_sec": 18548,
-      "count": 3,
-      "chat_total": 2036,
-      "comments_per_hour": 395.169,
-      "detail_path": "/data/vods/7WOvIrLpD9E.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "1UCd-YLgca0",
-      "vod_url": "https://www.youtube.com/watch?v=1UCd-YLgca0",
-      "title": "Switch2版エルデンの追加要素を探してさまよい続けている…【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-08-31T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/1UCd-YLgca0/maxresdefault.jpg",
-      "duration_sec": 19644,
-      "count": 3,
-      "chat_total": 1906,
-      "comments_per_hour": 349.297,
-      "detail_path": "/data/vods/1UCd-YLgca0.json",
       "provider": "youtube"
     },
     {
