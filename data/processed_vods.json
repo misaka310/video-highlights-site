@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-01T07:28:17+09:00",
+  "updated_at": "2026-11-02T06:44:40+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -9464,7 +9464,7 @@
           "start_time": "00:45:50",
           "end_time": "00:46:40",
           "reason": "Chat activity spike around 0h45m50s (z-score=3.356).",
-          "headline": "メニューがビンビン状態が続く",
+          "headline": "笑いながらビンビンメニューの警告",
           "tags": [
             "ww",
             "ホラー"
@@ -9481,7 +9481,7 @@
           "start_time": "00:16:10",
           "end_time": "00:17:00",
           "reason": "Chat activity spike around 0h16m10s (z-score=3.356).",
-          "headline": "叫びパリー吸血で倒す瞬間",
+          "headline": "叫びパリー吸血の倒し汁が凄絶",
           "tags": [
             "ww",
             "あ",
@@ -9499,7 +9499,7 @@
           "start_time": "01:15:10",
           "end_time": "01:16:00",
           "reason": "Chat activity spike around 1h15m10s (z-score=2.695).",
-          "headline": "フレームレート約60で左右が変化",
+          "headline": "フレームレートが左右する様子",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg&t=4510s",
           "screenshot_url": "/data/segment-thumbnails/ekhHnGl2pAg/ekhHnGl2pAg_4510_4560.webp"
@@ -9527,7 +9527,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-01T07:28:17+09:00"
+      "analyzed_at": "2026-11-02T06:44:40+09:00"
     },
     {
       "vod_id": "IVoq5mrBmQ8",
@@ -9959,7 +9959,7 @@
           "start_time": "00:19:10",
           "end_time": "00:21:00",
           "reason": "Chat activity spike around 0h19m10s (z-score=4.29).",
-          "headline": "笑いと議論のテスト感想",
+          "headline": "笑いと内部的別のログイン",
           "tags": [
             "ww",
             "えっ"
@@ -9976,7 +9976,7 @@
           "start_time": "01:07:20",
           "end_time": "01:08:10",
           "reason": "Chat activity spike around 1h7m20s (z-score=2.635).",
-          "headline": "深夜のように浮く感覚",
+          "headline": "深夜のような感じになる",
           "tags": [
             "ww"
           ],
@@ -9992,7 +9992,7 @@
           "start_time": "00:37:50",
           "end_time": "00:38:40",
           "reason": "Chat activity spike around 0h37m50s (z-score=2.635).",
-          "headline": "キングジと城の謎を検証",
+          "headline": "吸血のキングジを検索",
           "tags": [
             "好プレー"
           ],
@@ -10021,7 +10021,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-01T07:28:17+09:00"
+      "analyzed_at": "2026-11-02T06:44:40+09:00"
     },
     {
       "vod_id": "ZRkL_2jJYuU",
@@ -10044,7 +10044,7 @@
           "start_time": "00:36:50",
           "end_time": "00:38:20",
           "reason": "Chat activity spike around 0h36m50s (z-score=3.869).",
-          "headline": "1度もフェーズさんに行けませんでした",
+          "headline": "今日帰宅しフェーズさんへ未行き謝罪",
           "tags": [
             "ww",
             "好プレー"
@@ -10061,7 +10061,7 @@
           "start_time": "01:16:50",
           "end_time": "01:17:40",
           "reason": "Chat activity spike around 1h16m50s (z-score=3.869).",
-          "headline": "言われるレベルなのね、信じてよ",
+          "headline": "だって言われるレベルを信じる",
           "tags": [
             "ww",
             "好プレー"
@@ -10078,7 +10078,7 @@
           "start_time": "01:01:30",
           "end_time": "01:02:20",
           "reason": "Chat activity spike around 1h1m30s (z-score=3.232).",
-          "headline": "パションゲージオうんがすごい",
+          "headline": "パションゲージオうんの音楽がすごい",
           "tags": [
             "好プレー"
           ],
@@ -10107,7 +10107,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-01T07:28:17+09:00"
+      "analyzed_at": "2026-11-02T06:44:40+09:00"
     },
     {
       "vod_id": "2851339526",
@@ -11259,7 +11259,7 @@
           "start_time": "00:29:20",
           "end_time": "00:31:20",
           "reason": "Chat activity spike around 0h29m20s (z-score=3.99).",
-          "headline": "一度行ったラウンジの様子",
+          "headline": "ラウンジの高級ソファーがHikakin風",
           "tags": [
             "ww",
             "ホラー",
@@ -11277,7 +11277,7 @@
           "start_time": "01:01:20",
           "end_time": "01:02:10",
           "reason": "Chat activity spike around 1h1m20s (z-score=3.99).",
-          "headline": "エンディング話し合いは未決定",
+          "headline": "エンディング議論は停滞",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=3680s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_3680_3730.webp"
@@ -11291,7 +11291,7 @@
           "start_time": "00:10:50",
           "end_time": "00:11:40",
           "reason": "Chat activity spike around 0h10m50s (z-score=3.99).",
-          "headline": "おにぎり価格が300円前後に上昇",
+          "headline": "最近のおにぎりは約300円",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=650s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_650_700.webp"
@@ -11320,7 +11320,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-01T07:28:17+09:00"
+      "analyzed_at": "2026-11-02T06:44:40+09:00"
     },
     {
       "vod_id": "2845027398",
@@ -11764,7 +11764,7 @@
           "start_time": "02:44:30",
           "end_time": "02:46:10",
           "reason": "Chat activity spike around 2h44m30s (z-score=6.501).",
-          "headline": "たまに起きる行動とゲージ変化",
+          "headline": "たまに発生する行ける現象",
           "tags": [
             "ww"
           ],
@@ -11780,7 +11780,7 @@
           "start_time": "03:22:40",
           "end_time": "03:23:30",
           "reason": "Chat activity spike around 3h22m40s (z-score=5.466).",
-          "headline": "叫びと壁の笑いが炸裂",
+          "headline": "叫び声と壁の笑い",
           "tags": [
             "好プレー"
           ],
@@ -11796,7 +11796,7 @@
           "start_time": "00:51:20",
           "end_time": "00:52:40",
           "reason": "Chat activity spike around 0h51m20s (z-score=3.396).",
-          "headline": "削り続けても誰も落ちてない",
+          "headline": "誰も死なずに削り続行",
           "tags": [
             "ww"
           ],
@@ -11845,7 +11845,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-10-20T09:27:52+09:00"
+      "analyzed_at": "2026-11-02T06:44:40+09:00"
     },
     {
       "vod_id": "2842954346",

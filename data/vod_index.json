@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-01T07:28:17+09:00",
-  "next_update_at": "2026-11-01T00:00:00+00:00",
+  "updated_at": "2026-11-02T06:44:40+09:00",
+  "next_update_at": "2026-11-02T00:00:00+00:00",
   "videos": [
     {
       "vod_id": "zKON8HCvu_I",
@@ -637,19 +637,6 @@
       "chat_total": 1381,
       "comments_per_hour": 223.433,
       "detail_path": "/data/vods/pLDVnsAqhAI.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "V4ptTBDfRvk",
-      "vod_url": "https://www.youtube.com/watch?v=V4ptTBDfRvk",
-      "title": "【祭】既プレイを疑われている女のエルデン←どちらとも読める【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-02T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/V4ptTBDfRvk/maxresdefault.jpg",
-      "duration_sec": 17778,
-      "count": 3,
-      "chat_total": 1786,
-      "comments_per_hour": 361.66,
-      "detail_path": "/data/vods/V4ptTBDfRvk.json",
       "provider": "youtube"
     },
     {
