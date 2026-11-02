@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-02T06:44:40+09:00",
-  "next_update_at": "2026-11-02T00:00:00+00:00",
+  "updated_at": "2026-11-03T08:12:33+09:00",
+  "next_update_at": "2026-11-03T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "wBie2_htUGo",
+      "vod_url": "https://www.youtube.com/watch?v=wBie2_htUGo",
+      "title": "【お誕生日おめでとう】世界が滅亡する時もここで夜を渡っていたい【ナイトレイン/ELDEN RING NIGHTREIGN】※石学者検証",
+      "published_at": "2026-11-02T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/wBie2_htUGo/maxresdefault.jpg",
+      "duration_sec": 15379,
+      "count": 3,
+      "chat_total": 2033,
+      "comments_per_hour": 475.896,
+      "detail_path": "/data/vods/wBie2_htUGo.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "zKON8HCvu_I",
       "vod_url": "https://www.youtube.com/watch?v=zKON8HCvu_I",
@@ -624,19 +637,6 @@
       "chat_total": 640,
       "comments_per_hour": 217.914,
       "detail_path": "/data/vods/eOjsiBstzMw.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "pLDVnsAqhAI",
-      "vod_url": "https://www.youtube.com/watch?v=pLDVnsAqhAI",
-      "title": "【公開前日】映画セキロ予習会！映画までに再度クリアしておきたい【SEKIRO: SHADOWS DIE TWICE】",
-      "published_at": "2026-09-03T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/pLDVnsAqhAI/maxresdefault.jpg",
-      "duration_sec": 22251,
-      "count": 3,
-      "chat_total": 1381,
-      "comments_per_hour": 223.433,
-      "detail_path": "/data/vods/pLDVnsAqhAI.json",
       "provider": "youtube"
     },
     {
