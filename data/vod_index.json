@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-03T08:12:33+09:00",
-  "next_update_at": "2026-11-03T00:00:00+00:00",
+  "updated_at": "2026-11-04T06:28:15+09:00",
+  "next_update_at": "2026-11-04T00:00:00+00:00",
   "videos": [
     {
       "vod_id": "wBie2_htUGo",
@@ -624,19 +624,6 @@
       "chat_total": 1572,
       "comments_per_hour": 280.951,
       "detail_path": "/data/vods/13GjlTnKb5w.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "eOjsiBstzMw",
-      "vod_url": "https://www.youtube.com/watch?v=eOjsiBstzMw",
-      "title": "【本日公開】セキロ映画の予習復習で一周クリアするよ！【SEKIRO: SHADOWS DIE TWICE】",
-      "published_at": "2026-09-04T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/eOjsiBstzMw/maxresdefault.jpg",
-      "duration_sec": 10573,
-      "count": 3,
-      "chat_total": 640,
-      "comments_per_hour": 217.914,
-      "detail_path": "/data/vods/eOjsiBstzMw.json",
       "provider": "youtube"
     },
     {

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-03T08:12:33+09:00",
+  "updated_at": "2026-11-04T06:28:15+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -9580,7 +9580,7 @@
           "start_time": "00:45:50",
           "end_time": "00:46:40",
           "reason": "Chat activity spike around 0h45m50s (z-score=3.356).",
-          "headline": "設定オフが推奨された瞬間",
+          "headline": "メニューがビンビン、設定オフ推奨",
           "tags": [
             "ww",
             "ホラー"
@@ -9597,7 +9597,7 @@
           "start_time": "00:16:10",
           "end_time": "00:17:00",
           "reason": "Chat activity spike around 0h16m10s (z-score=3.356).",
-          "headline": "叫びパリー吸血で倒したときのノ汁が凄い",
+          "headline": "叫びパリー吸血で倒した瞬間",
           "tags": [
             "ww",
             "あ",
@@ -9615,7 +9615,7 @@
           "start_time": "01:15:10",
           "end_time": "01:16:00",
           "reason": "Chat activity spike around 1h15m10s (z-score=2.695).",
-          "headline": "フレームレートが60で左右される様子",
+          "headline": "約60fpsの動作",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg&t=4510s",
           "screenshot_url": "/data/segment-thumbnails/ekhHnGl2pAg/ekhHnGl2pAg_4510_4560.webp"
@@ -9643,7 +9643,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-03T08:12:33+09:00"
+      "analyzed_at": "2026-11-04T06:28:15+09:00"
     },
     {
       "vod_id": "IVoq5mrBmQ8",
@@ -10075,7 +10075,7 @@
           "start_time": "00:19:10",
           "end_time": "00:21:00",
           "reason": "Chat activity spike around 0h19m10s (z-score=4.29).",
-          "headline": "どかしに行く笑いと内部別",
+          "headline": "笑いながら内部処理を語る",
           "tags": [
             "ww",
             "えっ"
@@ -10092,7 +10092,7 @@
           "start_time": "01:07:20",
           "end_time": "01:08:10",
           "reason": "Chat activity spike around 1h7m20s (z-score=2.635).",
-          "headline": "深夜みたいな雰囲気が浮く",
+          "headline": "深夜みたいになると私は思う",
           "tags": [
             "ww"
           ],
@@ -10108,7 +10108,7 @@
           "start_time": "00:37:50",
           "end_time": "00:38:40",
           "reason": "Chat activity spike around 0h37m50s (z-score=2.635).",
-          "headline": "キング城を検索する",
+          "headline": "キングジとキング城の疑問",
           "tags": [
             "好プレー"
           ],
@@ -10137,7 +10137,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-03T08:12:33+09:00"
+      "analyzed_at": "2026-11-04T06:28:15+09:00"
     },
     {
       "vod_id": "ZRkL_2jJYuU",
@@ -10160,7 +10160,7 @@
           "start_time": "00:36:50",
           "end_time": "00:38:20",
           "reason": "Chat activity spike around 0h36m50s (z-score=3.869).",
-          "headline": "今日帰宅し謝罪、感想なし",
+          "headline": "フェーズさんに行けず謝罪",
           "tags": [
             "ww",
             "好プレー"
@@ -10177,7 +10177,7 @@
           "start_time": "01:16:50",
           "end_time": "01:17:40",
           "reason": "Chat activity spike around 1h16m50s (z-score=3.869).",
-          "headline": "言われるレベルなのね、信じて",
+          "headline": "言われるレベルを信じて",
           "tags": [
             "ww",
             "好プレー"
@@ -10194,7 +10194,7 @@
           "start_time": "01:01:30",
           "end_time": "01:02:20",
           "reason": "Chat activity spike around 1h1m30s (z-score=3.232).",
-          "headline": "パションゲージオうんのすごさ再確認",
+          "headline": "パションゲージオうんのすごい再来",
           "tags": [
             "好プレー"
           ],
@@ -10223,7 +10223,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-03T08:12:33+09:00"
+      "analyzed_at": "2026-11-04T06:28:15+09:00"
     },
     {
       "vod_id": "2851339526",
@@ -11375,7 +11375,7 @@
           "start_time": "00:29:20",
           "end_time": "00:31:20",
           "reason": "Chat activity spike around 0h29m20s (z-score=3.99).",
-          "headline": "一度行ったラウンジの豪華ソファー",
+          "headline": "1回行ったラウンジは豪華ソファー",
           "tags": [
             "ww",
             "ホラー",
@@ -11393,7 +11393,7 @@
           "start_time": "01:01:20",
           "end_time": "01:02:10",
           "reason": "Chat activity spike around 1h1m20s (z-score=3.99).",
-          "headline": "エンディング決定の話し合いは不十分",
+          "headline": "大した話し合いなしで進行",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=3680s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_3680_3730.webp"
@@ -11407,7 +11407,7 @@
           "start_time": "00:10:50",
           "end_time": "00:11:40",
           "reason": "Chat activity spike around 0h10m50s (z-score=3.99).",
-          "headline": "最近のおにぎり価格は300円前後",
+          "headline": "最近のおにぎりは約300円",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=trqPz9vVh14&t=650s",
           "screenshot_url": "/data/segment-thumbnails/trqPz9vVh14/trqPz9vVh14_650_700.webp"
@@ -11436,7 +11436,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-03T08:12:33+09:00"
+      "analyzed_at": "2026-11-04T06:28:15+09:00"
     },
     {
       "vod_id": "2845027398",
