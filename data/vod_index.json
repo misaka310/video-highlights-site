@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-04T06:28:15+09:00",
-  "next_update_at": "2026-11-04T00:00:00+00:00",
+  "updated_at": "2026-11-05T06:33:00+09:00",
+  "next_update_at": "2026-11-05T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "2gTjDqH9G8M",
+      "vod_url": "https://www.youtube.com/watch?v=2gTjDqH9G8M",
+      "title": "【カンスト記念】ご 褒 美 学 者【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-03T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/2gTjDqH9G8M/maxresdefault.jpg",
+      "duration_sec": 25777,
+      "count": 3,
+      "chat_total": 2840,
+      "comments_per_hour": 396.633,
+      "detail_path": "/data/vods/2gTjDqH9G8M.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "wBie2_htUGo",
       "vod_url": "https://www.youtube.com/watch?v=wBie2_htUGo",
@@ -611,19 +624,6 @@
       "chat_total": 1329,
       "comments_per_hour": 354.426,
       "detail_path": "/data/vods/Uh-y01w6WxA.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "13GjlTnKb5w",
-      "vod_url": "https://www.youtube.com/watch?v=13GjlTnKb5w",
-      "title": "【ラダーン祭】既プレイを疑われている女のエルデン←どちらとも読める【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-05T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/13GjlTnKb5w/maxresdefault.jpg",
-      "duration_sec": 20143,
-      "count": 3,
-      "chat_total": 1572,
-      "comments_per_hour": 280.951,
-      "detail_path": "/data/vods/13GjlTnKb5w.json",
       "provider": "youtube"
     },
     {
