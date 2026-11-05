@@ -75,10 +75,9 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
     const source = cues[index];
     const sourceText = normalizeCaptionText(source?.text || "");
     const match = (phrase === "あのさ" ? ANOSA_RE : ANONE_RE).exec(sourceText);
-    let text = "";
+    let text: string;
     let endSec = Number(source?.end_sec ?? source?.start_sec ?? 0);
     let cursor = index + 1;
-    let truncated = false;
 
     if (match && match.index >= 0) {
       text = sourceText.slice(match.index);
@@ -97,7 +96,7 @@ function extractPhraseStatements(cues: CaptionCue[], phrase: "あのさ" | "あ�
 
     const initialText = capCaptionText(text, maxCharacters);
     text = initialText.text;
-    truncated = initialText.truncated;
+    let truncated = initialText.truncated;
 
     while (!truncated && !SENTENCE_END_RE.test(text) && cursor < cues.length && cursor <= index + 8 && text.length < 220) {
       const next = cues[cursor];
