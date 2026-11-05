@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-05T06:33:00+09:00",
-  "next_update_at": "2026-11-05T00:00:00+00:00",
+  "updated_at": "2026-11-06T06:37:01+09:00",
+  "next_update_at": "2026-11-06T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "T3B5oql0g88",
+      "vod_url": "https://www.youtube.com/watch?v=T3B5oql0g88",
+      "title": "【カンスト記念】ご 褒 美 学 者 調香編②【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-04T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/T3B5oql0g88/maxresdefault.jpg",
+      "duration_sec": 13428,
+      "count": 3,
+      "chat_total": 1101,
+      "comments_per_hour": 295.174,
+      "detail_path": "/data/vods/T3B5oql0g88.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "2gTjDqH9G8M",
       "vod_url": "https://www.youtube.com/watch?v=2gTjDqH9G8M",
@@ -611,19 +624,6 @@
       "chat_total": 661,
       "comments_per_hour": 269.98,
       "detail_path": "/data/vods/uvjL4xGMxEM.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "Uh-y01w6WxA",
-      "vod_url": "https://www.youtube.com/watch?v=Uh-y01w6WxA",
-      "title": "【映画セキロ感想会】未視聴の方はこの枠見ないでください！！【SEKIRO: NO DEFEAT】",
-      "published_at": "2026-09-06T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/Uh-y01w6WxA/maxresdefault.jpg",
-      "duration_sec": 13499,
-      "count": 3,
-      "chat_total": 1329,
-      "comments_per_hour": 354.426,
-      "detail_path": "/data/vods/Uh-y01w6WxA.json",
       "provider": "youtube"
     },
     {
