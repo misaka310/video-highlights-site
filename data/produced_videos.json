@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-25T08:55:10+09:00",
+  "updated_at": "2026-11-05T00:00:00+09:00",
   "videos": [
     {
       "video_id": "pikmin-highlights-20261024",
@@ -112,6 +112,38 @@
         {
           "start_sec": 284,
           "label": "エンディング"
+        }
+      ]
+    },
+    {
+      "video_id": "patchinbon",
+      "title": "パッチンボン ― モーグの技に付いた呼び名の記録",
+      "description": "エルデンリングのモーグ戦で、血の爆発攻撃にその場で付いた呼び名『パッチンボン』。2024年の本編での命名から、DLC配信日の再戦、ナイトレインでの再会で『パッチンボンブン』へ伸びるまで、2年分の配信を追った6分11秒の総集編。",
+      "credits": "映像・音声：ドチタオの配信アーカイブを編集",
+      "duration_sec": 370.8,
+      "published_at": "2026-11-05",
+      "poster_url": "produced-video-posters/patchinbon.jpg",
+      "video_url": "https://dotitao-patchinbon.pages.dev/master.m3u8",
+      "chapters": [
+        {
+          "start_sec": 0,
+          "label": "冒頭ダイジェスト"
+        },
+        {
+          "start_sec": 27.2,
+          "label": "名前が付いた日"
+        },
+        {
+          "start_sec": 200.7,
+          "label": "DLCの前に もう一度"
+        },
+        {
+          "start_sec": 323.3,
+          "label": "呼び名が のびる"
+        },
+        {
+          "start_sec": 363.3,
+          "label": "2年たっても まだ言ってる"
         }
       ]
     }
