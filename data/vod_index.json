@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-07T06:36:14+09:00",
-  "next_update_at": "2026-11-07T00:00:00+00:00",
+  "updated_at": "2026-11-08T06:30:49+09:00",
+  "next_update_at": "2026-11-08T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "K_Oa6Upgi8s",
+      "vod_url": "https://www.youtube.com/watch?v=K_Oa6Upgi8s",
+      "title": "ナイトレインのことなら何でも聞いてください(という気分)【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-07T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/K_Oa6Upgi8s/maxresdefault.jpg",
+      "duration_sec": 17640,
+      "count": 3,
+      "chat_total": 1775,
+      "comments_per_hour": 362.245,
+      "detail_path": "/data/vods/K_Oa6Upgi8s.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "T3B5oql0g88",
       "vod_url": "https://www.youtube.com/watch?v=T3B5oql0g88",
@@ -611,19 +624,6 @@
       "chat_total": 1992,
       "comments_per_hour": 611.355,
       "detail_path": "/data/vods/szA-n46-IfU.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "uvjL4xGMxEM",
-      "vod_url": "https://www.youtube.com/watch?v=uvjL4xGMxEM",
-      "title": "新要素集めの旅いよいよ最後か⁉闘技場まっとれよ配信【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-08T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/uvjL4xGMxEM/maxresdefault.jpg",
-      "duration_sec": 8814,
-      "count": 3,
-      "chat_total": 661,
-      "comments_per_hour": 269.98,
-      "detail_path": "/data/vods/uvjL4xGMxEM.json",
       "provider": "youtube"
     },
     {
