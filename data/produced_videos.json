@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-05T00:00:00+09:00",
+  "updated_at": "2026-11-08T00:00:00+09:00",
   "videos": [
     {
       "video_id": "pikmin-highlights-20261024",
@@ -144,6 +144,46 @@
         {
           "start_sec": 363.3,
           "label": "2年たっても まだ言ってる"
+        }
+      ]
+    },
+    {
+      "video_id": "perapera-gakusha",
+      "title": "ペラペラペーラ ― 学者のアーツに毎回つくひと声",
+      "description": "ドチタオがナイトレインの学者で唱える掛け声『ペラペラペーラ』。2025年12月4日のDLC配信初日、学者を初めて使った日に出た最初のひと声から、レアな言い方まで、79配信・409回の掛け声をたどった7分35秒の総集編。",
+      "credits": "映像・音声：ドチタオの配信アーカイブを編集",
+      "duration_sec": 454.966,
+      "published_at": "2026-11-08",
+      "poster_url": "produced-video-posters/perapera-gakusha.jpg",
+      "video_url": "https://dotitao-gakusha.pages.dev/master.m3u8",
+      "chapters": [
+        {
+          "start_sec": 0,
+          "label": "冒頭ダイジェスト"
+        },
+        {
+          "start_sec": 27.6,
+          "label": "はじまりの日"
+        },
+        {
+          "start_sec": 111.7,
+          "label": "それでは参ります"
+        },
+        {
+          "start_sec": 163.2,
+          "label": "状況で 変わる"
+        },
+        {
+          "start_sec": 272.9,
+          "label": "のびる ゆれる"
+        },
+        {
+          "start_sec": 356,
+          "label": "流儀"
+        },
+        {
+          "start_sec": 447,
+          "label": "今日も 唱えている"
         }
       ]
     }
