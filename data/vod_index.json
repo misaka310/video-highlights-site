@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-09T06:42:16+09:00",
-  "next_update_at": "2026-11-09T00:00:00+00:00",
+  "updated_at": "2026-11-10T06:36:30+09:00",
+  "next_update_at": "2026-11-10T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "pR0IDWoo414",
+      "vod_url": "https://www.youtube.com/watch?v=pR0IDWoo414",
+      "title": "あーあまたこの人こんな時間にナイトレインしてます【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-09T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/pR0IDWoo414/maxresdefault.jpg",
+      "duration_sec": 17290,
+      "count": 3,
+      "chat_total": 1918,
+      "comments_per_hour": 399.352,
+      "detail_path": "/data/vods/pR0IDWoo414.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "qmVPaYNW1MQ",
       "vod_url": "https://www.youtube.com/watch?v=qmVPaYNW1MQ",
@@ -624,19 +637,6 @@
       "chat_total": 2712,
       "comments_per_hour": 305.291,
       "detail_path": "/data/vods/pIjBzUM55qE.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "OKCaYdbt68Q",
-      "vod_url": "https://www.youtube.com/watch?v=OKCaYdbt68Q",
-      "title": "【侵入歓迎】しろがね愛好家による黄金律原理主義プレイ【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-10T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/OKCaYdbt68Q/maxresdefault.jpg",
-      "duration_sec": 14698,
-      "count": 3,
-      "chat_total": 1395,
-      "comments_per_hour": 341.679,
-      "detail_path": "/data/vods/OKCaYdbt68Q.json",
       "provider": "youtube"
     },
     {
