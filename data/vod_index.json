@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-11T06:34:53+09:00",
-  "next_update_at": "2026-11-11T00:00:00+00:00",
+  "updated_at": "2026-11-12T06:38:07+09:00",
+  "next_update_at": "2026-11-12T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "sUV76HzRUMQ",
+      "vod_url": "https://www.youtube.com/watch?v=sUV76HzRUMQ",
+      "title": "【完全初見】王にはよくなってます！勇者にも余裕でなれると思います！押忍！【ゼルダの伝説 時のオカリナ】",
+      "published_at": "2026-11-11T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/sUV76HzRUMQ/maxresdefault.jpg",
+      "duration_sec": 19502,
+      "count": 3,
+      "chat_total": 2272,
+      "comments_per_hour": 419.403,
+      "detail_path": "/data/vods/sUV76HzRUMQ.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "_IRZ-a-8rH0",
       "vod_url": "https://www.youtube.com/watch?v=_IRZ-a-8rH0",
@@ -637,19 +650,6 @@
       "chat_total": 1366,
       "comments_per_hour": 359.5,
       "detail_path": "/data/vods/WGTrmrSvZH0.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "pIjBzUM55qE",
-      "vod_url": "https://www.youtube.com/watch?v=pIjBzUM55qE",
-      "title": "【修行】行きて帰りし視聴者ぶっ倒し物語【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-12T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/pIjBzUM55qE/maxresdefault.jpg",
-      "duration_sec": 31980,
-      "count": 3,
-      "chat_total": 2712,
-      "comments_per_hour": 305.291,
-      "detail_path": "/data/vods/pIjBzUM55qE.json",
       "provider": "youtube"
     },
     {
