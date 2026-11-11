@@ -45,6 +45,7 @@ PR作成、対象SHAの検証、head SHA確認、squash mergeは`.github/scripts
 
 Render の静的サイトは `render.yaml` と同じビルドコマンドで動かす。サービス側の設定が上書きされていると、frontend の依存が入らないまま `public/` を作り、依存を追加したリリースだけがビルドで落ちる。
 
+- `render.yaml` は Blueprint のスキーマに合わせ、静的サイトを `type: web` + `runtime: static` で宣言する。`type: static_site` のようなスキーマ外の service type では Blueprint がサービス定義として解釈されず、`headers` ブロックが本番へ反映されない。セキュリティヘッダー（`X-Frame-Options` / `Permissions-Policy` / `Referrer-Policy` / `X-Content-Type-Options`）の欠落はこの形の崩れで起きるため、`tests/test_public_build.py` で宣言形式を固定する。
 - Build Command は `npm ci && npm ci --prefix frontend && npm run build:public` とする。
 - `frontend` 側の `npm ci` を省略しない。省略するとビルドキャッシュに残った古い `frontend/node_modules` が使われ、`tsc` が新しい依存を解決できず `Cannot find module ...` で失敗する。
 - ビルドログの最初の行が `added N packages` ではなく `up to date, audited 4 packages` の場合、root の `npm install` だけが実行されている。コマンドが `render.yaml` と食い違っているので設定を直す。
