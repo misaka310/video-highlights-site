@@ -1,6 +1,11 @@
 services:
-  - type: static_site
+  # Render Blueprint schema: a static site is declared as type "web" with
+  # runtime "static" (see https://render.com/docs/blueprint-spec).
+  # The previous form used the non-schema service type name and omitted
+  # runtime, so the headers block below was never applied to the live site.
+  - type: web
     name: dotitao-moments
+    runtime: static
     buildCommand: npm ci && npm ci --prefix frontend && npm run build:public
     staticPublishPath: public
     headers:

@@ -89,6 +89,22 @@ class PublicBuildTests(unittest.TestCase):
         self.assertIn("npm ci && npm ci --prefix frontend && npm run build:public", render)
         self.assertIn("staticPublishPath: public", render)
 
+    def test_render_static_site_uses_blueprint_schema(self):
+        # A static site is type "web" + runtime "static" in the Blueprint schema.
+        # The non-schema "type: static_site" form silently drops the headers block,
+        # which left X-Frame-Options/Permissions-Policy/Referrer-Policy unapplied.
+        render = (ROOT / "render.yaml").read_text(encoding="utf-8")
+        self.assertNotIn("static_site", render)
+        self.assertIn("  - type: web", render)
+        self.assertIn("    runtime: static", render)
+        for header in (
+            "X-Frame-Options",
+            "Permissions-Policy",
+            "Referrer-Policy",
+            "X-Content-Type-Options",
+        ):
+            self.assertIn(header, render)
+
     def test_operations_document_the_render_build_command(self):
         operations = (ROOT / "docs" / "OPERATIONS.md").read_text(encoding="utf-8")
         self.assertIn("npm ci && npm ci --prefix frontend && npm run build:public", operations)
