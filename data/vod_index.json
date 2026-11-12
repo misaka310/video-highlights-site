@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-12T06:38:07+09:00",
-  "next_update_at": "2026-11-12T00:00:00+00:00",
+  "updated_at": "2026-11-13T06:39:22+09:00",
+  "next_update_at": "2026-11-13T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "TR6BoqD74dQ",
+      "vod_url": "https://www.youtube.com/watch?v=TR6BoqD74dQ",
+      "title": "【完全初見】見事ゴロン族懐柔！今日こそ次は魚人？の女の子とお近づきになりたい！！押忍！【ゼルダの伝説 時のオカリナ】",
+      "published_at": "2026-11-12T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/TR6BoqD74dQ/maxresdefault.jpg",
+      "duration_sec": 20342,
+      "count": 3,
+      "chat_total": 2281,
+      "comments_per_hour": 403.677,
+      "detail_path": "/data/vods/TR6BoqD74dQ.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "sUV76HzRUMQ",
       "vod_url": "https://www.youtube.com/watch?v=sUV76HzRUMQ",
@@ -637,19 +650,6 @@
       "chat_total": 1433,
       "comments_per_hour": 330.058,
       "detail_path": "/data/vods/930HUhvRKHc.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "WGTrmrSvZH0",
-      "vod_url": "https://www.youtube.com/watch?v=WGTrmrSvZH0",
-      "title": "【修行】エルデンリングの本質を知る配信【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-13T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/WGTrmrSvZH0/maxresdefault.jpg",
-      "duration_sec": 13679,
-      "count": 3,
-      "chat_total": 1366,
-      "comments_per_hour": 359.5,
-      "detail_path": "/data/vods/WGTrmrSvZH0.json",
       "provider": "youtube"
     },
     {
