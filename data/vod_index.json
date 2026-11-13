@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-13T06:39:22+09:00",
-  "next_update_at": "2026-11-13T00:00:00+00:00",
+  "updated_at": "2026-11-14T06:29:57+09:00",
+  "next_update_at": "2026-11-14T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "1oTk_Hsa8SQ",
+      "vod_url": "https://www.youtube.com/watch?v=1oTk_Hsa8SQ",
+      "title": "【初見】急展開リンク大失態！今日こそ強くなった勇者として世界を元に戻します！！押忍！【ゼルダの伝説 時のオカリナ】",
+      "published_at": "2026-11-13T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/1oTk_Hsa8SQ/maxresdefault.jpg",
+      "duration_sec": 15435,
+      "count": 3,
+      "chat_total": 1748,
+      "comments_per_hour": 407.697,
+      "detail_path": "/data/vods/1oTk_Hsa8SQ.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "TR6BoqD74dQ",
       "vod_url": "https://www.youtube.com/watch?v=TR6BoqD74dQ",
