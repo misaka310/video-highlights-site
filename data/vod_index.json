@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-15T06:46:59+09:00",
-  "next_update_at": "2026-11-15T00:00:00+00:00",
+  "updated_at": "2026-11-16T06:30:15+09:00",
+  "next_update_at": "2026-11-16T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "013nvmiSvJ0",
+      "vod_url": "https://www.youtube.com/watch?v=013nvmiSvJ0",
+      "title": "夜侵入調香火花持ち込み火＋４キスしたくなる確率＋４【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-15T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/013nvmiSvJ0/maxresdefault.jpg",
+      "duration_sec": 23295,
+      "count": 3,
+      "chat_total": 1759,
+      "comments_per_hour": 271.835,
+      "detail_path": "/data/vods/013nvmiSvJ0.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "akdh8pEAkFg",
       "vod_url": "https://www.youtube.com/watch?v=akdh8pEAkFg",
