@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-16T06:30:15+09:00",
+  "updated_at": "2026-11-17T06:23:50+09:00",
   "channel": "dotitao",
   "channel_url": "https://www.twitch.tv/dotitao",
   "analysis_version": "chat-zscore-v8",
@@ -11157,7 +11157,7 @@
           "start_time": "00:45:50",
           "end_time": "00:46:40",
           "reason": "Chat activity spike around 0h45m50s (z-score=3.356).",
-          "headline": "メニューがビンビンで設定オフ推奨",
+          "headline": "メニューがずっとビンビン、設定オフが必要",
           "tags": [
             "ww",
             "ホラー"
@@ -11174,7 +11174,7 @@
           "start_time": "00:16:10",
           "end_time": "00:17:00",
           "reason": "Chat activity spike around 0h16m10s (z-score=3.356).",
-          "headline": "叫びパリー吸血で倒した瞬間の衝撃",
+          "headline": "叫びパリー吸血の衝撃的ノ汁",
           "tags": [
             "ww",
             "あ",
@@ -11192,7 +11192,7 @@
           "start_time": "01:15:10",
           "end_time": "01:16:00",
           "reason": "Chat activity spike around 1h15m10s (z-score=2.695).",
-          "headline": "フレームレートは約60で揺れ",
+          "headline": "フレームレートは約60前後",
           "tags": [],
           "watch_url": "https://www.youtube.com/watch?v=ekhHnGl2pAg&t=4510s",
           "screenshot_url": "/data/segment-thumbnails/ekhHnGl2pAg/ekhHnGl2pAg_4510_4560.webp"
@@ -11220,7 +11220,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-16T06:30:15+09:00"
+      "analyzed_at": "2026-11-17T06:23:50+09:00"
     },
     {
       "vod_id": "IVoq5mrBmQ8",
@@ -11652,7 +11652,7 @@
           "start_time": "00:19:10",
           "end_time": "00:21:00",
           "reason": "Chat activity spike around 0h19m10s (z-score=4.29).",
-          "headline": "笑いと内部処理の違い",
+          "headline": "笑いで内部分離を語る",
           "tags": [
             "ww",
             "えっ"
@@ -11685,7 +11685,7 @@
           "start_time": "00:37:50",
           "end_time": "00:38:40",
           "reason": "Chat activity spike around 0h37m50s (z-score=2.635).",
-          "headline": "吸血のキングジ検索とキング城疑問",
+          "headline": "キングジとキング城の話",
           "tags": [
             "好プレー"
           ],
@@ -11714,7 +11714,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-16T06:30:15+09:00"
+      "analyzed_at": "2026-11-17T06:23:50+09:00"
     },
     {
       "vod_id": "ZRkL_2jJYuU",
@@ -11737,7 +11737,7 @@
           "start_time": "00:36:50",
           "end_time": "00:38:20",
           "reason": "Chat activity spike around 0h36m50s (z-score=3.882).",
-          "headline": "1度もフェーズさんに行けませんでした",
+          "headline": "フェーズ不参加と無感想を告白",
           "tags": [
             "ww",
             "好プレー"
@@ -11754,7 +11754,7 @@
           "start_time": "01:16:50",
           "end_time": "01:17:40",
           "reason": "Chat activity spike around 1h16m50s (z-score=3.882).",
-          "headline": "言われたレベルは信じるべき",
+          "headline": "言われるレベルだと信じる",
           "tags": [
             "ww",
             "好プレー"
@@ -11771,7 +11771,7 @@
           "start_time": "01:01:30",
           "end_time": "01:02:20",
           "reason": "Chat activity spike around 1h1m30s (z-score=3.243).",
-          "headline": "音楽とパションゲージオうん",
+          "headline": "パションゲージオうんのすごい音楽",
           "tags": [
             "好プレー"
           ],
@@ -11800,7 +11800,7 @@
         ]
       },
       "analysis_version": "chat-zscore-v8",
-      "analyzed_at": "2026-11-16T06:30:15+09:00"
+      "analyzed_at": "2026-11-17T06:23:50+09:00"
     },
     {
       "vod_id": "2851339526",

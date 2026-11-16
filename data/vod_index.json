@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-16T06:30:15+09:00",
-  "next_update_at": "2026-11-16T00:00:00+00:00",
+  "updated_at": "2026-11-17T06:23:50+09:00",
+  "next_update_at": "2026-11-17T00:00:00+00:00",
   "videos": [
     {
       "vod_id": "013nvmiSvJ0",
@@ -676,19 +676,6 @@
       "chat_total": 2202,
       "comments_per_hour": 340.238,
       "detail_path": "/data/vods/aTCWAb8wRd8.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "2a_ATYeOiAQ",
-      "vod_url": "https://www.youtube.com/watch?v=2a_ATYeOiAQ",
-      "title": "【生誕祭】今日のオタ活雑談【宮崎氏お誕生日祝い＆TGSに行った件】",
-      "published_at": "2026-09-17T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/2a_ATYeOiAQ/maxresdefault.jpg",
-      "duration_sec": 10379,
-      "count": 3,
-      "chat_total": 991,
-      "comments_per_hour": 343.733,
-      "detail_path": "/data/vods/2a_ATYeOiAQ.json",
       "provider": "youtube"
     },
     {
