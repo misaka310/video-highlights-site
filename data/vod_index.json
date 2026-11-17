@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-17T06:23:50+09:00",
-  "next_update_at": "2026-11-17T00:00:00+00:00",
+  "updated_at": "2026-11-18T06:42:41+09:00",
+  "next_update_at": "2026-11-18T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "sqd3x1Mzkvs",
+      "vod_url": "https://www.youtube.com/watch?v=sqd3x1Mzkvs",
+      "title": "【初見】最難所と噂に聞く神殿へ大人ルト姫を迎えに行く！！押忍！【ゼルダの伝説 時のオカリナ】",
+      "published_at": "2026-11-17T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/sqd3x1Mzkvs/maxresdefault.jpg",
+      "duration_sec": 24954,
+      "count": 3,
+      "chat_total": 2883,
+      "comments_per_hour": 415.917,
+      "detail_path": "/data/vods/sqd3x1Mzkvs.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "013nvmiSvJ0",
       "vod_url": "https://www.youtube.com/watch?v=013nvmiSvJ0",
