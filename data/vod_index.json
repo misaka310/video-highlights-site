@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-18T06:42:41+09:00",
-  "next_update_at": "2026-11-18T00:00:00+00:00",
+  "updated_at": "2026-11-19T06:32:34+09:00",
+  "next_update_at": "2026-11-19T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "K8S9QTSSoSU",
+      "vod_url": "https://www.youtube.com/watch?v=K8S9QTSSoSU",
+      "title": "【初見】物語は急展開、皆のトラウマ神殿らしいが余裕かと！押忍！【ゼルダの伝説 時のオカリナ】",
+      "published_at": "2026-11-18T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/K8S9QTSSoSU/maxresdefault.jpg",
+      "duration_sec": 12252,
+      "count": 3,
+      "chat_total": 1287,
+      "comments_per_hour": 378.159,
+      "detail_path": "/data/vods/K8S9QTSSoSU.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "sqd3x1Mzkvs",
       "vod_url": "https://www.youtube.com/watch?v=sqd3x1Mzkvs",
@@ -676,19 +689,6 @@
       "chat_total": 3215,
       "comments_per_hour": 393.821,
       "detail_path": "/data/vods/Dl_8GJUCspU.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "aTCWAb8wRd8",
-      "vod_url": "https://www.youtube.com/watch?v=aTCWAb8wRd8",
-      "title": "ダスブラなりきりエルデン大会やるのでビルド育てる【エルデンリング/ELDEN RING Tarnished Edition】",
-      "published_at": "2026-09-19T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/aTCWAb8wRd8/maxresdefault.jpg",
-      "duration_sec": 23299,
-      "count": 3,
-      "chat_total": 2202,
-      "comments_per_hour": 340.238,
-      "detail_path": "/data/vods/aTCWAb8wRd8.json",
       "provider": "youtube"
     },
     {
