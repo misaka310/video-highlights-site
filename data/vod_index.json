@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-20T06:23:54+09:00",
-  "next_update_at": "2026-11-20T00:00:00+00:00",
+  "updated_at": "2026-11-21T06:23:01+09:00",
+  "next_update_at": "2026-11-21T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "ET4UT09hIoQ",
+      "vod_url": "https://www.youtube.com/watch?v=ET4UT09hIoQ",
+      "title": "耳が聞こえナイトレイン【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-20T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/ET4UT09hIoQ/maxresdefault.jpg",
+      "duration_sec": 14960,
+      "count": 3,
+      "chat_total": 1937,
+      "comments_per_hour": 466.123,
+      "detail_path": "/data/vods/ET4UT09hIoQ.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "K8S9QTSSoSU",
       "vod_url": "https://www.youtube.com/watch?v=K8S9QTSSoSU",
