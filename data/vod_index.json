@@ -1,7 +1,20 @@
 {
-  "updated_at": "2026-11-21T06:23:01+09:00",
-  "next_update_at": "2026-11-21T00:00:00+00:00",
+  "updated_at": "2026-11-22T06:17:00+09:00",
+  "next_update_at": "2026-11-22T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "HXFqwrA5TDo",
+      "vod_url": "https://www.youtube.com/watch?v=HXFqwrA5TDo",
+      "title": "【ご報告】突発性難聴になりました【マズいよ】",
+      "published_at": "2026-11-21T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/HXFqwrA5TDo/maxresdefault.jpg",
+      "duration_sec": 4273,
+      "count": 2,
+      "chat_total": 1508,
+      "comments_per_hour": 1270.489,
+      "detail_path": "/data/vods/HXFqwrA5TDo.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "ET4UT09hIoQ",
       "vod_url": "https://www.youtube.com/watch?v=ET4UT09hIoQ",
