@@ -1,7 +1,33 @@
 {
-  "updated_at": "2026-11-22T06:17:00+09:00",
-  "next_update_at": "2026-11-22T00:00:00+00:00",
+  "updated_at": "2026-11-24T06:31:39+09:00",
+  "next_update_at": "2026-11-24T00:00:00+00:00",
   "videos": [
+    {
+      "vod_id": "44ZVHtPYVbc",
+      "vod_url": "https://www.youtube.com/watch?v=44ZVHtPYVbc",
+      "title": "【復帰配信】マズいことになったのでとりまナイトレインして落ち着こうと思います【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-23T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/44ZVHtPYVbc/maxresdefault.jpg",
+      "duration_sec": 7651,
+      "count": 3,
+      "chat_total": 789,
+      "comments_per_hour": 371.246,
+      "detail_path": "/data/vods/44ZVHtPYVbc.json",
+      "provider": "youtube"
+    },
+    {
+      "vod_id": "N90pxCG-YO8",
+      "vod_url": "https://www.youtube.com/watch?v=N90pxCG-YO8",
+      "title": "【復帰配信】マズいことになったのでとりまナイトレインして落ち着こうと思います【ナイトレイン/ELDEN RING NIGHTREIGN】",
+      "published_at": "2026-11-23T00:00:00+00:00",
+      "thumbnail_url": "https://i.ytimg.com/vi/N90pxCG-YO8/maxresdefault.jpg",
+      "duration_sec": 15856,
+      "count": 3,
+      "chat_total": 2286,
+      "comments_per_hour": 519.021,
+      "detail_path": "/data/vods/N90pxCG-YO8.json",
+      "provider": "youtube"
+    },
     {
       "vod_id": "HXFqwrA5TDo",
       "vod_url": "https://www.youtube.com/watch?v=HXFqwrA5TDo",
@@ -663,32 +689,6 @@
       "chat_total": 1813,
       "comments_per_hour": 421.437,
       "detail_path": "/data/vods/aRJa-2MDDOY.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "4dcYSB6iIoo",
-      "vod_url": "https://www.youtube.com/watch?v=4dcYSB6iIoo",
-      "title": "長期ナイトレ禁生活明けの極上の一夜にまさかの…！？【ナイトレイン/ELDEN RING NIGHTREIGN】",
-      "published_at": "2026-09-24T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/4dcYSB6iIoo/maxresdefault.jpg",
-      "duration_sec": 20960,
-      "count": 3,
-      "chat_total": 1934,
-      "comments_per_hour": 332.176,
-      "detail_path": "/data/vods/4dcYSB6iIoo.json",
-      "provider": "youtube"
-    },
-    {
-      "vod_id": "psNNW7U95wg",
-      "vod_url": "https://www.youtube.com/watch?v=psNNW7U95wg",
-      "title": "長期ナイトレ禁生活明けの極上の一夜にまさかの…！？【ナイトレイン/ELDEN RING NIGHTREIGN】",
-      "published_at": "2026-09-23T00:00:00+00:00",
-      "thumbnail_url": "https://i.ytimg.com/vi/psNNW7U95wg/maxresdefault.jpg",
-      "duration_sec": 39617,
-      "count": 3,
-      "chat_total": 3511,
-      "comments_per_hour": 319.045,
-      "detail_path": "/data/vods/psNNW7U95wg.json",
       "provider": "youtube"
     },
     {
